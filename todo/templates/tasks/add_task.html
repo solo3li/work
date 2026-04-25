@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <h1>Summon a New Task 🪄</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label>Task Title</label>
+        <input type="text" name="title" placeholder="What must be done? (e.g., Feed the dragon)" required>
+        
+        <label>Description (Optional)</label>
+        <textarea name="description" placeholder="Any extra details or excuses?"></textarea>
+        
+        <label>Priority</label>
+        <select name="priority">
+            <option value="low">Low (I'll do it next year)</option>
+            <option value="medium" selected>Medium (Standard effort)</option>
+            <option value="high">High (OH NO, PANIC!)</option>
+        </select>
+        
+        <label>Due Date</label>
+        <input type="datetime-local" name="due_date">
+        
+        <label>Category</label>
+        <select name="category">
+            <option value="">None</option>
+            {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit">Cast the Task! ⚡</button>
+        <a href="{% url 'task_list' %}" style="margin-left: 10px; color: var(--text-light);">Go Back</a>
+    </form>
+</div>
+{% endblock %}

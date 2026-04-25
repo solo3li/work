@@ -1,0 +1,17 @@
+mail host =fps60y@gmail.com
+mailpass=shkk dtko scqr yhtb
+
+fetures============
+auth with mail 
+verify mail code
+
+* Task creation (title, description)
+* Due dates & reminders
+* Priority levels (low, medium, high)
+* Categories or tags
+* Subtasks / checklists
+* Drag-and-drop reordering
+* Search and filters
+* Notifications
+* Sync across devices
+* Dark mode / customization

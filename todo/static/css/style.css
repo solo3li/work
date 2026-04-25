@@ -1,0 +1,134 @@
+:root {
+    --bg-light: #f0f4f8;
+    --text-light: #333;
+    --primary: #ff4757;
+    --secondary: #2ed573;
+    --accent: #ffa502;
+    --card-bg: #ffffff;
+    --nav-bg: #2f3542;
+    --nav-text: #ffffff;
+}
+
+body.dark-mode {
+    --bg-light: #2f3542;
+    --text-light: #f1f2f6;
+    --card-bg: #3e4444;
+}
+
+body {
+    margin: 0;
+    font-family: 'Quicksand', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    transition: all 0.3s ease;
+}
+
+nav {
+    background-color: var(--nav-bg);
+    color: var(--nav-text);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.logo {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+}
+
+.nav-links a, .nav-links span {
+    color: white;
+    text-decoration: none;
+    margin-left: 1.5rem;
+}
+
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    margin-bottom: 1.5rem;
+}
+
+h1, h2 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--primary);
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 0.8rem;
+    margin: 1rem 0;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-family: inherit;
+}
+
+button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Fredoka One', cursive;
+    transition: transform 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05) rotate(-2deg);
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 15px;
+    margin-bottom: 0.8rem;
+    border-left: 5px solid var(--accent);
+    cursor: grab;
+}
+
+.task-item.completed {
+    opacity: 0.6;
+    text-decoration: line-through;
+    border-left-color: var(--secondary);
+}
+
+.priority-high { border-left-color: #ff4757; }
+.priority-medium { border-left-color: #ffa502; }
+.priority-low { border-left-color: #2ed573; }
+
+.task-actions {
+    margin-left: auto;
+}
+
+.task-actions a {
+    text-decoration: none;
+    margin-left: 0.5rem;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.8rem;
+}
+
+/* Animations */
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.logo:hover {
+    animation: bounce 0.5s infinite;
+}

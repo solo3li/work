@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <h1>Check Your Mail! 📩</h1>
+    <p>A 6-digit code is waiting for you. If you don't see it, maybe you should check under the bed?</p>
+    {% if error %}
+        <p style="color: var(--primary);">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="code" placeholder="Enter code here..." maxlength="6" required>
+        <button type="submit">Verify & Un-Procrastinate! 🚀</button>
+    </form>
+</div>
+{% endblock %}
