@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from django.conf import settings
 from .models import User
 from django.contrib import messages
@@ -19,14 +21,14 @@ def register(request):
         user = User.objects.create_user(email=email, password=password, username=username)
         code = user.generate_verification_code()
         
-        # Send Email
-        send_mail(
-            'Verify your LCwiki account',
-            f'Your verification code is: {code}',
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )
+        # Send Professional HTML Email
+        subject = 'Verify your LCWIKI account'
+        html_content = render_to_string('emails/verification_email.html', {'code': code})
+        text_content = strip_tags(html_content)
+        
+        email_msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [email])
+        email_msg.attach_alternative(html_content, "text/html")
+        email_msg.send()
         
         request.session['unverified_user_id'] = user.id
         return redirect('verify_email')
@@ -63,26 +65,28 @@ def user_login(request):
         
         if user:
             if not user.is_email_verified:
-                user.generate_verification_code()
-                send_mail(
-                    'Verify your LCwiki account',
-                    f'Your verification code is: {user.email_verification_code}',
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                    fail_silently=False,
-                )
+                code = user.generate_verification_code()
+                subject = 'Verify your LCWIKI account'
+                html_content = render_to_string('emails/verification_email.html', {'code': code})
+                text_content = strip_tags(html_content)
+                
+                email_msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [email])
+                email_msg.attach_alternative(html_content, "text/html")
+                email_msg.send()
+                
                 request.session['unverified_user_id'] = user.id
                 return redirect('verify_email')
                 
             if user.is_2fa_enabled:
                 code = user.generate_2fa_code()
-                send_mail(
-                    'LCwiki Login 2FA Code',
-                    f'Your 2FA code is: {code}',
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                    fail_silently=False,
-                )
+                subject = 'LCWIKI Login 2FA Code'
+                html_content = render_to_string('emails/2fa_email.html', {'code': code})
+                text_content = strip_tags(html_content)
+                
+                email_msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [email])
+                email_msg.attach_alternative(html_content, "text/html")
+                email_msg.send()
+                
                 request.session['2fa_user_id'] = user.id
                 return redirect('verify_2fa')
             

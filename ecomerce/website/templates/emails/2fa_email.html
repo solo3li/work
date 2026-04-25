@@ -1,0 +1,9 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+    <div class="title">Security Check</div>
+    <p>A sign-in attempt requires a security code. Please use the 6-digit code below to authenticate your access to LCWIKI.</p>
+    <div class="code-box">
+        <div class="code">{{ code }}</div>
+    </div>
+    <p>If this was not you, we recommend changing your password immediately to protect your account.</p>
+{% endblock %}

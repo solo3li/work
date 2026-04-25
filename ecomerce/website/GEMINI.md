@@ -1,11 +1,4 @@
 # LCwiki Luxury E-commerce Store
-SECRET_KEY=django-insecure-luxury-lcwiki-secret-key-2026
-DEBUG=True
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=fps60y@gmail.com
-EMAIL_HOST_PASSWORD=ebdjzhswmwfuwimn
 
 ## Project Overview
 A bespoke, high-end e-commerce platform for the **LCwiki** brand. Featuring a luxury aesthetic, robust security with email-based 2FA, and a full shopping experience.
@@ -36,6 +29,10 @@ A bespoke, high-end e-commerce platform for the **LCwiki** brand. Featuring a lu
         - Order History dashboard for users.
         - Luxury Stepper UI (Placed -> Processing -> Shipped -> Delivered).
         - Detailed shipping and item breakdown.
+- [x] **Professional Email System**:
+    - Custom Luxury-styled HTML templates for all system communications.
+    - Branded Verification & 2FA emails with gold-accented code boxes.
+    - Multi-part email support (HTML with plain-text fallback).
 - [x] **Admin Dashboard**: Fully configured for managing luxury items and orders.
 - [x] **Cinematic Luxury UI**:
     - Modern minimalist design with glassmorphism effects.

@@ -1,0 +1,9 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+    <div class="title">Welcome to the Maison</div>
+    <p>Thank you for choosing LCWIKI. To complete your registration and join our exclusive community, please use the following verification code:</p>
+    <div class="code-box">
+        <div class="code">{{ code }}</div>
+    </div>
+    <p>This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
+{% endblock %}
