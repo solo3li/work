@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Metallic Taxi{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto;">
+    <div class="metallic-card">
+        <h2 style="text-align: center; margin-bottom: 2rem;">LOGIN</h2>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 5px;">{{ field.label }}</label>
+                    <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" class="form-input" required>
+                    {% if field.errors %}
+                        <div style="color: #ff6b6b; font-size: 0.8rem;">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn-metallic" style="width: 100%; padding: 12px; margin-top: 1rem;">Enter Dashboard</button>
+        </form>
+        <div style="text-align: center; margin-top: 1.5rem;">
+            Don't have an account? <a href="{% url 'register' %}" style="color: #cfd8dc;">Register Here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

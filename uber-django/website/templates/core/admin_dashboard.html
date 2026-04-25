@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Control Center - Metallic Taxi{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+    <div class="metallic-card" style="text-align: center; padding: 1.5rem;">
+        <div style="color: #888; font-size: 0.8rem;">TOTAL USERS</div>
+        <div style="font-size: 1.5rem; font-weight: bold;">1,284</div>
+    </div>
+    <div class="metallic-card" style="text-align: center; padding: 1.5rem;">
+        <div style="color: #888; font-size: 0.8rem;">ACTIVE DRIVERS</div>
+        <div style="font-size: 1.5rem; font-weight: bold;">156</div>
+    </div>
+    <div class="metallic-card" style="text-align: center; padding: 1.5rem;">
+        <div style="color: #888; font-size: 0.8rem;">PENDING APPROVALS</div>
+        <div style="font-size: 1.5rem; font-weight: bold; color: #ff6b6b;">12</div>
+    </div>
+    <div class="metallic-card" style="text-align: center; padding: 1.5rem;">
+        <div style="color: #888; font-size: 0.8rem;">TOTAL REVENUE (CASH)</div>
+        <div style="font-size: 1.5rem; font-weight: bold;">$12,450</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+    <div class="metallic-card">
+        <h3 style="margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 15px;">DRIVER APPROVAL QUEUE</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr style="text-align: left; color: #888; font-size: 0.9rem;">
+                    <th style="padding: 10px;">DRIVER NAME</th>
+                    <th>EMAIL</th>
+                    <th>DOCS</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid #333;">
+                    <td style="padding: 15px;">John Doe</td>
+                    <td>john@example.com</td>
+                    <td><a href="#" style="color: #cfd8dc;">View PDF</a></td>
+                    <td>
+                        <button class="btn-metallic" style="padding: 5px 10px; font-size: 0.7rem;">APPROVE</button>
+                        <button class="btn-metallic" style="padding: 5px 10px; font-size: 0.7rem; background: #500;">REJECT</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="metallic-card">
+        <h3 style="margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 15px;">SYSTEM ALERTS</h3>
+        <div style="font-size: 0.9rem;">
+            <div style="padding: 10px; border-left: 3px solid #ff6b6b; background: rgba(255,107,107,0.05); margin-bottom: 10px;">
+                <strong>High Cancellation Rate</strong> - Zone A
+            </div>
+            <div style="padding: 10px; border-left: 3px solid #4ade80; background: rgba(74,222,128,0.05); margin-bottom: 10px;">
+                <strong>System Stable</strong> - 99.9% Uptime
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

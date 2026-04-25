@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Metallic Taxi{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 3rem auto;">
+    <div class="metallic-card">
+        <h2 style="text-align: center; margin-bottom: 2rem;">JOIN THE FLEET</h2>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 5px;">{{ field.label }}</label>
+                    {% if field.name == 'user_type' %}
+                        <select name="{{ field.name }}" class="form-input">
+                            {% for value, label in field.field.choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" class="form-input" required>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div style="color: #ff6b6b; font-size: 0.8rem;">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn-metallic" style="width: 100%; padding: 12px; margin-top: 1rem;">Create Account</button>
+        </form>
+        <div style="text-align: center; margin-top: 1.5rem;">
+            Already have an account? <a href="{% url 'login' %}" style="color: #cfd8dc;">Login Here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,147 @@
+
+```_taxi_website"
+==============================
+TAXI APP LIKE UBER (CASH ONLY)
+AUTH = EMAIL ONLY
+==============================
+
+=========================================
+1) CUSTOMER pannel (Passenger)
+=========================================
+
+[Authentication]
+- Splash Screen
+- Onboarding
+- Register with Email ONLY
+- Email Verification (OTP Code via Email)
+- Login with Email + Password
+- Forgot Password (Email Reset Link)
+- Logout
+
+[Main Flow]
+- Home Map Screen
+- Detect Current Location
+- Search Destination
+- Saved Places (Home / Work)
+- Recent Trips
+
+[Booking Flow]
+- Select Pickup Location
+- Select Destination
+- Choose Ride Type:
+   * Economy
+   * Standard
+   * Premium
+   * XL
+   * Bike (optional)
+
+- Fare Estimate (Cash Only)
+- Confirm Ride
+- Add Notes
+- Schedule Ride (optional)
+
+[Driver Matching]
+- Searching Nearby Driver
+- Cancel Ride
+
+[Driver Assigned]
+- Driver Info
+- Vehicle Info
+- ETA
+- Call / Chat
+
+[Trip Screen]
+- Live Tracking Map
+- Share Trip
+- SOS Button
+- Change Destination (optional)
+
+[Trip Completed]
+- Cash Payment Confirmation
+- Rate Driver
+- Review
+- Tip (Cash)
+
+[Profile]
+- User Info
+- Ride History
+- Saved Addresses
+- Settings
+- Support
+
+=========================================
+2) DRIVER pannel
+=========================================
+
+[Authentication]
+- Email Registration ONLY
+- Email Verification
+- Login (Email + Password)
+- Driver Documents Upload
+- Admin Approval Required
+
+[Dashboard]
+- Online / Offline
+- Earnings
+- Trip Stats
+
+[Ride Requests]
+- Accept / Reject
+- Trip Details
+
+[Navigation]
+- Pickup Navigation
+- Drop-off Navigation
+- Start / End Trip
+
+[Cash Confirmation]
+- Mark Cash Received
+- Trip Completed
+
+=========================================
+3) ADMIN PANEL
+=========================================
+
+- User Management (Email-based users)
+- Driver Approval System
+- Ride Monitoring
+- Cash Tracking
+- Commission System
+- Support Tickets
+- Reports & Analytics
+
+=========================================
+4) CORE CHANGES (IMPORTANT)
+=========================================
+
+- NO phone number login
+- NO OTP SMS
+- ONLY EMAIL AUTH
+- Email verification required before access
+- Password-based security system required
+- Strong anti-spam / anti-fake email rules needed
+
+=========================================
+5) WARNING (ENGINEERING REALITY)
+=========================================
+
+- Email-only will:
+  * reduce conversion rate
+  * slow onboarding
+  * increase fake account risk
+  * make driver ops harder
+
+- You MUST add:
+  * email verification (mandatory)
+  * rate limiting on signup
+  * device fingerprinting
+  * captcha (to prevent bots)
+```
+
+email_host="fps60y@gmail.com"
+email_pass="etxr afdo ugzh npsm"
+
+make email templet send modern + amazing
+
+
+

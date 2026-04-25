@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Email - Metallic Taxi{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 5rem auto;">
+    <div class="metallic-card">
+        <h2 style="text-align: center; margin-bottom: 1rem;">VERIFY EMAIL</h2>
+        <p style="text-align: center; color: #888; margin-bottom: 2rem;">A 6-digit code has been sent to your email.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div style="margin-bottom: 1.5rem;">
+                <input type="text" name="otp" class="form-input" placeholder="000000" maxlength="6" style="text-align: center; font-size: 2rem; letter-spacing: 10px;" required>
+                {% if form.otp.errors %}
+                    <div style="color: #ff6b6b; font-size: 0.8rem; text-align: center;">{{ form.otp.errors }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn-metallic" style="width: 100%; padding: 12px;">Verify Code</button>
+        </form>
+        <div style="text-align: center; margin-top: 2rem; font-size: 0.9rem;">
+            Didn't receive the code? <a href="#" style="color: #cfd8dc;">Resend</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
