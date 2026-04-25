@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login - LCwiki{% endblock %}
+{% block content %}
+<div style="max-width: 400px; margin: 80px auto;">
+    <h1 style="text-align: center; margin-bottom: 40px;">Welcome Back</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label>Email Address</label>
+            <input type="email" name="email" required>
+        </div>
+        <div>
+            <label>Password</label>
+            <input type="password" name="password" required>
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Login</button>
+    </form>
+    <p style="text-align: center; margin-top: 20px; font-size: 0.9rem;">
+        New to LCwiki? <a href="{% url 'register' %}" style="color: var(--gold);">Create account</a>
+    </p>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed - LCwiki{% endblock %}
+{% block content %}
+<div style="padding: 100px 0; text-align: center;">
+    <h1 style="font-size: 3rem; margin-bottom: 20px;">Thank You.</h1>
+    <p style="color: var(--gray); font-size: 1.2rem; margin-bottom: 40px;">Your order #{{ order.id }} has been received and is being prepared.</p>
+    <a href="{% url 'home' %}" class="btn">Return to Store</a>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Track Order #{{ order.id }} - LCwiki{% endblock %}
+{% block content %}
+<div style="padding: 60px 0;">
+    <a href="{% url 'order_list' %}" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 600; color: var(--gray); margin-bottom: 20px; display: inline-block;">&larr; Back to Orders</a>
+    <h1 style="margin-bottom: 40px;">Order Tracking #{{ order.id }}</h1>
+
+    <!-- Stepper UI -->
+    <div style="display: flex; justify-content: space-between; position: relative; margin-bottom: 80px; padding: 0 40px;">
+        <!-- Connector Line -->
+        <div style="position: absolute; top: 15px; left: 80px; right: 80px; height: 2px; background-color: #eee; z-index: 1;">
+            <div style="height: 100%; background-color: var(--gold); transition: 0.5s; width: {% if current_step == 1 %}0%{% elif current_step == 2 %}33.33%{% elif current_step == 3 %}66.66%{% else %}100%{% endif %};"></div>
+        </div>
+
+        <!-- Step 1 -->
+        <div style="text-align: center; z-index: 2; width: 100px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background-color: {% if current_step >= 1 %}var(--gold){% else %}#eee{% endif %}; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 600; font-size: 0.8rem;">1</div>
+            <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: {% if current_step >= 1 %}var(--black){% else %}var(--gray){% endif %};">Placed</span>
+        </div>
+
+        <!-- Step 2 -->
+        <div style="text-align: center; z-index: 2; width: 100px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background-color: {% if current_step >= 2 %}var(--gold){% else %}#eee{% endif %}; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 600; font-size: 0.8rem;">2</div>
+            <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: {% if current_step >= 2 %}var(--black){% else %}var(--gray){% endif %};">Processing</span>
+        </div>
+
+        <!-- Step 3 -->
+        <div style="text-align: center; z-index: 2; width: 100px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background-color: {% if current_step >= 3 %}var(--gold){% else %}#eee{% endif %}; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 600; font-size: 0.8rem;">3</div>
+            <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: {% if current_step >= 3 %}var(--black){% else %}var(--gray){% endif %};">Shipped</span>
+        </div>
+
+        <!-- Step 4 -->
+        <div style="text-align: center; z-index: 2; width: 100px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background-color: {% if current_step >= 4 %}var(--gold){% else %}#eee{% endif %}; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 600; font-size: 0.8rem;">4</div>
+            <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: {% if current_step >= 4 %}var(--black){% else %}var(--gray){% endif %};">Delivered</span>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 60px;">
+        <div style="background-color: var(--cream); padding: 40px;">
+            <h3 style="margin-top: 0; margin-bottom: 20px;">Order Items</h3>
+            {% for item in order.items.all %}
+                <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #ddd;">
+                    <span>{{ item.product.name }} (x{{ item.quantity }})</span>
+                    <span style="font-weight: 600;">${{ item.get_cost }}</span>
+                </div>
+            {% endfor %}
+            <div style="display: flex; justify-content: space-between; padding-top: 20px;">
+                <span style="font-weight: 700; font-size: 1.2rem;">Total Cost</span>
+                <span style="font-weight: 700; font-size: 1.2rem; color: var(--gold);">${{ order.get_total_cost }}</span>
+            </div>
+        </div>
+        <div>
+            <h3 style="margin-top: 0; margin-bottom: 20px;">Shipping Details</h3>
+            <p style="font-size: 0.9rem; color: var(--gray); margin-bottom: 5px;">Recipient</p>
+            <p style="font-weight: 600; margin-top: 0;">{{ order.first_name }} {{ order.last_name }}</p>
+            
+            <p style="font-size: 0.9rem; color: var(--gray); margin-bottom: 5px; margin-top: 20px;">Address</p>
+            <p style="font-weight: 600; margin-top: 0;">{{ order.address }}<br>{{ order.city }}, {{ order.postal_code }}</p>
+            
+            <p style="font-size: 0.9rem; color: var(--gray); margin-bottom: 5px; margin-top: 20px;">Contact</p>
+            <p style="font-weight: 600; margin-top: 0;">{{ order.email }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

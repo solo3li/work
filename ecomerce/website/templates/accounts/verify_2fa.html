@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Security Check - LCwiki{% endblock %}
+{% block content %}
+<div style="max-width: 400px; margin: 80px auto; text-align: center;">
+    <h1>Security Check</h1>
+    <p style="color: var(--gray); margin-bottom: 30px;">Two-factor authentication is enabled. Enter the code sent to your email to continue.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label>2FA Code</label>
+            <input type="text" name="code" required maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px;">
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Authenticate</button>
+    </form>
+</div>
+{% endblock %}

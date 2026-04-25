@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} - LCwiki Luxury{% endblock %}
+{% block content %}
+<div class="container" style="padding: 100px 0;">
+    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 100px; align-items: center;">
+        <div class="animate__animated animate__fadeInLeft">
+            <div style="background-color: var(--gray-light); aspect-ratio: 4/5; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.05);">
+                {% if product.image_url %}
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 2s ease;">
+                {% elif product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 2s ease;">
+                {% else %}
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display'; color: #ccc; font-size: 2rem; letter-spacing: 5px;">LCWIKI</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="animate__animated animate__fadeInRight">
+            <p style="text-transform: uppercase; letter-spacing: 3px; font-size: 0.75rem; color: var(--gold); margin-bottom: 15px; font-weight: 600;">{{ product.category.name }}</p>
+            <h1 style="font-size: 3.5rem; line-height: 1.1; margin-bottom: 25px;">{{ product.name }}</h1>
+            <p style="font-size: 1.5rem; color: var(--black); margin-bottom: 40px; font-weight: 300;">${{ product.price }}</p>
+            
+            <div style="border-top: 1px solid #eee; padding: 40px 0; margin-bottom: 40px;">
+                <p style="font-size: 0.95rem; color: #555; line-height: 1.8; letter-spacing: 0.01em;">
+                    {{ product.description }}
+                </p>
+            </div>
+            
+            <a href="{% url 'cart_add' product.id %}" class="btn" style="width: 100%; text-align: center; padding: 22px 0;">Add to Bag</a>
+            
+            <div style="margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="padding: 20px; border: 1px solid #eee; text-align: center;">
+                    <p style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gray);">Shipping</p>
+                    <p style="font-size: 0.8rem; font-weight: 600;">Complimentary</p>
+                </div>
+                <div style="padding: 20px; border: 1px solid #eee; text-align: center;">
+                    <p style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gray);">Returns</p>
+                    <p style="font-size: 0.8rem; font-weight: 600;">30-Day Policy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommended Section -->
+<div class="container reveal" style="padding-bottom: 150px;">
+    <h2 style="font-size: 2rem; text-align: center; margin-bottom: 60px;">You May Also Appreciate</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;">
+        <!-- Placeholder for similar items -->
+        <div style="text-align: center;">
+            <div style="background: var(--gray-light); aspect-ratio: 1; margin-bottom: 20px;"></div>
+            <p style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Atelier Collection</p>
+        </div>
+        <div style="text-align: center;">
+            <div style="background: var(--gray-light); aspect-ratio: 1; margin-bottom: 20px;"></div>
+            <p style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Seasonal Essentials</p>
+        </div>
+        <div style="text-align: center;">
+            <div style="background: var(--gray-light); aspect-ratio: 1; margin-bottom: 20px;"></div>
+            <p style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Limited Edition</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

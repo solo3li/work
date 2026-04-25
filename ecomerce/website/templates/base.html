@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LCwiki Luxury Store{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        :root {
+            --gold: #C5A021;
+            --gold-light: #D4AF37;
+            --black: #0F0F0F;
+            --white: #FFFFFF;
+            --cream: #FAF9F6;
+            --gray-light: #F4F4F4;
+            --gray: #888888;
+            --transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        * { margin: 0; padding: 0; box-box: border-box; }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--white);
+            color: var(--black);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        h1, h2, h3, h4, .luxury-font {
+            font-family: 'Playfair Display', serif;
+            letter-spacing: -0.02em;
+        }
+        
+        a { text-decoration: none; color: inherit; transition: var(--transition); }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
+        
+        /* Modern Header */
+        header {
+            padding: 25px 0;
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: var(--transition);
+        }
+        
+        header.scrolled { padding: 15px 0; }
+        
+        nav { display: flex; justify-content: space-between; align-items: center; }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            background: linear-gradient(45deg, var(--black), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-links { display: flex; gap: 40px; align-items: center; }
+        .nav-links a {
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background-color: var(--gold);
+            transition: var(--transition);
+        }
+        
+        .nav-links a:hover::after { width: 100%; }
+
+        /* Modern Buttons */
+        .btn {
+            display: inline-block;
+            padding: 16px 45px;
+            background-color: var(--black);
+            color: var(--white);
+            border: 1px solid var(--black);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--gold);
+            transition: var(--transition);
+            z-index: -1;
+        }
+        
+        .btn:hover { color: var(--white); border-color: var(--gold); }
+        .btn:hover::before { left: 0; }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--black);
+        }
+
+        /* Hero Animation Utility */
+        .reveal { opacity: 0; transform: translateY(30px); transition: var(--transition); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Custom Animations */
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Messages */
+        .messages { position: fixed; top: 100px; right: 40px; z-index: 2000; width: 300px; }
+        .message {
+            padding: 20px;
+            margin-bottom: 15px;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--gold);
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        footer {
+            background-color: var(--black);
+            color: var(--white);
+            padding: 100px 0 50px;
+            margin-top: 150px;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 80px;
+            margin-bottom: 80px;
+        }
+        
+        .footer-logo { font-size: 1.5rem; letter-spacing: 3px; margin-bottom: 20px; color: var(--gold); }
+        .footer-col h4 { text-transform: uppercase; font-size: 0.9rem; margin-bottom: 30px; letter-spacing: 2px; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 15px; font-size: 0.85rem; color: #aaa; }
+        
+        .copyright {
+            border-top: 1px solid #333;
+            padding-top: 40px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #666;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <header id="main-header">
+        <div class="container">
+            <nav>
+                <a href="{% url 'home' %}" class="logo animate__animated animate__fadeIn">LCwiki</a>
+                <div class="nav-links">
+                    <a href="{% url 'home' %}">Collection</a>
+                    <a href="{% url 'cart_detail' %}">Bag</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'order_list' %}">Orders</a>
+                        <a href="{% url 'logout' %}" style="color: var(--gold);">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}">Sign In</a>
+                        <a href="{% url 'register' %}" class="btn btn-outline" style="padding: 10px 25px;">Join</a>
+                    {% endif %}
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="reveal">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">LCWIKI</div>
+                    <p style="color: #666; max-width: 400px;">Crafting the extraordinary for those who demand nothing less than perfection. Since 2026.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Customer Care</h4>
+                    <ul>
+                        <li>Private Appointments</li>
+                        <li>Shipping & Returns</li>
+                        <li>Sizing Guide</li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li>Atelier Paris</li>
+                        <li>London Mayfair</li>
+                        <li>New York Fifth Ave</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2026 LCWIKI LUXURY. ALL RIGHTS RESERVED.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll Reveal Animation
+        function reveal() {
+            var reveals = document.querySelectorAll(".reveal");
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                var elementVisible = 150;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", reveal);
+        
+        // Header Scroll Effect
+        window.addEventListener("scroll", function() {
+            var header = document.querySelector("header");
+            if (window.scrollY > 50) {
+                header.classList.add("scrolled");
+            } else {
+                header.classList.remove("scrolled");
+            }
+        });
+        
+        // Trigger once on load
+        reveal();
+    </script>
+</body>
+</html>

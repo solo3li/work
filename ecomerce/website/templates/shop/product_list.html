@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Shop Luxury Collection - LCwiki{% endblock %}
+{% block content %}
+<style>
+    .hero-section {
+        height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        margin-bottom: 80px;
+    }
+    
+    .hero-content h1 { font-size: 5rem; margin-bottom: 20px; }
+    .hero-content p { font-size: 1.2rem; letter-spacing: 4px; text-transform: uppercase; }
+
+    .category-nav {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-bottom: 80px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 20px;
+    }
+    
+    .category-nav a {
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--gray);
+    }
+    
+    .category-nav a.active { color: var(--black); }
+    .category-nav a.active::after {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 2px;
+        background: var(--gold);
+        margin-top: 20px;
+    }
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 60px 40px;
+    }
+
+    .product-card {
+        transition: var(--transition);
+        position: relative;
+    }
+    
+    .product-image-wrapper {
+        position: relative;
+        overflow: hidden;
+        background-color: var(--gray-light);
+        aspect-ratio: 3/4;
+        margin-bottom: 25px;
+    }
+    
+    .product-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .product-card:hover .product-image-wrapper img {
+        transform: scale(1.08);
+    }
+    
+    .product-info { text-align: center; }
+    .product-info h3 { font-size: 1.2rem; margin-bottom: 8px; font-weight: 400; }
+    .product-info .price { color: var(--gold); font-weight: 600; letter-spacing: 1px; }
+    
+    .quick-add {
+        position: absolute;
+        bottom: -50px;
+        left: 0;
+        width: 100%;
+        background: var(--black);
+        color: white;
+        text-align: center;
+        padding: 15px 0;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 2px;
+        transition: var(--transition);
+        opacity: 0;
+    }
+    
+    .product-card:hover .quick-add { bottom: 0; opacity: 1; }
+</style>
+
+{% if not category %}
+<div class="hero-section animate__animated animate__fadeIn">
+    <div class="hero-content">
+        <p class="animate__animated animate__fadeInUp animate__delay-1s">Exclusively Crafted</p>
+        <h1 class="animate__animated animate__fadeInUp">Defining Elegance</h1>
+        <a href="#collection" class="btn animate__animated animate__fadeInUp animate__delay-2s">Explore Collection</a>
+    </div>
+</div>
+{% endif %}
+
+<div class="container" id="collection" style="padding: 100px 0;">
+    <div class="category-nav reveal">
+        <a href="{% url 'home' %}" class="{% if not category %}active{% endif %}">All Collections</a>
+        {% for cat in categories %}
+            <a href="{% url 'product_list_by_category' cat.slug %}" class="{% if category.slug == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="product-grid">
+        {% for product in products %}
+            <div class="product-card reveal">
+                <a href="{% url 'product_detail' product.slug %}">
+                    <div class="product-image-wrapper">
+                        {% if product.image_url %}
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                        {% elif product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #eee;">
+                                <span style="font-family: 'Playfair Display'; color: #ccc; font-style: italic;">LCWIKI</span>
+                            </div>
+                        {% endif %}
+                        <div class="quick-add">View Details</div>
+                    </div>
+                    <div class="product-info">
+                        <h3>{{ product.name }}</h3>
+                        <p class="price">${{ product.price }}</p>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

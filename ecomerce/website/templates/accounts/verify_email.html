@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Verify Email - LCwiki{% endblock %}
+{% block content %}
+<div style="max-width: 400px; margin: 80px auto; text-align: center;">
+    <h1>Verify Your Email</h1>
+    <p style="color: var(--gray); margin-bottom: 30px;">We've sent a 6-digit code to your email. Please enter it below.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label>Verification Code</label>
+            <input type="text" name="code" required maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px;">
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Verify Email</button>
+    </form>
+</div>
+{% endblock %}
