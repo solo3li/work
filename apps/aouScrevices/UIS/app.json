@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "whats",
-    "slug": "whats",
+    "name": "UIS",
+    "slug": "UIS",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "whats",
+    "scheme": "uis",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -13,14 +13,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#6366F1",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "monochromeImage": "./assets/images/android-icon-foreground.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.solo3lihamed.whats"
+      "package": "com.solo3lihamed.UIS2"
     },
     "web": {
       "output": "static",
@@ -32,11 +32,11 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 250,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#6366F1",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#1E293B"
           }
         }
       ]
@@ -48,7 +48,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "ec9dcaca-f609-4bb4-86de-1f9e07656432"
+        "projectId": "7fdb6b0c-20d1-40a0-b54f-c9161f877390"
       }
     }
   }

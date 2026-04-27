@@ -1,17 +1,19 @@
 {
   "expo": {
-    "name": "whats",
-    "slug": "whats",
+    "name": "7rbit",
+    "slug": "7rbit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "whats",
+    "scheme": "yalabet",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.solo.r7bit"
     },
     "android": {
+      "package": "com.solo.r7bit",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -19,8 +21,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.solo3lihamed.whats"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
@@ -48,7 +49,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "ec9dcaca-f609-4bb4-86de-1f9e07656432"
+        "projectId": "15ae7a8e-ae52-4e85-9686-aa4e6b5de1b3"
       }
     }
   }

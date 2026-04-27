@@ -1,0 +1,328 @@
+
+### 1. التسجيل والحساب
+
+* إنشاء حساب بالإيميل / الهاتف
+* تسجيل سريع
+* استعادة كلمة المرور
+* توثيق ثنائي 2FA
+* إدارة الملف الشخصي
+* تغيير العملة / اللغة
+
+### 2. المحفظة المالية
+
+* إيداع أموال
+* سحب أرباح
+* سجل المعاملات
+* دعم عملات متعددة
+* تحويل بين العملات
+* تنبيهات السحب والإيداع
+
+### 3. الرهان الرياضي
+
+* مباريات اليوم
+* رهان قبل المباراة
+* Live Betting أثناء المباراة
+* Odds متغيرة لحظيًا
+* Bet Slip (قسيمة رهان)
+* Single / Combo / System Bets
+* Cash Out قبل نهاية الحدث
+* Bet History
+
+### 4. الكازينو
+
+* Slots
+* Roulette
+* Blackjack
+* Baccarat
+* Live Casino
+* Crash Games
+* Dice Games
+
+### 5. البث المباشر
+
+* مشاهدة المباراة داخل التطبيق
+* إحصائيات مباشرة
+* Timeline للأحداث
+
+---
+
+## ثانيًا: خصائص متقدمة قوية
+
+### 6. الذكاء التحليلي
+
+* اقتراح رهانات حسب السلوك
+* مباريات مناسبة للمستخدم
+* توقعات AI
+* توصيات Personalized
+
+### 7. Gamification
+
+* Levels
+* XP
+* Daily Rewards
+* Missions
+* Leaderboards
+
+### 8. برامج الولاء
+
+* VIP tiers
+* Cashback
+* Bonuses
+* Free Bets
+* Referral Program
+
+### 9. Social Betting
+
+* متابعة لاعبين آخرين
+* نسخ رهانات Copy Bet
+* شات عام
+* مشاركة كوبونات
+
+---
+
+## ثالثًا: خصائص الأمان (الأهم)
+
+### 10. الحماية
+
+* كشف الاحتيال Fraud Detection
+* منع تعدد الحسابات
+* Device Fingerprinting
+* Geo Blocking
+* KYC / AML
+* Suspicious Activity Alerts
+
+### 11. اللعب المسؤول
+
+* Limits للإيداع
+* Limits للخسارة
+* Timeouts
+* Self Exclusion
+* تحذير الإدمان
+
+---
+====================================
+pages 
+============================
+
+
+---
+
+# 1. صفحات الدخول والحساب
+
+```text
+- Splash Screen
+- اختيار اللغة
+- اختيار الدولة
+- Login
+- Register
+- Verify Email
+- Verify Phone
+- Forgot Password
+- Reset Password
+- 2FA Verification
+- قبول الشروط والأحكام
+```
+
+---
+
+# 2. الصفحة الرئيسية
+
+```text
+- Home Dashboard
+- Featured Matches
+- Popular Bets
+- Live Matches
+- Promotions Banner
+- Recommended Games
+- Recently Played
+- News / Updates
+```
+
+---
+
+# 3. قسم الرياضة
+
+```text
+- Sports Categories
+- Football
+- Basketball
+- Tennis
+- Esports
+- جميع الرياضات
+- Upcoming Matches
+- Match Details
+- Odds Markets
+- Team Stats
+- Head to Head
+```
+
+---
+
+# 4. الرهان المباشر Live Betting
+
+```text
+- Live Events List
+- Live Match Details
+- Live Stats
+- Live Timeline
+- Live Odds Updates
+- Quick Bet
+```
+
+---
+
+# 5. صفحة قسيمة الرهان
+
+```text
+- Bet Slip
+- Single Bet
+- Multi Bet
+- System Bet
+- Stake Input
+- Potential Win
+- Confirm Bet
+- Bet Success
+```
+
+---
+
+# 6. رهاناتي
+
+```text
+- Open Bets
+- Settled Bets
+- Won Bets
+- Lost Bets
+- Cancelled Bets
+- Bet Details
+- Cashout Page
+```
+
+---
+
+# 7. الكازينو
+
+```text
+- Casino Home
+- Slots
+- Live Casino
+- Roulette
+- Blackjack
+- Baccarat
+- Dice
+- Crash Games
+- Game Details
+- Favorites
+- Recently Played
+```
+
+---
+
+# 8. المحفظة المالية
+
+```text
+- Wallet Dashboard
+- Balance
+- Deposit
+- Withdraw
+- Select Payment Method
+- Crypto Deposit
+- Fiat Deposit
+- Withdrawal History
+- Transaction History
+- Bonus Wallet
+```
+
+---
+
+# 9. العروض والمكافآت
+
+```text
+- Promotions
+- Welcome Bonus
+- Cashback
+- Free Bets
+- VIP Program
+- Loyalty Points
+- Missions
+- Referral Program
+```
+
+---
+
+# 10. الملف الشخصي
+
+```text
+- Profile Overview
+- Edit Profile
+- Change Password
+- Security Settings
+- 2FA Settings
+- Notifications Settings
+- Language / Currency
+- Linked Accounts
+```
+
+---
+
+# 11. التحقق القانوني KYC
+
+```text
+- Verify Identity
+- Upload ID
+- Upload Address Proof
+- Face Verification
+- KYC Status
+```
+
+---
+
+# 12. الدعم وخدمة العملاء
+
+```text
+- Help Center
+- FAQ
+- Live Chat Support
+- Submit Ticket
+- My Tickets
+```
+
+---
+
+# 13. الإشعارات
+
+```text
+- Notifications Center
+- Bet Result Alerts
+- Promotions Alerts
+- Deposit Alerts
+- Security Alerts
+```
+
+---
+
+# 14. اللعب المسؤول
+
+```text
+- Deposit Limits
+- Session Limits
+- Self Exclusion
+- Cooling Off
+- Gambling Risk Warning
+```
+
+---
+
+# 15. صفحات إضافية قوية
+
+```text
+- Search
+- Favorites Teams
+- Favorites Games
+- Leaderboard
+- Achievements
+- Invite Friends
+- News Blog
+```
+
+---
