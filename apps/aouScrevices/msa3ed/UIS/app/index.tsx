@@ -8,21 +8,19 @@ import { useAuth } from '../context/AuthContext';
 
 export default function SplashScreen() {
   const router = useRouter();
-  const { role } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (role === 'student') {
+      if (user) {
         router.replace('/student/(tabs)');
-      } else if (role === 'executor') {
-        router.replace('/executor/(tabs)');
       } else {
         router.replace('/onboarding');
       }
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [role, router]);
+  }, [user, router]);
 
   return (
     <LinearGradient

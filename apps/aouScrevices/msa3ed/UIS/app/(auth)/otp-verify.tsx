@@ -4,14 +4,17 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function OtpVerifyScreen() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleVerify = () => {
-    router.replace('/(tabs)');
+    login({ id: '2', name: 'مستخدم جديد', email: 'new@uis.com', isExecutor: false });
+    router.replace('/student/(tabs)');
   };
 
   return (

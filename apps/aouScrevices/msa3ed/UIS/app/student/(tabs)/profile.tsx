@@ -3,21 +3,28 @@ import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    router.replace('/(auth)/login');
+  };
 
   const menuItems = [
     { icon: 'wallet', title: 'المحفظة', value: '450 ج.م', route: '' },
     { icon: 'heart', title: 'المفضلة', route: '' },
     { icon: 'settings', title: 'الإعدادات', route: '/shared/settings' },
     { icon: 'help-buoy', title: 'الدعم والنزاعات', route: '/shared/support/tickets' },
-    { icon: 'briefcase', title: 'العمل كمنفذ (KYC)', route: '/executor/kyc-submit', color: Colors.warning },
-    { icon: 'list', title: 'الطلبات المتاحة', route: '/executor/available-orders', color: Colors.success },
-    { icon: 'cash', title: 'أرباحي', route: '/executor/earnings', color: Colors.success },
-    { icon: 'log-out', title: 'تسجيل الخروج', route: '/(auth)/login', color: Colors.error },
+    ...(user?.isExecutor 
+      ? [{ icon: 'briefcase', title: 'لوحة تحكم المنفذ', route: '/executor/(tabs)', color: Colors.success }]
+      : [{ icon: 'briefcase', title: 'العمل كمنفذ (KYC)', route: '/executor/kyc-submit', color: Colors.warning }]),
+    { icon: 'log-out', title: 'تسجيل الخروج', action: handleLogout, color: Colors.error },
   ];
 
   return (
@@ -42,7 +49,7 @@ export default function ProfileScreen() {
               <Ionicons name="camera" size={16} color={Colors.white} />
             </Pressable>
           </View>
-          <Text style={styles.name}>أحمد محمد</Text>
+          <Text style={styles.name}>{user?.name || 'أحمد محمد'}</Text>
           <Text style={styles.university}>جامعة القاهرة - كلية الهندسة</Text>
         </View>
       </LinearGradient>
@@ -68,7 +75,13 @@ export default function ProfileScreen() {
                 styles.menuItem, 
                 index === menuItems.length - 1 && styles.menuItemLast
               ]}
-              onPress={() => item.route && router.push(item.route as any)}
+              onPress={() => {
+                if (item.action) {
+                  item.action();
+                } else if (item.route) {
+                  router.push(item.route as any);
+                }
+              }}
             >
               <View style={styles.menuItemLeft}>
                 <View style={[styles.menuIcon, { backgroundColor: (item.color || Colors.primary) + '15' }]}>

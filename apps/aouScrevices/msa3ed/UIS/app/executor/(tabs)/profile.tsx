@@ -3,33 +3,37 @@ import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    router.replace('/(auth)/login');
+  };
 
   const menuItems = [
-    { icon: 'wallet', title: 'المحفظة', value: '450 ج.م', route: '' },
-    { icon: 'heart', title: 'المفضلة', route: '' },
+    { icon: 'wallet', title: 'المحفظة', value: '1,250 ج.م', route: '' },
+    { icon: 'person', title: 'العودة لواجهة الطالب', route: '/student/(tabs)', color: Colors.primary },
     { icon: 'settings', title: 'الإعدادات', route: '/shared/settings' },
     { icon: 'help-buoy', title: 'الدعم والنزاعات', route: '/shared/support/tickets' },
-    { icon: 'briefcase', title: 'العمل كمنفذ (KYC)', route: '/executor/kyc-submit', color: Colors.warning },
-    { icon: 'list', title: 'الطلبات المتاحة', route: '/executor/available-orders', color: Colors.success },
-    { icon: 'cash', title: 'أرباحي', route: '/executor/earnings', color: Colors.success },
-    { icon: 'log-out', title: 'تسجيل الخروج', route: '/(auth)/login', color: Colors.error },
+    { icon: 'log-out', title: 'تسجيل الخروج', action: handleLogout, color: Colors.error },
   ];
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <LinearGradient
-        colors={[Colors.primary, Colors.secondary]}
+        colors={[Colors.success, '#059669']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerBackground}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>حسابي</Text>
+          <Text style={styles.headerTitle}>حساب المنفذ</Text>
         </View>
 
         <View style={styles.profileSection}>
@@ -38,25 +42,25 @@ export default function ProfileScreen() {
               source={{ uri: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' }} 
               style={styles.avatar} 
             />
-            <Pressable style={styles.editAvatarBtn}>
-              <Ionicons name="camera" size={16} color={Colors.white} />
-            </Pressable>
+            <View style={styles.verifiedBadge}>
+              <Ionicons name="checkmark-circle" size={24} color={Colors.white} />
+            </View>
           </View>
-          <Text style={styles.name}>أحمد محمد</Text>
-          <Text style={styles.university}>جامعة القاهرة - كلية الهندسة</Text>
+          <Text style={styles.name}>{user?.name || 'أحمد محمد'}</Text>
+          <Text style={styles.university}>منفذ خدمات موثوق</Text>
         </View>
       </LinearGradient>
 
       <View style={styles.content}>
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>12</Text>
-            <Text style={styles.statLabel}>طلب مكتمل</Text>
+            <Text style={styles.statValue}>45</Text>
+            <Text style={styles.statLabel}>طلب منفذ</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>4.8</Text>
-            <Text style={styles.statLabel}>التقييم العام</Text>
+            <Text style={styles.statValue}>4.9</Text>
+            <Text style={styles.statLabel}>تقييم العملاء</Text>
           </View>
         </View>
 
@@ -68,11 +72,17 @@ export default function ProfileScreen() {
                 styles.menuItem, 
                 index === menuItems.length - 1 && styles.menuItemLast
               ]}
-              onPress={() => item.route && router.push(item.route as any)}
+              onPress={() => {
+                if (item.action) {
+                  item.action();
+                } else if (item.route) {
+                  router.push(item.route as any);
+                }
+              }}
             >
               <View style={styles.menuItemLeft}>
-                <View style={[styles.menuIcon, { backgroundColor: (item.color || Colors.primary) + '15' }]}>
-                  <Ionicons name={item.icon as any} size={22} color={item.color || Colors.primary} />
+                <View style={[styles.menuIcon, { backgroundColor: (item.color || Colors.success) + '15' }]}>
+                  <Ionicons name={item.icon as any} size={22} color={item.color || Colors.success} />
                 </View>
                 <Text style={[styles.menuItemTitle, item.color && { color: item.color }]}>{item.title}</Text>
               </View>

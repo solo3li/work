@@ -88,16 +88,18 @@ All screens for both Student and Executor roles have been implemented according 
 *(Note: Roles for `Student` and `Executor` are also pre-seeded).*
 
 **Current State:**
-- The ASP.NET Core Web API + MVC project is initialized.
+- The ASP.NET Core Web API + MVC project is fully implemented.
 - `docker-compose.yml` is set up with PostgreSQL and pgAdmin.
 - `Dockerfile` is ready for deployment.
-- Initial Entity Framework Core models (`User`, `Role`, `Order`, `Service`, `Chat`, etc.) are mapped in `Data/ApplicationDbContext.cs`.
-- JWT Authentication and SignalR (`ChatHub`) are configured in `Program.cs`.
+- Entity Framework Core models (`User`, `Role`, `Permission`, `Order`, `Service`, `Chat`, `Ticket`, `KycRequest`, etc.) are mapped and seeded with comprehensive dummy data.
+- JWT Authentication, Email-based OTP, and SignalR (`ChatHub`) are configured.
+- The Admin Panel (MVC) is fully functional with dashboards, user management, order tracking, KYC approvals, and role/permission management.
+- The Web API endpoints are complete for the mobile application.
 
 ## 📐 Development Conventions
 - **Routing:** Use file-based routing in `UIS/app/`. Group authenticated routes in `(auth)` and tab-based navigation in `(tabs)`.
+- **Roles & Permissions:** Users are registered as Students by default. If they want to switch to an Executor, they must verify their KYC first. The `isExecutor` boolean flag (defaulting to `false`) in the User model and `AuthContext` dictates access to Executor features. Once KYC is approved, they gain access to Executor tabs alongside Student features.
 - **Styling:** Centralize colors in `UIS/constants/Colors.ts`.
-- **Roles:** Implement Role-Based Access Control (RBAC) within a single app instance as per the PRD.
 - **Language:** The UI is primarily in Arabic, catering to the target audience.
 
 ## 📋 Key Features (from PRD)

@@ -1,28 +1,38 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type Role = 'student' | 'executor' | null;
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  isExecutor: boolean;
+}
 
 interface AuthContextType {
-  role: Role;
-  login: (role: Role) => void;
+  user: User | null;
+  login: (user: User) => void;
   logout: () => void;
+  updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>(null);
+  const [user, setUser] = useState<User | null>(null);
 
-  const login = (newRole: Role) => {
-    setRole(newRole);
+  const login = (newUser: User) => {
+    setUser(newUser);
   };
 
   const logout = () => {
-    setRole(null);
+    setUser(null);
+  };
+
+  const updateUser = (data: Partial<User>) => {
+    setUser(prev => (prev ? { ...prev, ...data } : null));
   };
 
   return (
-    <AuthContext.Provider value={{ role, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

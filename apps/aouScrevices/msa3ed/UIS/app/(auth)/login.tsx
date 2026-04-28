@@ -12,14 +12,9 @@ export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const handleLoginAsStudent = () => {
-    login('student');
+  const handleLogin = () => {
+    login({ id: '1', name: 'أحمد محمد', email: 'student@uis.com', isExecutor: false });
     router.replace('/student/(tabs)');
-  };
-
-  const handleLoginAsExecutor = () => {
-    login('executor');
-    router.replace('/executor/(tabs)');
   };
 
   return (
@@ -68,29 +63,16 @@ export default function LoginScreen() {
             <Text style={styles.forgotPassword}>نسيت كلمة المرور؟</Text>
           </Pressable>
 
-          <View style={styles.rowButtons}>
-            <Pressable style={{ flex: 1 }} onPress={handleLoginAsStudent}>
-              <LinearGradient
-                colors={[Colors.primary, Colors.secondary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.button}
-              >
-                <Text style={styles.buttonText}>دخول كطالب</Text>
-              </LinearGradient>
-            </Pressable>
-
-            <Pressable style={{ flex: 1 }} onPress={handleLoginAsExecutor}>
-              <LinearGradient
-                colors={[Colors.success, '#059669']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.button}
-              >
-                <Text style={styles.buttonText}>دخول كمنفذ</Text>
-              </LinearGradient>
-            </Pressable>
-          </View>
+          <Pressable onPress={handleLogin} style={{ marginTop: 8 }}>
+            <LinearGradient
+              colors={[Colors.primary, Colors.secondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>تسجيل الدخول</Text>
+            </LinearGradient>
+          </Pressable>
 
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
