@@ -6,8 +6,8 @@ This document provides essential context and instructions for the UIS project, a
 UIS is a multi-role platform (Student and Executor) designed for university services. It includes a mobile application for users and a backend API for management and data persistence.
 
 - **Frontend:** A cross-platform mobile application built with **Expo (React Native)**.
-- **Backend:** (Planned) An **ASP.NET Core Web API** using **PostgreSQL** and **SignalR**.
-- **Admin Panel:** (Planned) Integrated into the ASP.NET Core project for platform management.
+- **Backend:** A functional **ASP.NET Core 10.0 Web API** using **PostgreSQL** and **SignalR**.
+- **Admin Panel:** An MVC application integrated into the ASP.NET Core project for platform management.
 
 ## 📂 Directory Structure
 - `/UIS`: The Expo mobile application source code.
@@ -17,7 +17,13 @@ UIS is a multi-role platform (Student and Executor) designed for university serv
     - `/executor`: Executor-specific layouts and screens.
     - `/shared`: Shared screens (Chat, Orders details, Support tickets, Settings).
   - `/UIS/context`: React Context for state management (AuthContext).
-- `/server`: The ASP.NET Core backend source code (currently empty).
+- `/server`: The ASP.NET Core backend source code.
+  - `/server/Controllers`: API Controllers (Users, Services, Orders, etc.) and MVC `AdminController`.
+  - `/server/Services`: Business logic and data access (EF Core).
+  - `/server/Models`: Entity Framework Data Models.
+  - `/server/DTOs`: Data Transfer Objects for API requests/responses.
+  - `/server/Views`: Razor Views for the Admin Dashboard.
+  - `/server/Hubs`: SignalR real-time hubs (`ChatHub`).
 - `prd.txt`: Detailed Product Requirements Document (in Arabic).
 
 ## 🛠️ Tech Stack
@@ -29,12 +35,12 @@ UIS is a multi-role platform (Student and Executor) designed for university serv
 - **Animations:** `react-native-reanimated`.
 - **Icons:** `@expo/vector-icons` (Ionicons).
 
-### Backend (Planned per `prd.txt`)
-- **Framework:** ASP.NET Core Web API
-- **Database:** PostgreSQL with Entity Framework Core
-- **Real-time:** SignalR (for Chat and Notifications)
-- **Payments:** Paymob Integration
-- **Auth:** JWT with OTP verification (Email-based)
+### Backend
+- **Framework:** ASP.NET Core 10.0 (Web API + MVC)
+- **Database:** PostgreSQL with Entity Framework Core 10
+- **Real-time:** SignalR (for Chat)
+- **Auth:** JWT with Email-based OTP logic
+- **Containerization:** Docker & Docker Compose
 
 ## 🏃 Getting Started
 
@@ -56,7 +62,37 @@ UIS is a multi-role platform (Student and Executor) designed for university serv
 All screens for both Student and Executor roles have been implemented according to the PRD using static dummy data. Navigation between screens is fully functional for the MVP showcase.
 
 ### Backend (server)
-- **TODO:** Initialize the ASP.NET Core project. The `prd.txt` outlines the required controllers and services.
+1. Navigate to the `server` directory:
+   ```bash
+   cd server
+   ```
+2. Start the PostgreSQL database via Docker:
+   ```bash
+   docker-compose up -d
+   ```
+3. Run Entity Framework Core migrations (ensure `dotnet-ef` tool is installed):
+   ```bash
+   dotnet ef migrations add InitialCreate
+   dotnet ef database update
+   ```
+4. Start the ASP.NET Core API and Admin Panel:
+   ```bash
+   dotnet run
+   ```
+   *The server will start (default is typically `http://localhost:5035` or `http://localhost:5000`).*
+
+**🔑 Default Credentials & URLs:**
+- **Admin Panel URL:** `http://localhost:5035/Admin`
+- **Admin Account:** `admin@uis.com`
+- **Admin Password:** `admin123`
+*(Note: Roles for `Student` and `Executor` are also pre-seeded).*
+
+**Current State:**
+- The ASP.NET Core Web API + MVC project is initialized.
+- `docker-compose.yml` is set up with PostgreSQL and pgAdmin.
+- `Dockerfile` is ready for deployment.
+- Initial Entity Framework Core models (`User`, `Role`, `Order`, `Service`, `Chat`, etc.) are mapped in `Data/ApplicationDbContext.cs`.
+- JWT Authentication and SignalR (`ChatHub`) are configured in `Program.cs`.
 
 ## 📐 Development Conventions
 - **Routing:** Use file-based routing in `UIS/app/`. Group authenticated routes in `(auth)` and tab-based navigation in `(tabs)`.

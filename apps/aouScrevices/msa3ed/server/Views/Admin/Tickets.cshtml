@@ -1,0 +1,73 @@
+@model IEnumerable<Uis.Server.Models.Ticket>
+
+@{
+    ViewData["Title"] = "تذاكر الدعم الفني والنزاعات";
+}
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100">
+        <div class="flex space-x-4 rtl:space-x-reverse">
+            <button class="px-4 py-2 border-b-2 border-indigo-600 text-indigo-600 font-semibold">مفتوحة</button>
+            <button class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium">مغلقة</button>
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold text-sm">
+                    <th class="p-4">رقم التذكرة</th>
+                    <th class="p-4">الموضوع</th>
+                    <th class="p-4">بواسطة</th>
+                    <th class="p-4">رقم الطلب المرتبط</th>
+                    <th class="p-4">الحالة</th>
+                    <th class="p-4">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @if(!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-gray-500">لا توجد تذاكر دعم فني مفتوحة حالياً. رائع! 🎉</td>
+                    </tr>
+                }
+                @foreach (var ticket in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4 font-mono text-xs text-gray-500">
+                            @ticket.Id.ToString().Substring(0, 8)...
+                        </td>
+                        <td class="p-4 font-medium text-gray-800">@ticket.Subject</td>
+                        <td class="p-4 text-gray-600">
+                            <span class="inline-flex items-center">
+                                <i class="fas fa-user-circle text-gray-400 ml-1"></i>
+                                @(ticket.User?.FullName ?? "مستخدم محذوف")
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            @if(ticket.OrderId.HasValue)
+                            {
+                                <a href="#" class="text-indigo-600 hover:underline font-mono text-xs">@ticket.OrderId.Value.ToString().Substring(0,8)...</a>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400">-</span>
+                            }
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded-md text-xs font-semibold
+                                @(ticket.Status == "Open" ? "bg-red-50 text-red-600 border border-red-100" : "bg-gray-100 text-gray-600 border border-gray-200")">
+                                @(ticket.Status == "Open" ? "تحتاج للرد" : "مغلقة")
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <button class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 px-3 py-1 rounded text-xs font-semibold transition-colors">
+                                الرد والتحكيم
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

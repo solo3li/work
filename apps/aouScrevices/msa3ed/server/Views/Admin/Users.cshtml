@@ -1,0 +1,85 @@
+@model IEnumerable<Uis.Server.Models.User>
+
+@{
+    ViewData["Title"] = "إدارة المستخدمين";
+}
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-gray-800">قائمة المستخدمين</h3>
+        <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
+            <i class="fas fa-plus ml-2"></i>إضافة مستخدم
+        </button>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold text-sm">
+                    <th class="p-4">الاسم الكامل</th>
+                    <th class="p-4">البريد الإلكتروني</th>
+                    <th class="p-4">الدور</th>
+                    <th class="p-4">الحالة</th>
+                    <th class="p-4">تاريخ الانضمام</th>
+                    <th class="p-4">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @foreach (var user in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4 font-medium text-gray-800">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs mr-3">
+                                    @user.FullName.Substring(0, 1)
+                                </div>
+                                @user.FullName
+                            </div>
+                        </td>
+                        <td class="p-4 text-gray-600">@user.Email</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded-md text-xs font-semibold
+                                @(user.Role?.Name == "Admin" ? "bg-purple-100 text-purple-700" : 
+                                  user.Role?.Name == "Executor" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700")">
+                                @(user.Role?.Name ?? "غير محدد")
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            @if (user.IsActive)
+                            {
+                                <span class="flex items-center text-green-600 text-xs font-semibold"><i class="fas fa-circle text-[8px] mr-1"></i>نشط</span>
+                            }
+                            else
+                            {
+                                <span class="flex items-center text-red-600 text-xs font-semibold"><i class="fas fa-circle text-[8px] mr-1"></i>محظور</span>
+                            }
+                        </td>
+                        <td class="p-4 text-gray-500">@user.CreatedAt.ToString("yyyy-MM-dd")</td>
+                        <td class="p-4">
+                            <div class="flex space-x-2 rtl:space-x-reverse">
+                                <button class="text-blue-500 hover:text-blue-700 p-1" title="تعديل"><i class="fas fa-edit"></i></button>
+                                @if (user.IsActive)
+                                {
+                                    <button class="text-red-500 hover:text-red-700 p-1" title="حظر"><i class="fas fa-ban"></i></button>
+                                }
+                                else
+                                {
+                                    <button class="text-green-500 hover:text-green-700 p-1" title="تفعيل"><i class="fas fa-check-circle"></i></button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="p-4 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
+        <span>عرض @Model.Count() مستخدمين</span>
+        <div class="flex space-x-1 rtl:space-x-reverse">
+            <button class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50">السابق</button>
+            <button class="px-3 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded font-medium">1</button>
+            <button class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50">التالي</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,80 @@
+@{
+    ViewData["Title"] = "الرئيسية";
+    var stats = ViewBag.Stats;
+}
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Stat Card 1 -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500 mb-1">إجمالي المستخدمين</p>
+            <h3 class="text-3xl font-bold text-gray-800">@stats?.TotalUsers</h3>
+        </div>
+        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl">
+            <i class="fas fa-users"></i>
+        </div>
+    </div>
+
+    <!-- Stat Card 2 -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500 mb-1">إجمالي الطلبات</p>
+            <h3 class="text-3xl font-bold text-gray-800">@stats?.TotalOrders</h3>
+        </div>
+        <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-xl">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+    </div>
+
+    <!-- Stat Card 3 -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500 mb-1">طلبات KYC المعلقة</p>
+            <h3 class="text-3xl font-bold text-gray-800">@stats?.PendingKyc</h3>
+        </div>
+        <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center text-xl">
+            <i class="fas fa-id-card"></i>
+        </div>
+    </div>
+
+    <!-- Stat Card 4 -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500 mb-1">تذاكر الدعم المفتوحة</p>
+            <h3 class="text-3xl font-bold text-gray-800">@stats?.OpenTickets</h3>
+        </div>
+        <div class="w-12 h-12 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl">
+            <i class="fas fa-headset"></i>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">نظرة عامة على النظام</h3>
+        <div class="flex items-center justify-center h-64 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+            <p class="text-gray-400">مساحة مخصصة للرسوم البيانية (Charts)</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">إجراءات سريعة</h3>
+        <div class="space-y-4">
+            <a href="/Admin/Kyc" class="flex items-center p-4 bg-yellow-50 hover:bg-yellow-100 border border-yellow-100 rounded-lg transition-colors">
+                <i class="fas fa-id-card text-yellow-600 text-xl w-8"></i>
+                <div class="mr-3">
+                    <h4 class="font-semibold text-yellow-800">مراجعة طلبات KYC</h4>
+                    <p class="text-sm text-yellow-600">يوجد @stats?.PendingKyc طلب بانتظار المراجعة</p>
+                </div>
+            </a>
+            
+            <a href="/Admin/Tickets" class="flex items-center p-4 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors">
+                <i class="fas fa-headset text-red-600 text-xl w-8"></i>
+                <div class="mr-3">
+                    <h4 class="font-semibold text-red-800">الرد على تذاكر الدعم</h4>
+                    <p class="text-sm text-red-600">يوجد @stats?.OpenTickets تذكرة مفتوحة تحتاج لرد</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

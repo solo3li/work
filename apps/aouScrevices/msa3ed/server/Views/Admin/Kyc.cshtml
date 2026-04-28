@@ -1,0 +1,67 @@
+@model IEnumerable<Uis.Server.Models.KycRequest>
+
+@{
+    ViewData["Title"] = "مراجعة طلبات KYC";
+}
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100">
+        <h3 class="text-lg font-bold text-gray-800">الطلبات المعلقة</h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold text-sm">
+                    <th class="p-4">اسم المستخدم</th>
+                    <th class="p-4">الرقم القومي</th>
+                    <th class="p-4">رقم الهاتف</th>
+                    <th class="p-4">الحالة</th>
+                    <th class="p-4">المستندات</th>
+                    <th class="p-4">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @if(!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-gray-500">لا توجد طلبات KYC معلقة في الوقت الحالي.</td>
+                    </tr>
+                }
+                @foreach (var req in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4 font-medium text-gray-800">@(req.User?.FullName ?? "مستخدم محذوف")</td>
+                        <td class="p-4 font-mono text-gray-600">@req.NationalId</td>
+                        <td class="p-4 font-mono text-gray-600" dir="ltr">@req.Phone</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded-md text-xs font-semibold
+                                @(req.Status == "Pending" ? "bg-yellow-100 text-yellow-700" : 
+                                  req.Status == "Approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                                @(req.Status == "Pending" ? "قيد المراجعة" : req.Status == "Approved" ? "مقبول" : "مرفوض")
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <button class="text-indigo-600 hover:text-indigo-800 text-xs font-semibold underline">
+                                <i class="fas fa-eye ml-1"></i>عرض المرفقات
+                            </button>
+                        </td>
+                        <td class="p-4">
+                            @if(req.Status == "Pending")
+                            {
+                                <div class="flex space-x-2 rtl:space-x-reverse">
+                                    <button class="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 px-3 py-1 rounded text-xs font-semibold transition-colors">
+                                        قبول
+                                    </button>
+                                    <button class="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-3 py-1 rounded text-xs font-semibold transition-colors">
+                                        رفض
+                                    </button>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

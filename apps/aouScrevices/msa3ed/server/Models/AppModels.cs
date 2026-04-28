@@ -1,0 +1,152 @@
+using System;
+using System.Collections.Generic;
+
+namespace Uis.Server.Models;
+
+public class User
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
+    public Guid RoleId { get; set; }
+    public Role Role { get; set; } = null!;
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class Role
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Name { get; set; } = string.Empty; // Student, Executor, Admin
+}
+
+public class EmailOtp
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Email { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public DateTime ExpiryDate { get; set; }
+    public bool IsUsed { get; set; }
+}
+
+public class KycRequest
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
+    public string NationalId { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
+    public string RejectionReason { get; set; } = string.Empty;
+}
+
+public class Category
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Name { get; set; } = string.Empty;
+}
+
+public class Service
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public decimal BasePrice { get; set; }
+    public Guid CategoryId { get; set; }
+    public Category Category { get; set; } = null!;
+    public bool IsActive { get; set; } = true;
+}
+
+public class Order
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid StudentId { get; set; }
+    public User Student { get; set; } = null!;
+    public Guid? ExecutorId { get; set; }
+    public User? Executor { get; set; }
+    public Guid ServiceId { get; set; }
+    public Service Service { get; set; } = null!;
+    public decimal Price { get; set; }
+    public string Status { get; set; } = "Pending";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class Payment
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrderId { get; set; }
+    public Order Order { get; set; } = null!;
+    public decimal Amount { get; set; }
+    public string Status { get; set; } = "Pending";
+    public string TransactionId { get; set; } = string.Empty;
+}
+
+public class Escrow
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrderId { get; set; }
+    public Order Order { get; set; } = null!;
+    public decimal Amount { get; set; }
+    public string Status { get; set; } = "Held"; // Held, Released, Refunded
+}
+
+public class Chat
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid? OrderId { get; set; }
+    public Order? Order { get; set; }
+    public ICollection<Message> Messages { get; set; } = new List<Message>();
+}
+
+public class Message
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid ChatId { get; set; }
+    public Chat Chat { get; set; } = null!;
+    public Guid SenderId { get; set; }
+    public User Sender { get; set; } = null!;
+    public string Content { get; set; } = string.Empty;
+    public DateTime SentAt { get; set; } = DateTime.UtcNow;
+}
+
+public class Ticket
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
+    public Guid? OrderId { get; set; }
+    public string Subject { get; set; } = string.Empty;
+    public string Status { get; set; } = "Open";
+    public ICollection<TicketMessage> Messages { get; set; } = new List<TicketMessage>();
+}
+
+public class TicketMessage
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TicketId { get; set; }
+    public Ticket Ticket { get; set; } = null!;
+    public Guid SenderId { get; set; }
+    public User Sender { get; set; } = null!;
+    public string Content { get; set; } = string.Empty;
+    public DateTime SentAt { get; set; } = DateTime.UtcNow;
+}
+
+public class Notification
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
+    public string Message { get; set; } = string.Empty;
+    public bool IsRead { get; set; } = false;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class FileAttachment
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string FilePath { get; set; } = string.Empty;
+    public string OriginalName { get; set; } = string.Empty;
+    public string EntityType { get; set; } = string.Empty; // Order, Kyc, Ticket
+    public Guid EntityId { get; set; }
+}
