@@ -71,20 +71,25 @@
                         </td>
                         <td class="p-4 text-gray-500 text-xs font-medium">@user.CreatedAt.ToString("yyyy-MM-dd")</td>
                         <td class="p-4">
-                            <form asp-action="ToggleUserStatus" asp-route-id="@user.Id" method="post" class="flex justify-center">
-                                @if (user.IsActive)
-                                {
-                                    <button type="submit" class="text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-all text-xs font-black border border-red-100">
-                                        <i class="fas fa-ban ml-1"></i>حظر
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button type="submit" class="text-green-600 hover:bg-green-50 px-3 py-1.5 rounded-lg transition-all text-xs font-black border border-green-100">
-                                        <i class="fas fa-check ml-1"></i>تفعيل
-                                    </button>
-                                }
-                            </form>
+                            <div class="flex justify-center space-x-2 rtl:space-x-reverse">
+                                <a asp-action="UserDetails" asp-route-id="@user.Id" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-all" title="عرض الملف">
+                                    <i class="fas fa-user-circle"></i>
+                                </a>
+                                <form asp-action="ToggleUserStatus" asp-route-id="@user.Id" method="post" class="flex">
+                                    @if (user.IsActive)
+                                    {
+                                        <button type="submit" class="text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-all text-xs font-black border border-red-100">
+                                            <i class="fas fa-ban ml-1"></i>حظر
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" class="text-green-600 hover:bg-green-50 px-3 py-1.5 rounded-lg transition-all text-xs font-black border border-green-100">
+                                            <i class="fas fa-check ml-1"></i>تفعيل
+                                        </button>
+                                    }
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 }

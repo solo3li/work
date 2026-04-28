@@ -4,13 +4,19 @@
     ViewData["Title"] = "سجل المدفوعات";
 }
 
-<div class="mb-8">
+<div class="mb-8 flex justify-between items-center">
     <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">العمليات المالية</h3>
+    <div class="flex items-center space-x-3 rtl:space-x-reverse">
+        <span class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg">
+            إجمالي المحصل: @Model.Where(p => p.Status == "Completed").Sum(p => p.Amount).ToString("N0") ج.م
+        </span>
+    </div>
 </div>
 
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="p-6 border-b border-gray-100">
-        <h4 class="font-bold text-gray-700">سجل المعاملات</h4>
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
+        <h4 class="font-bold text-gray-700">سجل المعاملات البنكية</h4>
+        <div class="text-xs text-gray-400 font-medium">عرض آخر @Model.Count() عملية</div>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-right">
@@ -18,25 +24,34 @@
                 <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs">
                     <th class="p-4 uppercase tracking-widest">معرف العملية</th>
                     <th class="p-4 uppercase tracking-widest">المبلغ</th>
-                    <th class="p-4 uppercase tracking-widest">الحالة</th>
+                    <th class="p-4 uppercase tracking-widest text-center">الحالة</th>
                     <th class="p-4 uppercase tracking-widest">العميل</th>
                     <th class="p-4 uppercase tracking-widest">رقم الطلب</th>
+                    <th class="p-4 uppercase tracking-widest text-center">الإجراءات</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 text-sm">
                 @if(!Model.Any()) {
-                    <tr><td colspan="5" class="p-8 text-center text-gray-400 italic">لا توجد سجلات مدفوعات حالياً.</td></tr>
+                    <tr><td colspan="6" class="p-8 text-center text-gray-400 italic">لا توجد سجلات مدفوعات حالياً.</td></tr>
                 }
                 @foreach (var pay in Model)
                 {
                     <tr class="hover:bg-gray-50/50 transition-colors">
-                        <td class="p-4 font-mono text-xs text-gray-500">@pay.TransactionId</td>
-                        <td class="p-4 font-black text-green-600">@pay.Amount.ToString("N2") ج.م</td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border border-green-200 bg-green-50 text-green-700">@pay.Status</span>
+                        <td class="p-4 font-mono text-xs text-gray-400">@pay.TransactionId</td>
+                        <td class="p-4 font-black text-indigo-600">@pay.Amount.ToString("N2") ج.م</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black border 
+                                @(pay.Status == "Completed" ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")">
+                                @pay.Status
+                            </span>
                         </td>
                         <td class="p-4 font-medium text-gray-700">@(pay.Order?.Student?.FullName ?? "-")</td>
-                        <td class="p-4 font-mono text-xs text-indigo-500 underline decoration-indigo-300">#@pay.OrderId.ToString().Substring(0,8)</td>
+                        <td class="p-4 font-mono text-[10px] text-indigo-400">#@pay.OrderId.ToString().Substring(0,8)</td>
+                        <td class="p-4 text-center">
+                            <a asp-action="PaymentDetails" asp-route-id="@pay.Id" class="inline-block bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm">
+                                <i class="fas fa-file-invoice-dollar ml-1"></i> التفاصيل
+                            </a>
+                        </td>
                     </tr>
                 }
             </tbody>

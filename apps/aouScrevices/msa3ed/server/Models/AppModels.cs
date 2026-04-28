@@ -9,6 +9,10 @@ public class User
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string? University { get; set; }
+    public string? Major { get; set; }
+    public string? Bio { get; set; }
+    public string? ProfilePicture { get; set; }
     public Guid RoleId { get; set; }
     public Role Role { get; set; } = null!;
     public bool IsActive { get; set; } = true;
@@ -37,6 +41,9 @@ public class KycRequest
     public User User { get; set; } = null!;
     public string NationalId { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
+    public string? Address { get; set; }
+    public DateTime? BirthDate { get; set; }
+    public DateTime? IdExpiryDate { get; set; }
     public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
     public string RejectionReason { get; set; } = string.Empty;
 }

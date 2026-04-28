@@ -67,12 +67,47 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Users));
     }
 
+    [HttpGet("Users/{id}")]
+    public async Task<IActionResult> UserDetails(Guid id)
+    {
+        var user = await _db.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user == null) return NotFound();
+
+        // Get user activity summary
+        ViewBag.OrdersCount = await _db.Orders.CountAsync(o => o.StudentId == id || o.ExecutorId == id);
+        ViewBag.RecentOrders = await _db.Orders
+            .Where(o => o.StudentId == id || o.ExecutorId == id)
+            .Include(o => o.Service)
+            .OrderByDescending(o => o.CreatedAt)
+            .Take(5)
+            .ToListAsync();
+        
+        ViewBag.KycRequest = await _db.KycRequests.FirstOrDefaultAsync(k => k.UserId == id);
+
+        return View(user);
+    }
+
     // --- KYC Management ---
     [HttpGet("Kyc")]
     public async Task<IActionResult> Kyc()
     {
         var requests = await _db.KycRequests.Include(k => k.User).OrderByDescending(k => k.Status == "Pending").ToListAsync();
         return View(requests);
+    }
+
+    [HttpGet("Kyc/{id}")]
+    public async Task<IActionResult> KycDetails(Guid id)
+    {
+        var request = await _db.KycRequests
+            .Include(k => k.User)
+            .FirstOrDefaultAsync(k => k.Id == id);
+
+        if (request == null) return NotFound();
+
+        return View(request);
     }
 
     [HttpPost("Kyc/Approve/{id}")]
@@ -188,6 +223,23 @@ public class AdminController : Controller
             await _db.SaveChangesAsync();
         }
         return RedirectToAction(nameof(Orders));
+    }
+
+    [HttpGet("Orders/{id}")]
+    public async Task<IActionResult> OrderDetails(Guid id)
+    {
+        var order = await _db.Orders
+            .Include(o => o.Student)
+            .Include(o => o.Executor)
+            .Include(o => o.Service)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+        if (order == null) return NotFound();
+
+        ViewBag.Payment = await _db.Payments.FirstOrDefaultAsync(p => p.OrderId == id);
+        ViewBag.Escrow = await _db.Escrows.FirstOrDefaultAsync(e => e.OrderId == id);
+
+        return View(order);
     }
 
     // --- Ticket Management ---
@@ -322,6 +374,23 @@ public class AdminController : Controller
     {
         var payments = await _db.Payments.Include(p => p.Order).ThenInclude(o => o.Student).OrderByDescending(p => p.Id).ToListAsync();
         return View(payments);
+    }
+
+    [HttpGet("Payments/{id}")]
+    public async Task<IActionResult> PaymentDetails(Guid id)
+    {
+        var payment = await _db.Payments
+            .Include(p => p.Order)
+            .ThenInclude(o => o.Student)
+            .Include(p => p.Order)
+            .ThenInclude(o => o.Service)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (payment == null) return NotFound();
+
+        ViewBag.Escrow = await _db.Escrows.FirstOrDefaultAsync(e => e.OrderId == payment.OrderId);
+
+        return View(payment);
     }
 
     [HttpGet("GetDashboardStats")]

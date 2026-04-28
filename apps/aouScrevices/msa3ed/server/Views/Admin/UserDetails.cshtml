@@ -1,0 +1,154 @@
+@model Uis.Server.Models.User
+
+@{
+    ViewData["Title"] = $"ملف المستخدم - {Model.FullName}";
+    var recentOrders = ViewBag.RecentOrders as IEnumerable<Uis.Server.Models.Order>;
+    var kyc = ViewBag.KycRequest as Uis.Server.Models.KycRequest;
+}
+
+<div class="mb-6 flex items-center justify-between">
+    <a href="/Admin/Users" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center transition-all">
+        <i class="fas fa-arrow-right ml-2"></i> العودة لقائمة المستخدمين
+    </a>
+    <div class="flex space-x-2 rtl:space-x-reverse">
+        @if (Model.IsActive)
+        {
+            <span class="bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-black border border-green-200">حساب نشط</span>
+        }
+        else
+        {
+            <span class="bg-red-100 text-red-700 px-4 py-1.5 rounded-full text-xs font-black border border-red-200">حساب محظور</span>
+        }
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- User Profile Card -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="h-24 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+            <div class="px-8 pb-8 -mt-12 text-center">
+                <img src="https://ui-avatars.com/api/?name=@Model.FullName&size=256&background=random" class="w-24 h-24 rounded-2xl mx-auto shadow-xl border-4 border-white mb-4">
+                <h2 class="text-2xl font-black text-gray-800">@Model.FullName</h2>
+                <p class="text-gray-400 font-medium text-sm">@Model.Email</p>
+                
+                <div class="inline-block mt-4 px-4 py-1 bg-gray-50 rounded-lg border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                    @(Model.Role?.Name ?? "بدون دور")
+                </div>
+
+                <div class="mt-8 space-y-4 text-right">
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-university w-6 text-indigo-400"></i>
+                        <span class="text-xs font-bold mr-2">الجامعة:</span>
+                        <span class="text-xs mr-auto">@(Model.University ?? "غير محدد")</span>
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-graduation-cap w-6 text-indigo-400"></i>
+                        <span class="text-xs font-bold mr-2">التخصص:</span>
+                        <span class="text-xs mr-auto">@(Model.Major ?? "غير محدد")</span>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-gray-50">
+                    <h4 class="text-xs font-black text-gray-400 uppercase text-right mb-3">نبذة تعريفية</h4>
+                    <p class="text-xs text-gray-600 leading-relaxed text-right italic">
+                        "@(Model.Bio ?? "لا يوجد وصف متوفر لهذا المستخدم حالياً.")"
+                    </p>
+                </div>
+
+                <div class="mt-8">
+                    <form asp-action="ToggleUserStatus" asp-route-id="@Model.Id" method="post">
+                        <button type="submit" class="w-full py-3 rounded-xl font-bold transition-all shadow-md
+                            @(Model.IsActive ? "bg-red-50 text-red-600 hover:bg-red-600 hover:text-white" : "bg-green-50 text-green-600 hover:bg-green-600 hover:text-white")">
+                            <i class="fas @(Model.IsActive ? "fa-user-slash" : "fa-user-check") ml-2"></i>
+                            @(Model.IsActive ? "حظر هذا المستخدم" : "فك حظر المستخدم")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @if(kyc != null)
+        {
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <h4 class="font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-shield-check ml-2 text-green-500"></i> توثيق الهوية (KYC)
+                </h4>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+                        <span class="text-xs text-gray-500 font-bold">الحالة</span>
+                        <span class="px-2 py-1 rounded-lg text-[10px] font-black @(kyc.Status == "Approved" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700")">
+                            @kyc.Status
+                        </span>
+                    </div>
+                    <a asp-action="KycDetails" asp-route-id="@kyc.Id" class="block w-full text-center bg-indigo-50 text-indigo-600 py-3 rounded-xl text-xs font-black hover:bg-indigo-600 hover:text-white transition-all">
+                        مراجعة بيانات الهوية
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Activity Log & Stats -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                <p class="text-[10px] font-black text-gray-400 uppercase mb-2">إجمالي الطلبات</p>
+                <p class="text-2xl font-black text-gray-800">@ViewBag.OrdersCount</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                <p class="text-[10px] font-black text-gray-400 uppercase mb-2">تاريخ التسجيل</p>
+                <p class="text-sm font-black text-gray-800">@Model.CreatedAt.ToString("MMMM yyyy")</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                <p class="text-[10px] font-black text-gray-400 uppercase mb-2">ساعات النشاط</p>
+                <p class="text-2xl font-black text-indigo-600">24/7</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800">آخر الطلبات المرتبطة</h3>
+                <i class="fas fa-history text-gray-300"></i>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold text-[10px] uppercase tracking-widest">
+                            <th class="p-4">رقم الطلب</th>
+                            <th class="p-4">الخدمة</th>
+                            <th class="p-4">القيمة</th>
+                            <th class="p-4">الحالة</th>
+                            <th class="p-4"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @if(!recentOrders.Any())
+                        {
+                            <tr><td colspan="5" class="p-8 text-center text-gray-400 italic text-sm">لا توجد طلبات مسجلة لهذا المستخدم حتى الآن.</td></tr>
+                        }
+                        @foreach(var order in recentOrders)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="p-4 font-mono text-[10px] text-gray-400">#@order.Id.ToString().Substring(0,8)</td>
+                                <td class="p-4 font-bold text-gray-700 text-xs">@order.Service.Title</td>
+                                <td class="p-4 font-black text-indigo-600 text-xs">@order.Price.ToString("N0") ج.م</td>
+                                <td class="p-4">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black border 
+                                        @(order.Status == "Completed" ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-100 text-gray-600")">
+                                        @order.Status
+                                    </span>
+                                </td>
+                                <td class="p-4 text-left">
+                                    <a asp-action="OrderDetails" asp-route-id="@order.Id" class="text-indigo-400 hover:text-indigo-600 transition-colors">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

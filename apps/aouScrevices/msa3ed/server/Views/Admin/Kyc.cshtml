@@ -42,9 +42,9 @@
                             </span>
                         </td>
                         <td class="p-4">
-                            <button class="text-indigo-600 hover:text-indigo-800 text-xs font-bold border border-indigo-200 px-2 py-1 rounded">
-                                <i class="fas fa-file-image ml-1"></i>مشاهدة الصور
-                            </button>
+                            <a asp-action="KycDetails" asp-route-id="@req.Id" class="text-indigo-600 hover:text-indigo-800 text-xs font-black border border-indigo-200 px-3 py-1.5 rounded-xl bg-indigo-50 transition-all inline-block shadow-sm">
+                                <i class="fas fa-search-plus ml-1"></i> مراجعة والتحقق
+                            </a>
                         </td>
                         <td class="p-4">
                             @if(req.Status == "Pending")

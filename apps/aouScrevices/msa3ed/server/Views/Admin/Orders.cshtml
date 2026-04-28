@@ -40,15 +40,9 @@
                         </td>
                         <td class="p-4 font-extrabold text-indigo-600">@order.Price.ToString("N0") ج.م</td>
                         <td class="p-4">
-                            <form asp-action="UpdateOrderStatus" asp-route-id="@order.Id" method="post" class="flex justify-center items-center space-x-2 rtl:space-x-reverse">
-                                <select name="status" class="text-xs bg-gray-100 border-none rounded-lg p-1 font-bold outline-none focus:ring-1 focus:ring-indigo-500">
-                                    <option value="Pending" selected="@(order.Status == "Pending")">قيد الانتظار</option>
-                                    <option value="In Progress" selected="@(order.Status == "In Progress")">قيد التنفيذ</option>
-                                    <option value="Completed" selected="@(order.Status == "Completed")">مكتمل</option>
-                                    <option value="Cancelled" selected="@(order.Status == "Cancelled")">إلغاء</option>
-                                </select>
-                                <button type="submit" class="text-indigo-600 hover:scale-110 transition-transform"><i class="fas fa-save"></i></button>
-                            </form>
+                            <a asp-action="OrderDetails" asp-route-id="@order.Id" class="inline-block bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white border border-indigo-200 px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                <i class="fas fa-eye ml-1"></i> التفاصيل
+                            </a>
                         </td>
                     </tr>
                 }

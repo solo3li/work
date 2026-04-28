@@ -42,8 +42,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cS3ljLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/solo/Desktop/work/apps/aouScrevices/msa3ed/server/Views/Admin/KycDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cS3ljRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/solo/Desktop/work/apps/aouScrevices/msa3ed/server/Views/Admin/OrderDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cT3JkZXJEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/solo/Desktop/work/apps/aouScrevices/msa3ed/server/Views/Admin/Orders.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cT3JkZXJzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/solo/Desktop/work/apps/aouScrevices/msa3ed/server/Views/Admin/PaymentDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cUGF5bWVudERldGFpbHMuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/solo/Desktop/work/apps/aouScrevices/msa3ed/server/Views/Admin/Payments.cshtml]
@@ -60,6 +72,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/solo/Desktop/work/apps/aouScrevices/msa3ed/server/Views/Admin/Tickets.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVGlja2V0cy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/solo/Desktop/work/apps/aouScrevices/msa3ed/server/Views/Admin/UserDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVXNlckRldGFpbHMuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/solo/Desktop/work/apps/aouScrevices/msa3ed/server/Views/Admin/Users.cshtml]
