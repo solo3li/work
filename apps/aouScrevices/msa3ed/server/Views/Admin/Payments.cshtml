@@ -1,0 +1,45 @@
+@model IEnumerable<Uis.Server.Models.Payment>
+
+@{
+    ViewData["Title"] = "سجل المدفوعات";
+}
+
+<div class="mb-8">
+    <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">العمليات المالية</h3>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100">
+        <h4 class="font-bold text-gray-700">سجل المعاملات</h4>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs">
+                    <th class="p-4 uppercase tracking-widest">معرف العملية</th>
+                    <th class="p-4 uppercase tracking-widest">المبلغ</th>
+                    <th class="p-4 uppercase tracking-widest">الحالة</th>
+                    <th class="p-4 uppercase tracking-widest">العميل</th>
+                    <th class="p-4 uppercase tracking-widest">رقم الطلب</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @if(!Model.Any()) {
+                    <tr><td colspan="5" class="p-8 text-center text-gray-400 italic">لا توجد سجلات مدفوعات حالياً.</td></tr>
+                }
+                @foreach (var pay in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4 font-mono text-xs text-gray-500">@pay.TransactionId</td>
+                        <td class="p-4 font-black text-green-600">@pay.Amount.ToString("N2") ج.م</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border border-green-200 bg-green-50 text-green-700">@pay.Status</span>
+                        </td>
+                        <td class="p-4 font-medium text-gray-700">@(pay.Order?.Student?.FullName ?? "-")</td>
+                        <td class="p-4 font-mono text-xs text-indigo-500 underline decoration-indigo-300">#@pay.OrderId.ToString().Substring(0,8)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

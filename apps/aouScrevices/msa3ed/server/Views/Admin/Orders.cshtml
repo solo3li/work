@@ -4,70 +4,51 @@
     ViewData["Title"] = "إدارة الطلبات";
 }
 
+<div class="mb-8">
+    <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">متابعة طلبات العملاء</h3>
+</div>
+
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-        <h3 class="text-lg font-bold text-gray-800">جميع الطلبات</h3>
-        <div class="flex space-x-2 rtl:space-x-reverse">
-            <input type="text" placeholder="بحث برقم الطلب..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500">
-            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors border border-gray-200">
-                <i class="fas fa-filter"></i>
-            </button>
-        </div>
-    </div>
-    
     <div class="overflow-x-auto">
         <table class="w-full text-right">
             <thead>
-                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold text-sm">
-                    <th class="p-4">رقم الطلب (ID)</th>
-                    <th class="p-4">الخدمة المطلوبة</th>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs uppercase tracking-tighter">
+                    <th class="p-4">الرقم</th>
+                    <th class="p-4">الخدمة</th>
                     <th class="p-4">الطالب</th>
-                    <th class="p-4">المنفذ</th>
+                    <th class="p-4 text-center">الحالة الحالية</th>
                     <th class="p-4">المبلغ</th>
-                    <th class="p-4">الحالة</th>
-                    <th class="p-4">تاريخ الطلب</th>
-                    <th class="p-4">إجراءات</th>
+                    <th class="p-4 text-center">تحديث الحالة</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 text-sm">
-                @if(!Model.Any())
-                {
-                    <tr>
-                        <td colspan="8" class="p-8 text-center text-gray-500">لا توجد طلبات في النظام.</td>
-                    </tr>
-                }
                 @foreach (var order in Model)
                 {
                     <tr class="hover:bg-gray-50/50 transition-colors">
-                        <td class="p-4 font-mono text-xs text-gray-500" title="@order.Id">
-                            @order.Id.ToString().Substring(0, 8)...
-                        </td>
-                        <td class="p-4 font-medium text-gray-800 max-w-[150px] truncate" title="@(order.Service?.Title)">
-                            @(order.Service?.Title ?? "خدمة محذوفة")
-                        </td>
-                        <td class="p-4 text-gray-600">@(order.Student?.FullName ?? "طالب محذوف")</td>
-                        <td class="p-4 text-gray-600">
-                            @if(order.ExecutorId != null)
-                            {
-                                @order.Executor?.FullName
-                            }
-                            else
-                            {
-                                <span class="text-orange-500 text-xs font-semibold bg-orange-50 px-2 py-1 rounded border border-orange-100">بانتظار منفذ</span>
-                            }
-                        </td>
-                        <td class="p-4 font-bold text-indigo-600">@order.Price.ToString("C")</td>
-                        <td class="p-4">
-                            <span class="px-2 py-1 rounded-md text-xs font-semibold
-                                @(order.Status == "Pending" ? "bg-yellow-100 text-yellow-700" : 
-                                  order.Status == "In Progress" ? "bg-blue-100 text-blue-700" : 
-                                  order.Status == "Completed" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
-                                @order.Status
+                        <td class="p-4 font-mono text-xs text-gray-400">#@order.Id.ToString().Substring(0,8)</td>
+                        <td class="p-4 font-bold text-gray-800">@(order.Service?.Title ?? "خدمة محذوفة")</td>
+                        <td class="p-4 text-gray-600 font-medium">@(order.Student?.FullName ?? "مستخدم محذوف")</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-full text-xs font-black border
+                                @(order.Status == "Pending" ? "bg-orange-50 text-orange-700 border-orange-200" : 
+                                  order.Status == "In Progress" ? "bg-blue-50 text-blue-700 border-blue-200" : 
+                                  order.Status == "Completed" ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")">
+                                @(order.Status == "Pending" ? "قيد الانتظار" : 
+                                  order.Status == "In Progress" ? "قيد التنفيذ" : 
+                                  order.Status == "Completed" ? "مكتمل" : "ملغي")
                             </span>
                         </td>
-                        <td class="p-4 text-gray-500 text-xs">@order.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="p-4 font-extrabold text-indigo-600">@order.Price.ToString("N0") ج.م</td>
                         <td class="p-4">
-                            <button class="text-indigo-500 hover:text-indigo-700 p-1" title="تفاصيل"><i class="fas fa-external-link-alt"></i></button>
+                            <form asp-action="UpdateOrderStatus" asp-route-id="@order.Id" method="post" class="flex justify-center items-center space-x-2 rtl:space-x-reverse">
+                                <select name="status" class="text-xs bg-gray-100 border-none rounded-lg p-1 font-bold outline-none focus:ring-1 focus:ring-indigo-500">
+                                    <option value="Pending" selected="@(order.Status == "Pending")">قيد الانتظار</option>
+                                    <option value="In Progress" selected="@(order.Status == "In Progress")">قيد التنفيذ</option>
+                                    <option value="Completed" selected="@(order.Status == "Completed")">مكتمل</option>
+                                    <option value="Cancelled" selected="@(order.Status == "Cancelled")">إلغاء</option>
+                                </select>
+                                <button type="submit" class="text-indigo-600 hover:scale-110 transition-transform"><i class="fas fa-save"></i></button>
+                            </form>
                         </td>
                     </tr>
                 }

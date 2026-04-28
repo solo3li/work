@@ -60,6 +60,14 @@
                 <i class="fas fa-shopping-cart w-6 text-center"></i>
                 <span class="mx-3 font-semibold">الطلبات</span>
             </a>
+            <a href="/Admin/Payments" class="nav-link flex items-center px-4 py-3 text-white rounded-lg transition-colors @(ViewContext.RouteData.Values["action"]?.ToString() == "Payments" ? "active" : "")">
+                <i class="fas fa-file-invoice-dollar w-6 text-center"></i>
+                <span class="mx-3 font-semibold">المدفوعات</span>
+            </a>
+            <a href="/Admin/Categories" class="nav-link flex items-center px-4 py-3 text-white rounded-lg transition-colors @(ViewContext.RouteData.Values["action"]?.ToString() == "Categories" ? "active" : "")">
+                <i class="fas fa-tags w-6 text-center"></i>
+                <span class="mx-3 font-semibold">التصنيفات</span>
+            </a>
             <a href="/Admin/Tickets" class="nav-link flex items-center px-4 py-3 text-white rounded-lg transition-colors @(ViewContext.RouteData.Values["action"]?.ToString() == "Tickets" ? "active" : "")">
                 <i class="fas fa-headset w-6 text-center"></i>
                 <span class="mx-3 font-semibold">الدعم الفني</span>

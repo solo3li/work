@@ -1,80 +1,108 @@
 @{
     ViewData["Title"] = "الرئيسية";
     var stats = ViewBag.Stats;
+    var recentOrders = ViewBag.RecentOrders as IEnumerable<Uis.Server.Models.Order>;
 }
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Stat Card 1 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
-        <div>
-            <p class="text-sm font-medium text-gray-500 mb-1">إجمالي المستخدمين</p>
-            <h3 class="text-3xl font-bold text-gray-800">@stats?.TotalUsers</h3>
-        </div>
-        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl">
-            <i class="fas fa-users"></i>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">إجمالي المستخدمين</p>
+        <div class="flex items-center justify-between">
+            <h3 class="text-3xl font-black text-gray-800">@stats?.TotalUsers</h3>
+            <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><i class="fas fa-users"></i></div>
         </div>
     </div>
-
-    <!-- Stat Card 2 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
-        <div>
-            <p class="text-sm font-medium text-gray-500 mb-1">إجمالي الطلبات</p>
-            <h3 class="text-3xl font-bold text-gray-800">@stats?.TotalOrders</h3>
-        </div>
-        <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-xl">
-            <i class="fas fa-shopping-cart"></i>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">إجمالي الطلبات</p>
+        <div class="flex items-center justify-between">
+            <h3 class="text-3xl font-black text-gray-800">@stats?.TotalOrders</h3>
+            <div class="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center"><i class="fas fa-shopping-cart"></i></div>
         </div>
     </div>
-
-    <!-- Stat Card 3 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
-        <div>
-            <p class="text-sm font-medium text-gray-500 mb-1">طلبات KYC المعلقة</p>
-            <h3 class="text-3xl font-bold text-gray-800">@stats?.PendingKyc</h3>
-        </div>
-        <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center text-xl">
-            <i class="fas fa-id-card"></i>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">KYC معلق</p>
+        <div class="flex items-center justify-between">
+            <h3 class="text-3xl font-black text-gray-800">@stats?.PendingKyc</h3>
+            <div class="w-10 h-10 bg-yellow-50 text-yellow-600 rounded-xl flex items-center justify-center"><i class="fas fa-id-card"></i></div>
         </div>
     </div>
-
-    <!-- Stat Card 4 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
-        <div>
-            <p class="text-sm font-medium text-gray-500 mb-1">تذاكر الدعم المفتوحة</p>
-            <h3 class="text-3xl font-bold text-gray-800">@stats?.OpenTickets</h3>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">تذاكر مفتوحة</p>
+        <div class="flex items-center justify-between">
+            <h3 class="text-3xl font-black text-gray-800">@stats?.OpenTickets</h3>
+            <div class="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center"><i class="fas fa-headset"></i></div>
         </div>
-        <div class="w-12 h-12 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl">
-            <i class="fas fa-headset"></i>
+    </div>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">إجمالي الإيرادات</p>
+        <div class="flex items-center justify-between">
+            <h3 class="text-2xl font-black text-indigo-700">@stats?.TotalRevenue.ToString("N0")</h3>
+            <div class="w-10 h-10 bg-indigo-100 text-indigo-800 rounded-xl flex items-center justify-center font-bold text-xs">ج.م</div>
         </div>
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">نظرة عامة على النظام</h3>
-        <div class="flex items-center justify-center h-64 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-            <p class="text-gray-400">مساحة مخصصة للرسوم البيانية (Charts)</p>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-800">نشاط الطلبات (آخر 7 أيام)</h3>
+            <span class="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded">تحديث مباشر</span>
         </div>
+        <canvas id="ordersChart" height="150"></canvas>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">إجراءات سريعة</h3>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-6">آخر الطلبات</h3>
         <div class="space-y-4">
-            <a href="/Admin/Kyc" class="flex items-center p-4 bg-yellow-50 hover:bg-yellow-100 border border-yellow-100 rounded-lg transition-colors">
-                <i class="fas fa-id-card text-yellow-600 text-xl w-8"></i>
-                <div class="mr-3">
-                    <h4 class="font-semibold text-yellow-800">مراجعة طلبات KYC</h4>
-                    <p class="text-sm text-yellow-600">يوجد @stats?.PendingKyc طلب بانتظار المراجعة</p>
+            @foreach(var order in recentOrders)
+            {
+                <div class="flex items-center p-3 hover:bg-gray-50 rounded-xl transition-all border border-transparent hover:border-gray-100">
+                    <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-box"></i></div>
+                    <div class="mr-3 flex-1">
+                        <h4 class="text-sm font-bold text-gray-800 truncate w-32">@order.Service.Title</h4>
+                        <p class="text-[10px] text-gray-400">@order.Student.FullName • @order.CreatedAt.ToString("HH:mm")</p>
+                    </div>
+                    <span class="text-xs font-black text-indigo-600">@order.Price.ToString("N0") ج.م</span>
                 </div>
-            </a>
-            
-            <a href="/Admin/Tickets" class="flex items-center p-4 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors">
-                <i class="fas fa-headset text-red-600 text-xl w-8"></i>
-                <div class="mr-3">
-                    <h4 class="font-semibold text-red-800">الرد على تذاكر الدعم</h4>
-                    <p class="text-sm text-red-600">يوجد @stats?.OpenTickets تذكرة مفتوحة تحتاج لرد</p>
-                </div>
-            </a>
+            }
+            <a href="/Admin/Orders" class="block text-center text-indigo-600 text-sm font-bold mt-4 hover:underline">عرض جميع الطلبات</a>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        fetch('/Admin/GetDashboardStats')
+            .then(res => res.json())
+            .then(data => {
+                const ctx = document.getElementById('ordersChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'عدد الطلبات',
+                            data: data.data,
+                            borderColor: '#6366F1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#6366F1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { display: false } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            });
+    </script>
+}
