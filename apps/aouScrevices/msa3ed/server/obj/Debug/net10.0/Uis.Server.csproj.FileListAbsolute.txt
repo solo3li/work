@@ -196,3 +196,8 @@ C:\Users\solo\Desktop\work\apps\aouScrevices\msa3ed\server\obj\Debug\net10.0\Uis
 C:\Users\solo\Desktop\work\apps\aouScrevices\msa3ed\server\obj\Debug\net10.0\Uis.Server.genruntimeconfig.cache
 C:\Users\solo\Desktop\work\apps\aouScrevices\msa3ed\server\obj\Debug\net10.0\ref\Uis.Server.dll
 C:\Users\solo\Desktop\work\apps\aouScrevices\msa3ed\server\bin\Debug\net10.0\dotnet-tools.json
+C:\Users\solo\Desktop\work\apps\aouScrevices\msa3ed\server\obj\Debug\net10.0\Uis.Server.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\solo\Desktop\work\apps\aouScrevices\msa3ed\server\bin\Debug\net10.0\Microsoft.OpenApi.dll
+C:\Users\solo\Desktop\work\apps\aouScrevices\msa3ed\server\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\solo\Desktop\work\apps\aouScrevices\msa3ed\server\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\solo\Desktop\work\apps\aouScrevices\msa3ed\server\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll

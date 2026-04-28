@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Uis.Server.Data;
 using Uis.Server.Models;
+using Uis.Server.Services;
 
 namespace Uis.Server.Controllers;
 
@@ -9,10 +10,12 @@ namespace Uis.Server.Controllers;
 public class AdminController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly INotificationService _notificationService;
 
-    public AdminController(ApplicationDbContext db)
+    public AdminController(ApplicationDbContext db, INotificationService notificationService)
     {
         _db = db;
+        _notificationService = notificationService;
     }
 
     [HttpGet("")]
@@ -41,13 +44,13 @@ public class AdminController : Controller
     [HttpGet("Users")]
     public async Task<IActionResult> Users(string? search, string? role)
     {
-        var query = _db.Users.Include(u => u.Role).AsQueryable();
+        var query = _db.Users.Include(u => u.Roles).AsQueryable();
 
         if (!string.IsNullOrEmpty(search))
             query = query.Where(u => u.FullName.Contains(search) || u.Email.Contains(search));
 
         if (!string.IsNullOrEmpty(role))
-            query = query.Where(u => u.Role.Name == role);
+            query = query.Where(u => u.Roles.Any(r => r.Name == role));
 
         var users = await query.OrderByDescending(u => u.CreatedAt).ToListAsync();
         ViewBag.Search = search;
@@ -71,7 +74,7 @@ public class AdminController : Controller
     public async Task<IActionResult> UserDetails(Guid id)
     {
         var user = await _db.Users
-            .Include(u => u.Role)
+            .Include(u => u.Roles)
             .FirstOrDefaultAsync(u => u.Id == id);
 
         if (user == null) return NotFound();
@@ -86,8 +89,52 @@ public class AdminController : Controller
             .ToListAsync();
         
         ViewBag.KycRequest = await _db.KycRequests.FirstOrDefaultAsync(k => k.UserId == id);
+        
+        // Load all roles for the change role dropdown
+        ViewBag.AllRoles = await _db.Roles.OrderBy(r => r.Name).ToListAsync();
 
         return View(user);
+    }
+
+    [HttpPost("UpdateUserRole")]
+    public async Task<IActionResult> UpdateUserRole(Guid userId, Guid roleId)
+    {
+        var user = await _db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == userId);
+        var role = await _db.Roles.FindAsync(roleId);
+        
+        if (user != null && role != null)
+        {
+            if (!user.Roles.Any(r => r.Id == roleId))
+            {
+                user.Roles.Add(role);
+                
+                // Sync boolean flags
+                if (role.Name == "Admin") user.IsAdmin = true;
+                if (role.Name == "Executor") user.IsExecutor = true;
+                
+                await _db.SaveChangesAsync();
+            }
+        }
+        return RedirectToAction(nameof(UserDetails), new { id = userId });
+    }
+
+    [HttpPost("RemoveUserRole")]
+    public async Task<IActionResult> RemoveUserRole(Guid userId, Guid roleId)
+    {
+        var user = await _db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == userId);
+        var role = user?.Roles.FirstOrDefault(r => r.Id == roleId);
+        
+        if (user != null && role != null)
+        {
+            user.Roles.Remove(role);
+            
+            // Sync boolean flags
+            if (role.Name == "Admin") user.IsAdmin = false;
+            if (role.Name == "Executor") user.IsExecutor = false;
+            
+            await _db.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(UserDetails), new { id = userId });
     }
 
     // --- KYC Management ---
@@ -113,11 +160,21 @@ public class AdminController : Controller
     [HttpPost("Kyc/Approve/{id}")]
     public async Task<IActionResult> ApproveKyc(Guid id)
     {
-        var request = await _db.KycRequests.FindAsync(id);
+        var request = await _db.KycRequests.Include(k => k.User).ThenInclude(u => u.Roles).FirstOrDefaultAsync(k => k.Id == id);
         if (request != null)
         {
             request.Status = "Approved";
+            
+            // Grant Executor role and flag
+            request.User.IsExecutor = true;
+            var executorRole = await _db.Roles.FirstOrDefaultAsync(r => r.Name == "Executor");
+            if (executorRole != null && !request.User.Roles.Any(r => r.Name == "Executor"))
+            {
+                request.User.Roles.Add(executorRole);
+            }
+            
             await _db.SaveChangesAsync();
+            await _notificationService.SendNotificationAsync(request.UserId, "تم توثيق حسابك بنجاح! يمكنك الآن البدء في تقديم الخدمات كمنفذ.");
         }
         return RedirectToAction(nameof(Kyc));
     }
@@ -164,6 +221,99 @@ public class AdminController : Controller
             await _db.SaveChangesAsync();
         }
         return RedirectToAction(nameof(Categories));
+    }
+
+    // --- Role Management ---
+    [HttpGet("Roles")]
+    public async Task<IActionResult> Roles()
+    {
+        var roles = await _db.Roles.OrderByDescending(r => r.IsSystemRole).ToListAsync();
+        return View(roles);
+    }
+
+    [HttpPost("Roles/Create")]
+    public async Task<IActionResult> CreateRole(string name, string description)
+    {
+        if (!string.IsNullOrEmpty(name))
+        {
+            _db.Roles.Add(new Role { Name = name, Description = description, IsSystemRole = false });
+            await _db.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(Roles));
+    }
+
+    [HttpPost("Roles/Delete/{id}")]
+    public async Task<IActionResult> DeleteRole(Guid id)
+    {
+        var role = await _db.Roles.FindAsync(id);
+        if (role != null && !role.IsSystemRole)
+        {
+            _db.Roles.Remove(role);
+            await _db.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(Roles));
+    }
+
+    [HttpGet("Roles/Permissions/{id}")]
+    public async Task<IActionResult> RolePermissions(Guid id)
+    {
+        var role = await _db.Roles
+            .Include("RolePermissions.Permission")
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (role == null) return NotFound();
+
+        ViewBag.AllPermissions = await _db.Permissions.ToListAsync();
+        return View(role);
+    }
+
+    [HttpPost("Roles/UpdatePermissions")]
+    public async Task<IActionResult> UpdateRolePermissions(Guid roleId, Guid[] permissionIds)
+    {
+        var existingPermissions = await _db.RolePermissions.Where(rp => rp.RoleId == roleId).ToListAsync();
+        _db.RolePermissions.RemoveRange(existingPermissions);
+
+        if (permissionIds != null)
+        {
+            foreach (var pId in permissionIds)
+            {
+                _db.RolePermissions.Add(new RolePermission { RoleId = roleId, PermissionId = pId });
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Roles));
+    }
+
+    // --- Permission Management ---
+    [HttpGet("Permissions")]
+    public async Task<IActionResult> Permissions()
+    {
+        var permissions = await _db.Permissions.OrderBy(p => p.Group).ToListAsync();
+        return View(permissions);
+    }
+
+    [HttpPost("Permissions/Create")]
+    public async Task<IActionResult> CreatePermission(string name, string group, string description)
+    {
+        if (!string.IsNullOrEmpty(name))
+        {
+            _db.Permissions.Add(new Permission { Name = name, Group = group, Description = description });
+            await _db.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(Permissions));
+    }
+
+    [HttpPost("Permissions/Delete/{id}")]
+    public async Task<IActionResult> DeletePermission(Guid id)
+    {
+        var p = await _db.Permissions.FindAsync(id);
+        if (p != null)
+        {
+            _db.Permissions.Remove(p);
+            await _db.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(Permissions));
     }
 
     // --- Service Management ---
@@ -505,5 +655,42 @@ public class AdminController : Controller
         var data = last7Days.Select(d => orderData.FirstOrDefault(x => x.Date == d)?.Count ?? 0).ToList();
 
         return Json(new { labels, data });
+    }
+
+    // --- Notification Management ---
+    [HttpGet("Notifications")]
+    public async Task<IActionResult> Notifications()
+    {
+        var notifications = await _notificationService.GetAllNotificationsAsync();
+        ViewBag.Users = await _db.Users.OrderBy(u => u.FullName).ToListAsync();
+        return View(notifications);
+    }
+
+    [HttpPost("Notifications/Send")]
+    public async Task<IActionResult> SendNotification(Guid? userId, string message, bool allUsers = false)
+    {
+        if (string.IsNullOrEmpty(message)) return RedirectToAction(nameof(Notifications));
+
+        if (allUsers)
+        {
+            var userIds = await _db.Users.Select(u => u.Id).ToListAsync();
+            foreach (var id in userIds)
+            {
+                await _notificationService.SendNotificationAsync(id, message);
+            }
+        }
+        else if (userId.HasValue)
+        {
+            await _notificationService.SendNotificationAsync(userId.Value, message);
+        }
+
+        return RedirectToAction(nameof(Notifications));
+    }
+
+    [HttpPost("Notifications/Delete/{id}")]
+    public async Task<IActionResult> DeleteNotification(Guid id)
+    {
+        await _notificationService.DeleteNotificationAsync(id);
+        return RedirectToAction(nameof(Notifications));
     }
 }

@@ -13,8 +13,15 @@ public class User
     public string? Major { get; set; }
     public string? Bio { get; set; }
     public string? ProfilePicture { get; set; }
-    public Guid RoleId { get; set; }
-    public Role Role { get; set; } = null!;
+    
+    // Boolean flags for easy access control
+    public bool IsAdmin { get; set; } = false;
+    public bool IsExecutor { get; set; } = false;
+    public bool IsStaff { get; set; } = false;
+
+    // Many-to-many relationship with Roles
+    public ICollection<Role> Roles { get; set; } = new List<Role>();
+    
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
@@ -23,6 +30,27 @@ public class Role
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty; // Student, Executor, Admin
+    public string? Description { get; set; }
+    public bool IsSystemRole { get; set; } = false;
+    public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
+    public ICollection<User> Users { get; set; } = new List<User>();
+}
+
+public class Permission
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Name { get; set; } = string.Empty; // e.g., "Users.View", "Orders.Manage"
+    public string? Group { get; set; } // e.g., "Management", "Finance"
+    public string? Description { get; set; }
+}
+
+public class RolePermission
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid RoleId { get; set; }
+    public Role Role { get; set; } = null!;
+    public Guid PermissionId { get; set; }
+    public Permission Permission { get; set; } = null!;
 }
 
 public class EmailOtp

@@ -18,13 +18,42 @@ public static class DbSeeder
         await context.Database.MigrateAsync();
 
         // 1. Seed Roles
-        var adminRole = await GetOrCreateRole(context, "Admin");
-        var studentRole = await GetOrCreateRole(context, "Student");
-        var executorRole = await GetOrCreateRole(context, "Executor");
+        var adminRole = await GetOrCreateRole(context, "Admin", "Full access to all system features", true);
+        var studentRole = await GetOrCreateRole(context, "Student", "Standard student access", true);
+        var executorRole = await GetOrCreateRole(context, "Executor", "Service execution access", true);
         await context.SaveChangesAsync();
 
+        // 1.1 Seed Permissions
+        if (!await context.Permissions.AnyAsync())
+        {
+            var permissions = new List<Permission>
+            {
+                new Permission { Group = "Management", Name = "Users.View", Description = "Can view users list and details" },
+                new Permission { Group = "Management", Name = "Users.Edit", Description = "Can toggle user status and edit roles" },
+                new Permission { Group = "Management", Name = "Roles.Manage", Description = "Full control over roles and permissions" },
+                new Permission { Group = "KYC", Name = "Kyc.Process", Description = "Can approve or reject KYC requests" },
+                new Permission { Group = "Catalog", Name = "Services.Manage", Description = "Can CRUD services and categories" },
+                new Permission { Group = "Operations", Name = "Orders.View", Description = "Can monitor all orders" },
+                new Permission { Group = "Operations", Name = "Orders.Manage", Description = "Can update order statuses" },
+                new Permission { Group = "Finance", Name = "Payments.View", Description = "Can view transaction history" },
+                new Permission { Group = "Finance", Name = "Disputes.Resolve", Description = "Can arbitrate and resolve financial disputes" },
+                new Permission { Group = "Support", Name = "Tickets.Manage", Description = "Can respond to and close support tickets" }
+            };
+            context.Permissions.AddRange(permissions);
+            await context.SaveChangesAsync();
+
+            // Assign all permissions to Admin role
+            foreach (var p in permissions)
+            {
+                context.RolePermissions.Add(new RolePermission { RoleId = adminRole.Id, PermissionId = p.Id });
+            }
+            await context.SaveChangesAsync();
+        }
+
         // 2. Seed Admin
-        await GetOrCreateUser(context, "admin@uis.com", "مدير النظام الرئيسي", "admin123", adminRole.Id, "جامعة القاهرة", "إدارة نظم معلومات", "مدير المنصة المسؤول عن المراجعة والتحكيم.");
+        await GetOrCreateUser(context, "admin@uis.com", "مدير النظام الرئيسي", "admin123", new List<Role> { adminRole, studentRole }, 
+            isAdmin: true, isStaff: true, uni: "جامعة القاهرة", major: "إدارة نظم معلومات", 
+            bio: "مدير المنصة المسؤول عن المراجعة والتحكيم.");
 
         // 3. Seed Students (Large batch with details)
         var students = new List<User>();
@@ -33,10 +62,10 @@ public static class DbSeeder
 
         for (int i = 1; i <= 20; i++)
         {
-            var user = await GetOrCreateUser(context, $"student{i}@uis.com", $"طالب رقم {i}", "pass123", studentRole.Id, 
-                universities[i % universities.Length], 
-                majors[i % majors.Length], 
-                $"أنا طالب في السنة {((i%4)+1)}، أحتاج لمساعدة في بعض المشاريع الأكاديمية.");
+            var user = await GetOrCreateUser(context, $"student{i}@uis.com", $"طالب رقم {i}", "pass123", new List<Role> { studentRole },
+                isAdmin: false, isStaff: false, uni: universities[i % universities.Length], 
+                major: majors[i % majors.Length], 
+                bio: $"أنا طالب في السنة {((i%4)+1)}، أحتاج لمساعدة في بعض المشاريع الأكاديمية.");
             students.Add(user);
         }
 
@@ -44,10 +73,11 @@ public static class DbSeeder
         var executors = new List<User>();
         for (int i = 1; i <= 15; i++)
         {
-            var user = await GetOrCreateUser(context, $"executor{i}@uis.com", $"منفذ خدمات {i}", "pass123", executorRole.Id,
-                universities[(i+2) % universities.Length],
-                majors[(i+1) % majors.Length],
-                $"خبير في مجال {majors[(i+1) % majors.Length]} ولدي خبرة أكثر من 3 سنوات في تنفيذ المشاريع الطلابية بجودة عالية.");
+            // Executors also have Student role
+            var user = await GetOrCreateUser(context, $"executor{i}@uis.com", $"منفذ خدمات {i}", "pass123", new List<Role> { studentRole, executorRole },
+                isAdmin: false, isStaff: false, isExecutor: true, uni: universities[(i+2) % universities.Length],
+                major: majors[(i+1) % majors.Length],
+                bio: $"خبير في مجال {majors[(i+1) % majors.Length]} ولدي خبرة أكثر من 3 سنوات في تنفيذ المشاريع الطلابية بجودة عالية.");
             executors.Add(user);
         }
         await context.SaveChangesAsync();
@@ -199,8 +229,8 @@ public static class DbSeeder
         // 11. Seed Private Chats (Direct Messages without orders)
         if (await context.Chats.CountAsync(c => c.OrderId == null) < 5)
         {
-            var allStudents = await context.Users.Where(u => u.Role.Name == "Student").ToListAsync();
-            var allExecutors = await context.Users.Where(u => u.Role.Name == "Executor").ToListAsync();
+            var allStudents = await context.Users.Where(u => u.Roles.Any(r => r.Name == "Student")).ToListAsync();
+            var allExecutors = await context.Users.Where(u => u.Roles.Any(r => r.Name == "Executor")).ToListAsync();
 
             for (int i = 0; i < 5; i++)
             {
@@ -220,20 +250,21 @@ public static class DbSeeder
         }
     }
 
-    private static async Task<Role> GetOrCreateRole(ApplicationDbContext context, string name)
+    private static async Task<Role> GetOrCreateRole(ApplicationDbContext context, string name, string? description = null, bool isSystem = false)
     {
         var role = await context.Roles.FirstOrDefaultAsync(r => r.Name == name);
         if (role == null)
         {
-            role = new Role { Name = name };
+            role = new Role { Name = name, Description = description, IsSystemRole = isSystem };
             context.Roles.Add(role);
         }
         return role;
     }
 
-    private static async Task<User> GetOrCreateUser(ApplicationDbContext context, string email, string fullName, string password, Guid roleId, string? uni = null, string? major = null, string? bio = null)
+    private static async Task<User> GetOrCreateUser(ApplicationDbContext context, string email, string fullName, string password, List<Role> roles, 
+        bool isAdmin = false, bool isExecutor = false, bool isStaff = false, string? uni = null, string? major = null, string? bio = null)
     {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Email == email);
         if (user == null)
         {
             user = new User
@@ -244,9 +275,15 @@ public static class DbSeeder
                 University = uni,
                 Major = major,
                 Bio = bio,
-                RoleId = roleId,
+                IsAdmin = isAdmin,
+                IsExecutor = isExecutor,
+                IsStaff = isStaff,
                 IsActive = true
             };
+            foreach (var role in roles)
+            {
+                user.Roles.Add(role);
+            }
             context.Users.Add(user);
             await context.SaveChangesAsync();
         }

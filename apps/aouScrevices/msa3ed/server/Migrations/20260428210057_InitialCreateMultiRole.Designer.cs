@@ -12,8 +12,8 @@ using Uis.Server.Data;
 namespace Uis.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260427234803_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260428210057_InitialCreateMultiRole")]
+    partial class InitialCreateMultiRole
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,21 @@ namespace Uis.Server.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("RoleUser", b =>
+                {
+                    b.Property<Guid>("RolesId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsersId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("RolesId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("UserRoles", (string)null);
+                });
 
             modelBuilder.Entity("Uis.Server.Models.Category", b =>
                 {
@@ -46,12 +61,22 @@ namespace Uis.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ExecutorId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("StudentId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ExecutorId");
+
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("StudentId");
 
                     b.ToTable("Chats");
                 });
@@ -135,6 +160,15 @@ namespace Uis.Server.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("IdExpiryDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NationalId")
                         .IsRequired()
@@ -279,11 +313,38 @@ namespace Uis.Server.Migrations
                     b.ToTable("Payments");
                 });
 
+            modelBuilder.Entity("Uis.Server.Models.Permission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Group")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions");
+                });
+
             modelBuilder.Entity("Uis.Server.Models.Role", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsSystemRole")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -292,6 +353,27 @@ namespace Uis.Server.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("Uis.Server.Models.RolePermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PermissionId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("Uis.Server.Models.Service", b =>
@@ -385,6 +467,9 @@ namespace Uis.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Bio")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -399,27 +484,67 @@ namespace Uis.Server.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsExecutor")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsStaff")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Major")
+                        .HasColumnType("text");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("ProfilePicture")
+                        .HasColumnType("text");
+
+                    b.Property<string>("University")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
 
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("RoleUser", b =>
+                {
+                    b.HasOne("Uis.Server.Models.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RolesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Uis.Server.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Uis.Server.Models.Chat", b =>
                 {
+                    b.HasOne("Uis.Server.Models.User", "Executor")
+                        .WithMany()
+                        .HasForeignKey("ExecutorId");
+
                     b.HasOne("Uis.Server.Models.Order", "Order")
                         .WithMany()
                         .HasForeignKey("OrderId");
 
+                    b.HasOne("Uis.Server.Models.User", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId");
+
+                    b.Navigation("Executor");
+
                     b.Navigation("Order");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("Uis.Server.Models.Escrow", b =>
@@ -510,6 +635,25 @@ namespace Uis.Server.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("Uis.Server.Models.RolePermission", b =>
+                {
+                    b.HasOne("Uis.Server.Models.Permission", "Permission")
+                        .WithMany()
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Uis.Server.Models.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("Uis.Server.Models.Service", b =>
                 {
                     b.HasOne("Uis.Server.Models.Category", "Category")
@@ -551,20 +695,14 @@ namespace Uis.Server.Migrations
                     b.Navigation("Ticket");
                 });
 
-            modelBuilder.Entity("Uis.Server.Models.User", b =>
-                {
-                    b.HasOne("Uis.Server.Models.Role", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-                });
-
             modelBuilder.Entity("Uis.Server.Models.Chat", b =>
                 {
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("Uis.Server.Models.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("Uis.Server.Models.Ticket", b =>

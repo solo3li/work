@@ -4,6 +4,7 @@
     ViewData["Title"] = $"ملف المستخدم - {Model.FullName}";
     var recentOrders = ViewBag.RecentOrders as IEnumerable<Uis.Server.Models.Order>;
     var kyc = ViewBag.KycRequest as Uis.Server.Models.KycRequest;
+    var allRoles = ViewBag.AllRoles as IEnumerable<Uis.Server.Models.Role>;
 }
 
 <div class="mb-6 flex items-center justify-between">
@@ -32,24 +33,80 @@
                 <h2 class="text-2xl font-black text-gray-800">@Model.FullName</h2>
                 <p class="text-gray-400 font-medium text-sm">@Model.Email</p>
                 
-                <div class="inline-block mt-4 px-4 py-1 bg-gray-50 rounded-lg border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500">
-                    @(Model.Role?.Name ?? "بدون دور")
+                <div class="flex flex-wrap justify-center gap-1 mt-4">
+                    @foreach(var r in Model.Roles)
+                    {
+                        <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 text-[10px] font-black uppercase tracking-widest">
+                            @r.Name
+                        </span>
+                    }
+                </div>
+                
+                <div class="flex justify-center gap-2 mt-2">
+                    @if(Model.IsAdmin){ <span class="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">ADMIN</span> }
+                    @if(Model.IsExecutor){ <span class="bg-blue-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">EXEC</span> }
+                    @if(Model.IsStaff){ <span class="bg-green-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">STAFF</span> }
                 </div>
 
                 <div class="mt-8 space-y-4 text-right">
                     <div class="flex items-center text-gray-600">
-                        <i class="fas fa-university w-6 text-indigo-400"></i>
+                        <i class="fas fa-university w-6 text-indigo-400 text-center"></i>
                         <span class="text-xs font-bold mr-2">الجامعة:</span>
                         <span class="text-xs mr-auto">@(Model.University ?? "غير محدد")</span>
                     </div>
                     <div class="flex items-center text-gray-600">
-                        <i class="fas fa-graduation-cap w-6 text-indigo-400"></i>
+                        <i class="fas fa-graduation-cap w-6 text-indigo-400 text-center"></i>
                         <span class="text-xs font-bold mr-2">التخصص:</span>
                         <span class="text-xs mr-auto">@(Model.Major ?? "غير محدد")</span>
                     </div>
                 </div>
 
-                <div class="mt-8 pt-6 border-t border-gray-50">
+                <!-- Update Role Section -->
+                <div class="mt-8 pt-6 border-t border-gray-50 bg-gray-50/50 -mx-8 px-8 pb-6">
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase text-right mb-4 tracking-widest flex items-center">
+                        <i class="fas fa-user-tag ml-2 text-indigo-400"></i> إدارة الأدوار والصلاحيات
+                    </h4>
+                    
+                    <div class="space-y-2 mb-4">
+                        @foreach(var r in Model.Roles)
+                        {
+                            <div class="flex items-center justify-between bg-white p-2 rounded-xl border border-gray-100">
+                                <span class="text-xs font-bold text-gray-700">@r.Name</span>
+                                @if(r.Name != "Student") {
+                                    <form asp-action="RemoveUserRole" method="post">
+                                        <input type="hidden" name="userId" value="@Model.Id" />
+                                        <input type="hidden" name="roleId" value="@r.Id" />
+                                        <button type="submit" class="text-red-400 hover:text-red-600 transition-colors">
+                                            <i class="fas fa-times-circle"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <form asp-action="UpdateUserRole" method="post" class="space-y-3">
+                        <input type="hidden" name="userId" value="@Model.Id" />
+                        <div class="relative">
+                            <select name="roleId" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500 appearance-none">
+                                <option value="">إضافة دور جديد...</option>
+                                @foreach(var role in allRoles)
+                                {
+                                    @if(!Model.Roles.Any(r => r.Id == role.Id))
+                                    {
+                                        <option value="@role.Id">@role.Name</option>
+                                    }
+                                }
+                            </select>
+                            <i class="fas fa-chevron-down absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"></i>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-xs font-black transition-all shadow-lg hover:shadow-indigo-100 flex items-center justify-center">
+                            <i class="fas fa-plus ml-2 text-[10px]"></i> إضافة الصلاحية
+                        </button>
+                    </form>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-50">
                     <h4 class="text-xs font-black text-gray-400 uppercase text-right mb-3">نبذة تعريفية</h4>
                     <p class="text-xs text-gray-600 leading-relaxed text-right italic">
                         "@(Model.Bio ?? "لا يوجد وصف متوفر لهذا المستخدم حالياً.")"
@@ -93,23 +150,24 @@
     <div class="lg:col-span-2 space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                <p class="text-[10px] font-black text-gray-400 uppercase mb-2">إجمالي الطلبات</p>
+                <p class="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">إجمالي الطلبات</p>
                 <p class="text-2xl font-black text-gray-800">@ViewBag.OrdersCount</p>
             </div>
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                <p class="text-[10px] font-black text-gray-400 uppercase mb-2">تاريخ التسجيل</p>
+                <p class="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">تاريخ التسجيل</p>
                 <p class="text-sm font-black text-gray-800">@Model.CreatedAt.ToString("MMMM yyyy")</p>
             </div>
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                <p class="text-[10px] font-black text-gray-400 uppercase mb-2">ساعات النشاط</p>
-                <p class="text-2xl font-black text-indigo-600">24/7</p>
+                <p class="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">المستوى</p>
+                <p class="text-2xl font-black text-indigo-600">V.I.P</p>
             </div>
         </div>
 
         <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-gray-800">آخر الطلبات المرتبطة</h3>
-                <i class="fas fa-history text-gray-300"></i>
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/20">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-history ml-2 text-indigo-400"></i> آخر النشاطات المرتبطة
+                </h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-right">

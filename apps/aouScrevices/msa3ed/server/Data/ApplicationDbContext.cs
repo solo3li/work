@@ -25,10 +25,17 @@ public class ApplicationDbContext : DbContext
     public DbSet<TicketMessage> TicketMessages { get; set; } = null!;
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<FileAttachment> Files { get; set; } = null!;
+    public DbSet<Permission> Permissions { get; set; } = null!;
+    public DbSet<RolePermission> RolePermissions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        // Configure relationships here
+        
+        // Configure Many-to-Many between User and Role
+        modelBuilder.Entity<User>()
+            .HasMany(u => u.Roles)
+            .WithMany(r => r.Users)
+            .UsingEntity(j => j.ToTable("UserRoles"));
     }
 }

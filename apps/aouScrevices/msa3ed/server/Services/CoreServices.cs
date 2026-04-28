@@ -15,18 +15,31 @@ public class AuthService : IAuthService {
     private readonly ApplicationDbContext _db; private readonly IJwtService _jwt; private readonly IOtpService _otp;
     public AuthService(ApplicationDbContext db, IJwtService jwt, IOtpService otp) { _db = db; _jwt = jwt; _otp = otp; }
     public async Task<string?> LoginAsync(LoginDto dto) {
-        var user = await _db.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == dto.Email);
+        var user = await _db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Email == dto.Email);
         if (user == null || user.PasswordHash != dto.Password) return null;
         return _jwt.GenerateToken(user);
     }
     public async Task<bool> RegisterAsync(RegisterDto dto) {
         if (await _db.Users.AnyAsync(u => u.Email == dto.Email)) return false;
-        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == dto.Role);
-        if (role == null) {
-            role = new Role { Name = dto.Role };
-            _db.Roles.Add(role);
+
+        // Every registered user is a Student by default
+        var studentRole = await _db.Roles.FirstOrDefaultAsync(r => r.Name == "Student");
+        if (studentRole == null) {
+            studentRole = new Role { Name = "Student", IsSystemRole = true };
+            _db.Roles.Add(studentRole);
         }
-        var user = new User { Email = dto.Email, FullName = dto.FullName, PasswordHash = dto.Password, Role = role };
+
+        var user = new User { 
+            Email = dto.Email, 
+            FullName = dto.FullName, 
+            PasswordHash = dto.Password,
+            IsAdmin = false,
+            IsExecutor = false,
+            IsStaff = false
+        };
+
+        user.Roles.Add(studentRole);
+
         _db.Users.Add(user); await _db.SaveChangesAsync(); return true;
     }
 }
@@ -49,7 +62,16 @@ public interface IJwtService { string GenerateToken(User user); }
 public class JwtService : IJwtService {
     private readonly IConfiguration _config; public JwtService(IConfiguration config) { _config = config; }
     public string GenerateToken(User user) {
-        var claims = new[] { new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), new Claim(ClaimTypes.Email, user.Email), new Claim(ClaimTypes.Role, user.Role?.Name ?? "Student") };
+        var claims = new List<Claim> { 
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), 
+            new Claim(ClaimTypes.Email, user.Email) 
+        };
+
+        // Add all roles to claims
+        foreach (var role in user.Roles) {
+            claims.Add(new Claim(ClaimTypes.Role, role.Name));
+        }
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtSettings:Secret"] ?? "default_secret_key_default_secret_key_default_secret_key"));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(issuer: _config["JwtSettings:Issuer"], audience: _config["JwtSettings:Audience"], claims: claims, expires: DateTime.UtcNow.AddDays(7), signingCredentials: creds);
@@ -60,6 +82,6 @@ public class JwtService : IJwtService {
 public interface IUserService { Task<User?> GetUserByIdAsync(Guid id); Task<IEnumerable<User>> GetAllUsersAsync(); }
 public class UserService : IUserService {
     private readonly ApplicationDbContext _db; public UserService(ApplicationDbContext db) { _db = db; }
-    public async Task<User?> GetUserByIdAsync(Guid id) => await _db.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
-    public async Task<IEnumerable<User>> GetAllUsersAsync() => await _db.Users.Include(u => u.Role).ToListAsync();
+    public async Task<User?> GetUserByIdAsync(Guid id) => await _db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == id);
+    public async Task<IEnumerable<User>> GetAllUsersAsync() => await _db.Users.Include(u => u.Roles).ToListAsync();
 }

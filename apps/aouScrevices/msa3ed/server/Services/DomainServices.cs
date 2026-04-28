@@ -77,10 +77,52 @@ public class TicketService : ITicketService {
     }
 }
 
-public interface INotificationService { Task SendNotificationAsync(Guid userId, string message); }
+public interface INotificationService 
+{ 
+    Task SendNotificationAsync(Guid userId, string message); 
+    Task<List<Notification>> GetUserNotificationsAsync(Guid userId);
+    Task<List<Notification>> GetAllNotificationsAsync(int count = 50);
+    Task MarkAsReadAsync(Guid notificationId);
+    Task DeleteNotificationAsync(Guid notificationId);
+}
+
 public class NotificationService : INotificationService {
-    private readonly ApplicationDbContext _db; public NotificationService(ApplicationDbContext db) { _db = db; }
+    private readonly ApplicationDbContext _db; 
+    public NotificationService(ApplicationDbContext db) { _db = db; }
+
     public async Task SendNotificationAsync(Guid userId, string message) {
-        _db.Notifications.Add(new Notification { UserId = userId, Message = message }); await _db.SaveChangesAsync();
+        _db.Notifications.Add(new Notification { UserId = userId, Message = message }); 
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<List<Notification>> GetUserNotificationsAsync(Guid userId) {
+        return await _db.Notifications
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<Notification>> GetAllNotificationsAsync(int count = 50) {
+        return await _db.Notifications
+            .Include(n => n.User)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task MarkAsReadAsync(Guid notificationId) {
+        var n = await _db.Notifications.FindAsync(notificationId);
+        if (n != null) {
+            n.IsRead = true;
+            await _db.SaveChangesAsync();
+        }
+    }
+
+    public async Task DeleteNotificationAsync(Guid notificationId) {
+        var n = await _db.Notifications.FindAsync(notificationId);
+        if (n != null) {
+            _db.Notifications.Remove(n);
+            await _db.SaveChangesAsync();
+        }
     }
 }
