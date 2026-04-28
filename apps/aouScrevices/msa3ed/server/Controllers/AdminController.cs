@@ -168,18 +168,79 @@ public class AdminController : Controller
 
     // --- Service Management ---
     [HttpGet("Services")]
-    public async Task<IActionResult> Services()
+    public async Task<IActionResult> Services(string? search, Guid? categoryId)
+    {
+        var query = _db.Services.Include(s => s.Category).AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(s => s.Title.Contains(search) || s.Description.Contains(search));
+
+        if (categoryId.HasValue)
+            query = query.Where(s => s.CategoryId == categoryId.Value);
+
+        var services = await query.OrderByDescending(s => s.Id).ToListAsync();
+        
+        ViewBag.Categories = await _db.Categories.ToListAsync();
+        ViewBag.Search = search;
+        ViewBag.SelectedCategoryId = categoryId;
+
+        return View(services);
+    }
+
+    [HttpGet("Services/Create")]
+    public async Task<IActionResult> CreateService()
     {
         ViewBag.Categories = await _db.Categories.ToListAsync();
-        var services = await _db.Services.Include(s => s.Category).ToListAsync();
-        return View(services);
+        return View();
     }
 
     [HttpPost("Services/Create")]
     public async Task<IActionResult> CreateService(Service service)
     {
-        _db.Services.Add(service);
-        await _db.SaveChangesAsync();
+        if (ModelState.IsValid)
+        {
+            _db.Services.Add(service);
+            await _db.SaveChangesAsync();
+            return RedirectToAction(nameof(Services));
+        }
+        ViewBag.Categories = await _db.Categories.ToListAsync();
+        return View(service);
+    }
+
+    [HttpGet("Services/Edit/{id}")]
+    public async Task<IActionResult> EditService(Guid id)
+    {
+        var service = await _db.Services.FindAsync(id);
+        if (service == null) return NotFound();
+
+        ViewBag.Categories = await _db.Categories.ToListAsync();
+        return View(service);
+    }
+
+    [HttpPost("Services/Edit/{id}")]
+    public async Task<IActionResult> EditService(Guid id, Service service)
+    {
+        if (id != service.Id) return BadRequest();
+
+        if (ModelState.IsValid)
+        {
+            _db.Entry(service).State = EntityState.Modified;
+            await _db.SaveChangesAsync();
+            return RedirectToAction(nameof(Services));
+        }
+        ViewBag.Categories = await _db.Categories.ToListAsync();
+        return View(service);
+    }
+
+    [HttpPost("Services/Delete/{id}")]
+    public async Task<IActionResult> DeleteService(Guid id)
+    {
+        var service = await _db.Services.FindAsync(id);
+        if (service != null)
+        {
+            _db.Services.Remove(service);
+            await _db.SaveChangesAsync();
+        }
         return RedirectToAction(nameof(Services));
     }
 

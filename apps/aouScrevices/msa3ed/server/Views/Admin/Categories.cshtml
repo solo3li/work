@@ -7,17 +7,19 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Add Category Form -->
     <div class="lg:col-span-1">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-6">إضافة تصنيف جديد</h3>
-            <form asp-action="CreateCategory" method="post" class="space-y-4">
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 sticky top-6">
+            <h3 class="text-xl font-black text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-folder-plus ml-2 text-indigo-500"></i> تصنيف جديد
+            </h3>
+            <form asp-action="CreateCategory" method="post" class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">اسم التصنيف</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">اسم التصنيف</label>
                     <input type="text" name="name" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                           placeholder="مثال: برمجة، تصميم...">
+                           class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-gray-50"
+                           placeholder="مثال: برمجة تطبيقات...">
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md">
-                    <i class="fas fa-plus ml-2"></i>حفظ التصنيف
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl transition-all shadow-lg hover:scale-[1.02] active:scale-95">
+                    <i class="fas fa-save ml-2"></i>حفظ التصنيف
                 </button>
             </form>
         </div>
@@ -25,29 +27,38 @@
 
     <!-- Categories List -->
     <div class="lg:col-span-2">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-6 border-b border-gray-100">
-                <h3 class="text-lg font-bold text-gray-800">التصنيفات الحالية</h3>
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-lg font-bold text-gray-800">التصنيفات المتاحة</h3>
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">إجمالي: @Model.Count()</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-right">
                     <thead>
-                        <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold text-sm">
+                        <tr class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold text-[10px] uppercase tracking-widest">
                             <th class="p-4">اسم التصنيف</th>
-                            <th class="p-4 text-center">الإجراءات</th>
+                            <th class="p-4 text-center">الإجراءات والربط</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-sm">
                         @foreach (var cat in Model)
                         {
-                            <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="p-4 font-medium text-gray-800">@cat.Name</td>
-                                <td class="p-4 flex justify-center space-x-2 rtl:space-x-reverse">
-                                    <form asp-action="DeleteCategory" asp-route-id="@cat.Id" method="post" onsubmit="return confirm('هل أنت متأكد من حذف هذا التصنيف؟')">
-                                        <button type="submit" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="p-4 font-bold text-gray-800">@cat.Name</td>
+                                <td class="p-4">
+                                    <div class="flex justify-center space-x-3 rtl:space-x-reverse">
+                                        <!-- Link to Filtered Services -->
+                                        <a asp-action="Services" asp-route-categoryId="@cat.Id" 
+                                           class="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-xl text-xs font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex items-center">
+                                            <i class="fas fa-list-ul ml-1.5"></i> عرض الخدمات
+                                        </a>
+
+                                        <form asp-action="DeleteCategory" asp-route-id="@cat.Id" method="post" onsubmit="return confirm('هل أنت متأكد؟ سيتم فصل الخدمات المرتبطة بهذا التصنيف.')">
+                                            <button type="submit" class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-xl transition-all">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }

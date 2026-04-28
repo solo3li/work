@@ -5,14 +5,30 @@
     var categories = ViewBag.Categories as IEnumerable<Uis.Server.Models.Category>;
 }
 
-<div class="mb-8 flex justify-between items-center">
+<div class="mb-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
     <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">الخدمات المتاحة</h3>
-    <button onclick="document.getElementById('add-service-modal').classList.remove('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg flex items-center">
-        <i class="fas fa-plus ml-2"></i>إضافة خدمة جديدة
-    </button>
+    
+    <!-- Search & Filter Form -->
+    <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
+        <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث باسم الخدمة..." 
+                   class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-w-[200px]">
+        </div>
+        <select name="categoryId" onchange="this.form.submit()" class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+            <option value="">كل التصنيفات</option>
+            @foreach(var cat in categories)
+            {
+                <option value="@cat.Id" selected="@(ViewBag.SelectedCategoryId?.ToString() == cat.Id.ToString())">@cat.Name</option>
+            }
+        </select>
+        <a asp-action="CreateService" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md flex items-center">
+            <i class="fas fa-plus ml-2"></i>إضافة خدمة
+        </a>
+    </form>
 </div>
 
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-right">
             <thead>
@@ -25,12 +41,16 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 text-sm">
+                @if(!Model.Any())
+                {
+                    <tr><td colspan="5" class="p-8 text-center text-gray-400 italic">لا توجد خدمات تطابق معايير البحث.</td></tr>
+                }
                 @foreach (var srv in Model)
                 {
                     <tr class="hover:bg-gray-50/50 transition-colors">
                         <td class="p-4 font-bold text-gray-800">@srv.Title</td>
                         <td class="p-4">
-                            <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold border border-indigo-100">
+                            <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-black border border-indigo-100 uppercase">
                                 @(srv.Category?.Name ?? "غير مصنف")
                             </span>
                         </td>
@@ -38,11 +58,11 @@
                         <td class="p-4 text-center">
                             @if (srv.IsActive)
                             {
-                                <span class="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full text-xs font-bold border border-green-200">نشطة</span>
+                                <span class="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full text-[10px] font-black border border-green-200">نشطة</span>
                             }
                             else
                             {
-                                <span class="bg-gray-100 text-gray-800 px-2.5 py-0.5 rounded-full text-xs font-bold border border-gray-200">معطلة</span>
+                                <span class="bg-gray-100 text-gray-800 px-2.5 py-0.5 rounded-full text-[10px] font-black border border-gray-200">معطلة</span>
                             }
                         </td>
                         <td class="p-4">
@@ -52,47 +72,15 @@
                                         <i class="fas @(srv.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
                                     </button>
                                 </form>
-                                <button class="text-blue-500 hover:bg-blue-50 p-2 rounded-lg" title="تعديل"><i class="fas fa-edit"></i></button>
-                                <button class="text-red-500 hover:bg-red-50 p-2 rounded-lg" title="حذف"><i class="fas fa-trash-alt"></i></button>
+                                <a asp-action="EditService" asp-route-id="@srv.Id" class="text-blue-500 hover:bg-blue-50 p-2 rounded-lg" title="تعديل"><i class="fas fa-edit"></i></a>
+                                <form asp-action="DeleteService" asp-route-id="@srv.Id" method="post" onsubmit="return confirm('هل أنت متأكد من حذف هذه الخدمة؟')">
+                                    <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg" title="حذف"><i class="fas fa-trash-alt"></i></button>
+                                </form>
                             </div>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-    </div>
-</div>
-
-<!-- Add Service Modal -->
-<div id="add-service-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
-        <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
-            <h4 class="text-xl font-bold">إضافة خدمة جديدة</h4>
-            <button onclick="document.getElementById('add-service-modal').classList.add('hidden')" class="text-white hover:rotate-90 transition-transform"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <form asp-action="CreateService" method="post" class="p-8 space-y-5">
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">عنوان الخدمة</label>
-                <input type="text" name="Title" required class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">التصنيف</label>
-                <select name="CategoryId" required class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-white">
-                    @foreach(var cat in categories) { <option value="@cat.Id">@cat.Name</option> }
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">السعر الأساسي (ج.م)</label>
-                <input type="number" name="BasePrice" step="0.01" required class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">الوصف</label>
-                <textarea name="Description" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none" rows="3"></textarea>
-            </div>
-            <div class="pt-4 flex space-x-3 rtl:space-x-reverse">
-                <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg">حفظ الخدمة</button>
-                <button type="button" onclick="document.getElementById('add-service-modal').classList.add('hidden')" class="px-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200">إلغاء</button>
-            </div>
-        </form>
     </div>
 </div>
