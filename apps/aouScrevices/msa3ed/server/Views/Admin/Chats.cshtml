@@ -1,0 +1,66 @@
+@model IEnumerable<Uis.Server.Models.Chat>
+
+@{
+    ViewData["Title"] = "الرقابة على المحادثات";
+}
+
+<div class="mb-8">
+    <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">مراقبة التفاعلات المباشرة</h3>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
+        <h4 class="font-bold text-gray-700">جميع المحادثات النشطة</h4>
+        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">إجمالي: @Model.Count()</span>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs uppercase tracking-widest">
+                    <th class="p-4">نوع المحادثة</th>
+                    <th class="p-4">الأطراف المشاركة</th>
+                    <th class="p-4">آخر رسالة</th>
+                    <th class="p-4 text-center">النشاط</th>
+                    <th class="p-4 text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @foreach (var chat in Model)
+                {
+                    var lastMsg = chat.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault();
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4">
+                            @if(chat.OrderId.HasValue)
+                            {
+                                <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">طلب #@chat.OrderId.Value.ToString().Substring(0,8)</span>
+                            }
+                            else
+                            {
+                                <span class="bg-purple-50 text-purple-700 px-2 py-1 rounded-md text-[10px] font-black border border-purple-100">دردشة خاصة</span>
+                            }
+                        </td>
+                        <td class="p-4">
+                            <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                                <span class="font-bold text-gray-800">@(chat.Order?.Student?.FullName ?? chat.Student?.FullName ?? "مستخدم")</span>
+                                <i class="fas fa-exchange-alt text-gray-300 text-xs mx-1"></i>
+                                <span class="font-bold text-indigo-600">@(chat.Order?.Executor?.FullName ?? chat.Executor?.FullName ?? "منفذ")</span>
+                            </div>
+                        </td>
+                        <td class="p-4 max-w-xs">
+                            <p class="text-xs text-gray-500 truncate italic">"@(lastMsg?.Content ?? "لا توجد رسائل")"</p>
+                        </td>
+                        <td class="p-4 text-center text-[10px] text-gray-400 font-medium">
+                            @(lastMsg?.SentAt.ToString("yyyy-MM-dd HH:mm") ?? "-")
+                        </td>
+                        <td class="p-4 text-center">
+                            <a asp-action="ChatDetails" asp-route-id="@chat.Id" class="inline-block bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm">
+                                <i class="fas fa-search-eye ml-1"></i> مراقبة
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

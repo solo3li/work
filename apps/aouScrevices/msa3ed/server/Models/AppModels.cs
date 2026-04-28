@@ -103,6 +103,13 @@ public class Chat
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid? OrderId { get; set; }
     public Order? Order { get; set; }
+    
+    // For direct chats not linked to orders
+    public Guid? StudentId { get; set; }
+    public User? Student { get; set; }
+    public Guid? ExecutorId { get; set; }
+    public User? Executor { get; set; }
+
     public ICollection<Message> Messages { get; set; } = new List<Message>();
 }
 

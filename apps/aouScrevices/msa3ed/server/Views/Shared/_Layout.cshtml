@@ -60,6 +60,10 @@
                 <i class="fas fa-shopping-cart w-6 text-center"></i>
                 <span class="mx-3 font-semibold">الطلبات</span>
             </a>
+            <a href="/Admin/Chats" class="nav-link flex items-center px-4 py-3 text-white rounded-lg transition-colors @(ViewContext.RouteData.Values["action"]?.ToString() == "Chats" ? "active" : "")">
+                <i class="fas fa-comments w-6 text-center"></i>
+                <span class="mx-3 font-semibold">المحادثات</span>
+            </a>
             <a href="/Admin/Payments" class="nav-link flex items-center px-4 py-3 text-white rounded-lg transition-colors @(ViewContext.RouteData.Values["action"]?.ToString() == "Payments" ? "active" : "")">
                 <i class="fas fa-file-invoice-dollar w-6 text-center"></i>
                 <span class="mx-3 font-semibold">المدفوعات</span>

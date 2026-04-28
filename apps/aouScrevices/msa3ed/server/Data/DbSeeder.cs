@@ -169,9 +169,55 @@ public static class DbSeeder
                     Amount = order.Price, 
                     Status = escrowStatus 
                 });
+
+                // 10. Seed Chat & Messages for this order
+                if (order.ExecutorId.HasValue && !await context.Chats.AnyAsync(c => c.OrderId == order.Id))
+                {
+                    var chat = new Chat { OrderId = order.Id };
+                    context.Chats.Add(chat);
+                    await context.SaveChangesAsync();
+
+                    var msgs = new List<Message>
+                    {
+                        new Message { ChatId = chat.Id, SenderId = order.StudentId, Content = "مرحباً، هل بدأت العمل؟", SentAt = order.CreatedAt.AddMinutes(10) },
+                        new Message { ChatId = chat.Id, SenderId = order.ExecutorId.Value, Content = "أهلاً بك، نعم سأبدأ الآن وسأوافيك بالتطورات.", SentAt = order.CreatedAt.AddHours(1) },
+                        new Message { ChatId = chat.Id, SenderId = order.StudentId, Content = "ممتاز، شكراً جزيلاً لك.", SentAt = order.CreatedAt.AddHours(2) }
+                    };
+
+                    if (order.Status == "Completed")
+                    {
+                        msgs.Add(new Message { ChatId = chat.Id, SenderId = order.ExecutorId.Value, Content = "لقد انتهيت من العمل ورفعت الملفات المطلوبة.", SentAt = order.CreatedAt.AddDays(1) });
+                        msgs.Add(new Message { ChatId = chat.Id, SenderId = order.StudentId, Content = "تم الاستلام، جودة رائعة!", SentAt = order.CreatedAt.AddDays(1).AddHours(2) });
+                    }
+
+                    context.Messages.AddRange(msgs);
+                }
             }
         }
         await context.SaveChangesAsync();
+
+        // 11. Seed Private Chats (Direct Messages without orders)
+        if (await context.Chats.CountAsync(c => c.OrderId == null) < 5)
+        {
+            var allStudents = await context.Users.Where(u => u.Role.Name == "Student").ToListAsync();
+            var allExecutors = await context.Users.Where(u => u.Role.Name == "Executor").ToListAsync();
+
+            for (int i = 0; i < 5; i++)
+            {
+                var student = allStudents[i % allStudents.Count];
+                var executor = allExecutors[i % allExecutors.Count];
+                
+                var privateChat = new Chat { StudentId = student.Id, ExecutorId = executor.Id };
+                context.Chats.Add(privateChat);
+                await context.SaveChangesAsync();
+
+                context.Messages.AddRange(
+                    new Message { ChatId = privateChat.Id, SenderId = student.Id, Content = "مرحباً، أود الاستفسار عن خدماتك بشكل مباشر.", SentAt = DateTime.UtcNow.AddDays(-2) },
+                    new Message { ChatId = privateChat.Id, SenderId = executor.Id, Content = "أهلاً بك! أنا متاح للرد على أي استفسار بخصوص البرمجة أو التصميم.", SentAt = DateTime.UtcNow.AddDays(-2).AddMinutes(15) }
+                );
+            }
+            await context.SaveChangesAsync();
+        }
     }
 
     private static async Task<Role> GetOrCreateRole(ApplicationDbContext context, string name)

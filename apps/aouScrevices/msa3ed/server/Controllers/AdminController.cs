@@ -238,6 +238,12 @@ public class AdminController : Controller
 
         ViewBag.Payment = await _db.Payments.FirstOrDefaultAsync(p => p.OrderId == id);
         ViewBag.Escrow = await _db.Escrows.FirstOrDefaultAsync(e => e.OrderId == id);
+        
+        // Load Chat and Messages
+        ViewBag.Chat = await _db.Chats
+            .Include(c => c.Messages.OrderBy(m => m.SentAt))
+            .ThenInclude(m => m.Sender)
+            .FirstOrDefaultAsync(c => c.OrderId == id);
 
         return View(order);
     }
@@ -366,6 +372,36 @@ public class AdminController : Controller
         }
 
         return RedirectToAction(nameof(TicketDetails), new { id = ticketId });
+    }
+
+    // --- Monitoring & General Chat ---
+    [HttpGet("Chats")]
+    public async Task<IActionResult> Chats()
+    {
+        var chats = await _db.Chats
+            .Include(c => c.Order)
+            .Include(c => c.Student)
+            .Include(c => c.Executor)
+            .Include(c => c.Messages)
+            .OrderByDescending(c => c.Messages.Max(m => m.SentAt))
+            .ToListAsync();
+        return View(chats);
+    }
+
+    [HttpGet("Chats/{id}")]
+    public async Task<IActionResult> ChatDetails(Guid id)
+    {
+        var chat = await _db.Chats
+            .Include(c => c.Order)
+            .Include(c => c.Student)
+            .Include(c => c.Executor)
+            .Include(c => c.Messages.OrderBy(m => m.SentAt))
+            .ThenInclude(m => m.Sender)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (chat == null) return NotFound();
+
+        return View(chat);
     }
 
     // --- Payment Management ---
