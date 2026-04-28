@@ -3,8 +3,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../constants/Colors';
 import { Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function TabLayout() {
+  const { user } = useAuth();
+  const isExecutor = user?.isExecutor || false;
+
   return (
     <Tabs
       screenOptions={{
@@ -23,7 +27,7 @@ export default function TabLayout() {
           paddingTop: 12,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: '700',
           marginTop: 4,
         },
@@ -45,8 +49,31 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? "grid" : "grid-outline"} size={size} color={color} />
           ),
+          href: isExecutor ? null : undefined, // Hide for executors to save space, but still accessible
         }}
       />
+      {/* EXECUTOR ONLY TABS */}
+      <Tabs.Screen
+        name="executor-orders"
+        options={{
+          title: 'متاح للعمل',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "briefcase" : "briefcase-outline"} size={size} color={color} />
+          ),
+          href: isExecutor ? undefined : null,
+        }}
+      />
+      <Tabs.Screen
+        name="executor-earnings"
+        options={{
+          title: 'أرباحي',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "cash" : "cash-outline"} size={size} color={color} />
+          ),
+          href: isExecutor ? undefined : null,
+        }}
+      />
+      {/* COMMON TABS */}
       <Tabs.Screen
         name="orders"
         options={{

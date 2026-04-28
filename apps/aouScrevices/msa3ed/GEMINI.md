@@ -13,8 +13,8 @@ UIS is a multi-role platform (Student and Executor) designed for university serv
 - `/UIS`: The Expo mobile application source code.
   - `/UIS/app`: Uses Expo Router for file-based navigation.
     - `/(auth)`: Login, Register, OTP, Forgot Password.
-    - `/student`: Student-specific layouts and screens.
-    - `/executor`: Executor-specific layouts and screens.
+    - `/student`: Unified tab-based navigation and screens for both Students and Executors.
+    - `/executor`: KYC submission and status screens.
     - `/shared`: Shared screens (Chat, Orders details, Support tickets, Settings).
   - `/UIS/context`: React Context for state management (AuthContext).
 - `/server`: The ASP.NET Core backend source code.
@@ -59,7 +59,9 @@ UIS is a multi-role platform (Student and Executor) designed for university serv
    ```
 
 **Current State:**
-All screens for both Student and Executor roles have been implemented according to the PRD using static dummy data. Navigation between screens is fully functional for the MVP showcase.
+All screens for both Student and Executor roles have been implemented according to the PRD. The unified frontend uses `isExecutor` state for Role-Based conditional rendering.
+The ASP.NET Core backend has been updated to include all necessary REST API endpoints mapping directly to the frontend screens (Auth, Users/Me, Services, Orders, Payments, Chat, Tickets, KYC).
+The frontend includes an `apiFetch` client in `UIS/services/api.ts` ready to replace the static dummy data.
 
 ### Backend (server)
 1. Navigate to the `server` directory:
@@ -95,6 +97,45 @@ All screens for both Student and Executor roles have been implemented according 
 - JWT Authentication, Email-based OTP, and SignalR (`ChatHub`) are configured.
 - The Admin Panel (MVC) is fully functional with dashboards, user management, order tracking, KYC approvals, and role/permission management.
 - The Web API endpoints are complete for the mobile application.
+
+## 🌐 Backend API Endpoints
+
+The ASP.NET Core backend exposes the following REST API endpoints for the mobile application. All authenticated routes require a valid JWT token in the `Authorization: Bearer <token>` header.
+
+### 🔐 Authentication (`/api/Auth`)
+- `POST /login` - Authenticate a user and trigger an OTP email.
+- `POST /register` - Register a new user (defaults to 'Student' role).
+- `POST /verify-otp` - Verify the OTP and return user details (`id`, `name`, `email`, `isExecutor`, `roles`).
+
+### 👤 Users (`/api/Users`)
+- `GET /Me` **[Auth]** - Fetch the current authenticated user's profile and roles.
+
+### 🛍️ Catalog (`/api/Services`, `/api/Categories`)
+- `GET /api/Services` - Fetch all active services.
+- `GET /api/Services/{id}` - Fetch a specific service by ID.
+- `GET /api/Categories` - Fetch all service categories.
+
+### 📦 Orders (`/api/Orders`)
+- `GET /` **[Auth]** - Get all orders related to the current user (Student or Executor).
+- `GET /Available` - Get all pending orders available for executors to accept.
+- `GET /{id}` **[Auth]** - Get details of a specific order.
+- `POST /` **[Auth]** - Create a new order for a service.
+
+### 💳 Payments (`/api/Payments`)
+- `POST /{orderId}` - Process a payment for a specific order.
+
+### 💬 Chat (`/api/Chat`)
+- `GET /Order/{orderId}` **[Auth]** - Retrieve chat history for a specific order.
+- `POST /{chatId}/Message` **[Auth]** - Send a new message in a chat.
+
+### 🎫 Support Tickets (`/api/Ticket`)
+- `GET /` **[Auth]** - Retrieve all support tickets for the current user.
+- `GET /{id}` **[Auth]** - Get details and messages of a specific ticket.
+- `POST /` **[Auth]** - Open a new support ticket.
+
+### 🛡️ KYC Verification (`/api/Kyc`)
+- `GET /Status` **[Auth]** - Get the current user's KYC submission status (Pending, Approved, Rejected).
+- `POST /Submit` **[Auth]** - Submit national ID and phone number for Executor verification.
 
 ## 📐 Development Conventions
 - **Routing:** Use file-based routing in `UIS/app/`. Group authenticated routes in `(auth)` and tab-based navigation in `(tabs)`.

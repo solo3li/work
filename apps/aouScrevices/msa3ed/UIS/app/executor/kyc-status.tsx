@@ -12,7 +12,7 @@ export default function KycStatusScreen() {
   const handleSimulateApproval = () => {
     updateUser({ isExecutor: true });
     alert('تم قبول طلبك بنجاح في هذه النسخة التجريبية!');
-    router.replace('/executor/(tabs)');
+    router.replace('/student/(tabs)/executor-orders');
   };
 
   return (
