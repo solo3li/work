@@ -79,7 +79,7 @@ public class TicketService : ITicketService {
 
 public interface INotificationService 
 { 
-    Task SendNotificationAsync(Guid userId, string message); 
+    Task SendNotificationAsync(Guid userId, string message, string? title = null); 
     Task<List<Notification>> GetUserNotificationsAsync(Guid userId);
     Task<List<Notification>> GetAllNotificationsAsync(int count = 50);
     Task MarkAsReadAsync(Guid notificationId);
@@ -88,11 +88,25 @@ public interface INotificationService
 
 public class NotificationService : INotificationService {
     private readonly ApplicationDbContext _db; 
-    public NotificationService(ApplicationDbContext db) { _db = db; }
+    private readonly IEmailService _emailService;
+    public NotificationService(ApplicationDbContext db, IEmailService emailService) { _db = db; _emailService = emailService; }
 
-    public async Task SendNotificationAsync(Guid userId, string message) {
+    public async Task SendNotificationAsync(Guid userId, string message, string? title = null) {
         _db.Notifications.Add(new Notification { UserId = userId, Message = message }); 
         await _db.SaveChangesAsync();
+
+        // Also send email notification
+        var user = await _db.Users.FindAsync(userId);
+        if (user != null && !string.IsNullOrEmpty(user.Email)) {
+            await _emailService.SendTemplatedEmailAsync(
+                user.Email, 
+                title ?? "تنبيه جديد من UIS", 
+                title ?? "إشعار جديد", 
+                message,
+                "فتح التطبيق",
+                "http://localhost:8081" // Mobile deep link placeholder
+            );
+        }
     }
 
     public async Task<List<Notification>> GetUserNotificationsAsync(Guid userId) {

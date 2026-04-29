@@ -22,7 +22,7 @@ export default function LoginScreen() {
     const success = await login({ email, password });
     setLoading(false);
     if (success) {
-      router.replace('/(auth)/otp-verify');
+      router.replace({ pathname: '/(auth)/otp-verify', params: { email } });
     } else {
       alert('فشل تسجيل الدخول. يرجى التأكد من البيانات.');
     }

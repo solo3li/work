@@ -36,6 +36,18 @@ export const login = createAsyncThunk('auth/login', async (credentials: any, { r
   }
 });
 
+export const register = createAsyncThunk('auth/register', async (credentials: any, { rejectWithValue }) => {
+  try {
+    const data = await apiFetch('/Auth/register', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+    return data;
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
+
 export const verifyOtp = createAsyncThunk('auth/verifyOtp', async (credentials: any, { rejectWithValue }) => {
   try {
     const data = await apiFetch('/Auth/verify-otp', {

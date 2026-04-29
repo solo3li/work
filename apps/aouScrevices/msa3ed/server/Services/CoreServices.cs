@@ -13,10 +13,11 @@ using Uis.Server.DTOs;
 
 namespace Uis.Server.Services;
 
-public interface IEmailService { Task SendEmailAsync(string to, string subject, string body); }
+public interface IEmailService { Task SendEmailAsync(string to, string subject, string body); Task SendTemplatedEmailAsync(string to, string subject, string title, string message, string? buttonText = null, string? buttonUrl = null); }
 public class EmailService : IEmailService {
     private readonly IConfiguration _config;
     public EmailService(IConfiguration config) { _config = config; }
+    
     public async Task SendEmailAsync(string to, string subject, string body) {
         var email = new MimeMessage();
         email.From.Add(new MailboxAddress(_config["EmailSettings:SenderName"], _config["EmailSettings:SenderEmail"]));
@@ -29,6 +30,37 @@ public class EmailService : IEmailService {
         await smtp.AuthenticateAsync(_config["EmailSettings:SenderEmail"], _config["EmailSettings:Password"]);
         await smtp.SendAsync(email);
         await smtp.DisconnectAsync(true);
+    }
+
+    public async Task SendTemplatedEmailAsync(string to, string subject, string title, string message, string? buttonText = null, string? buttonUrl = null) {
+        var buttonHtml = !string.IsNullOrEmpty(buttonText) && !string.IsNullOrEmpty(buttonUrl) 
+            ? $@"<div style='margin-top: 30px;'><a href='{buttonUrl}' style='background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%); color: white; padding: 14px 32px; border-radius: 14px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);'>{buttonText}</a></div>"
+            : "";
+
+        var body = $@"
+        <div dir='rtl' style='font-family: ""Tajawal"", Tahoma, Arial, sans-serif; background-color: #f8fafc; padding: 40px 20px; text-align: center;'>
+            <div style='max-width: 550px; margin: 0 auto; background: white; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);'>
+                <div style='background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%); padding: 50px 20px; color: white;'>
+                    <h1 style='margin: 0; font-size: 36px; font-weight: 900; letter-spacing: 3px;'>UIS</h1>
+                    <p style='margin: 12px 0 0; opacity: 0.8; font-size: 16px; font-weight: 500;'>بوابتك الذكية للخدمات الجامعية</p>
+                </div>
+                <div style='padding: 45px 35px;'>
+                    <h2 style='color: #1e293b; margin: 0 0 24px; font-size: 24px; font-weight: 800;'>{title}</h2>
+                    <div style='color: #64748b; line-height: 1.8; font-size: 16px;'>{message}</div>
+                    {buttonHtml}
+                </div>
+                <div style='background: #f8fafc; padding: 30px; border-top: 1px solid #f1f5f9;'>
+                    <p style='color: #94a3b8; font-size: 13px; margin: 0;'>هذا بريد تلقائي من منصة UIS.</p>
+                    <div style='margin-top: 15px;'>
+                        <a href='#' style='color: #6366F1; text-decoration: none; font-size: 12px; margin: 0 10px;'>مركز الدعم</a>
+                        <a href='#' style='color: #6366F1; text-decoration: none; font-size: 12px; margin: 0 10px;'>الشروط والأحكام</a>
+                    </div>
+                    <p style='color: #cbd5e1; font-size: 11px; margin-top: 20px;'>© 2026 UIS Platform. All rights reserved.</p>
+                </div>
+            </div>
+        </div>";
+
+        await SendEmailAsync(to, subject, body);
     }
 }
 
@@ -77,7 +109,14 @@ public class OtpService : IOtpService {
         _db.EmailOtps.Add(otp); 
         await _db.SaveChangesAsync(); 
         
-        await _emailService.SendEmailAsync(email, "رمز التحقق الخاص بك - UIS", $"<h1>مرحباً</h1><p>رمز التحقق الخاص بك لإتمام تسجيل الدخول هو: <strong>{code}</strong></p><p>هذا الرمز صالح لمدة 10 دقائق.</p>");
+        var message = $@"
+            مرحباً، استخدم الرمز التالي لإتمام عملية تسجيل الدخول إلى حسابك في UIS:
+            <div style='margin-top: 30px; background: #f1f5f9; border-radius: 20px; padding: 25px; display: inline-block; border: 2px dashed #6366F1;'>
+                <span style='font-size: 42px; font-weight: 900; color: #6366F1; letter-spacing: 12px; font-family: monospace;'>{code}</span>
+            </div>
+            <p style='margin-top: 25px; font-size: 14px;'>هذا الرمز صالح لمدة 10 دقائق فقط.</p>";
+
+        await _emailService.SendTemplatedEmailAsync(email, "رمز التحقق الخاص بك - UIS", "تحقق من هويتك", message);
         
         return otp.Code;
     }

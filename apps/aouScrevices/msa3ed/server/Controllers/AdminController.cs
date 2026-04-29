@@ -176,7 +176,7 @@ public class AdminController : Controller
             }
             
             await _db.SaveChangesAsync();
-            await _notificationService.SendNotificationAsync(request.UserId, "تم توثيق حسابك بنجاح! يمكنك الآن البدء في تقديم الخدمات كمنفذ.");
+            await _notificationService.SendNotificationAsync(request.UserId, "تم توثيق حسابك بنجاح! يمكنك الآن البدء في تقديم الخدمات كمنفذ.", "توثيق الحساب");
         }
         return RedirectToAction(nameof(Kyc));
     }
@@ -716,12 +716,12 @@ public class AdminController : Controller
             var userIds = await _db.Users.Select(u => u.Id).ToListAsync();
             foreach (var id in userIds)
             {
-                await _notificationService.SendNotificationAsync(id, message);
+                await _notificationService.SendNotificationAsync(id, message, "تنبيه إداري");
             }
         }
         else if (userId.HasValue)
         {
-            await _notificationService.SendNotificationAsync(userId.Value, message);
+            await _notificationService.SendNotificationAsync(userId.Value, message, "تنبيه إداري");
         }
 
         return RedirectToAction(nameof(Notifications));

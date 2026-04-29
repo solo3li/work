@@ -1,17 +1,39 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../store';
+import { register } from '../../store/slices/authSlice';
 
 const { width } = Dimensions.get('window');
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
 
-  const handleRegister = () => {
-    router.replace('/(auth)/otp-verify');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!fullName || !email || !password) {
+      alert('يرجى ملء جميع الحقول');
+      return;
+    }
+    setLoading(true);
+    const result = await dispatch(register({ fullName, email, password }));
+    setLoading(false);
+    if (register.fulfilled.match(result)) {
+      alert('تم إنشاء الحساب بنجاح. يمكنك الآن تسجيل الدخول.');
+      router.replace('/(auth)/login');
+    } else {
+      alert('فشل إنشاء الحساب: ' + (result.payload || 'خطأ غير معروف'));
+    }
   };
 
   return (
@@ -44,6 +66,8 @@ export default function RegisterScreen() {
               style={styles.input} 
               placeholder="الاسم الكامل" 
               placeholderTextColor={Colors.textSecondary}
+              value={fullName}
+              onChangeText={setFullName}
             />
           </View>
 
@@ -54,6 +78,8 @@ export default function RegisterScreen() {
               placeholder="البريد الإلكتروني" 
               placeholderTextColor={Colors.textSecondary}
               keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
 
@@ -64,18 +90,20 @@ export default function RegisterScreen() {
               placeholder="كلمة المرور" 
               placeholderTextColor={Colors.textSecondary}
               secureTextEntry
+              value={password}
+              onChangeText={setPassword}
             />
             <Ionicons name="eye-off-outline" size={22} color={Colors.textSecondary} style={styles.eyeIcon} />
           </View>
 
-          <Pressable onPress={handleRegister}>
+          <Pressable onPress={handleRegister} disabled={loading}>
             <LinearGradient
               colors={[Colors.primary, Colors.secondary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.button}
             >
-              <Text style={styles.buttonText}>تسجيل</Text>
+              {loading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.buttonText}>تسجيل</Text>}
             </LinearGradient>
           </Pressable>
 
