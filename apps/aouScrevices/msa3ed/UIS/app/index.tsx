@@ -13,7 +13,7 @@ export default function SplashScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (user) {
-        router.replace('/student/(tabs)');
+        router.replace('/student');
       } else {
         router.replace('/onboarding');
       }

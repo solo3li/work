@@ -31,12 +31,12 @@ export default function PaymentResultScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable onPress={() => router.replace('/(tabs)/orders')} style={{ marginBottom: 16 }}>
+        <Pressable onPress={() => router.replace('/student/orders')} style={{ marginBottom: 16 }}>
           <LinearGradient colors={[Colors.primary, Colors.secondary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btn}>
             <Text style={styles.btnText}>متابعة الطلب</Text>
           </LinearGradient>
         </Pressable>
-        <Pressable onPress={() => router.replace('/(tabs)')} style={styles.btnOutline}>
+        <Pressable onPress={() => router.replace('/student/')} style={styles.btnOutline}>
           <Text style={styles.btnOutlineText}>العودة للرئيسية</Text>
         </Pressable>
       </View>

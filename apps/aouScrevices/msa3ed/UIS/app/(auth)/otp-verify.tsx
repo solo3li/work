@@ -36,7 +36,7 @@ export default function OtpVerifyScreen() {
     }
     const result = await dispatch(verifyOtp({ email, code }));
     if (verifyOtp.fulfilled.match(result)) {
-      router.replace('/student/(tabs)');
+      router.replace('/student');
     } else {
       alert('رمز التحقق غير صحيح أو انتهت صلاحيته');
     }

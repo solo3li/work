@@ -174,7 +174,20 @@ public class OrdersController : ControllerBase {
     [HttpPost] public async Task<IActionResult> Create(CreateOrderDto dto) {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(userIdStr == null) return Unauthorized();
-        var order = new Order { StudentId = Guid.Parse(userIdStr), ServiceId = dto.ServiceId, Price = dto.Price };
+        
+        var studentId = Guid.Parse(userIdStr);
+        
+        // Ensure student exists in DB (avoid FK violation if token is old)
+        var student = await _db.Users.FindAsync(studentId);
+        if (student == null) return Unauthorized("User not found in database.");
+
+        var order = new Order { 
+            StudentId = studentId, 
+            ServiceId = dto.ServiceId, 
+            Price = dto.Price,
+            Status = "Pending" // Set to Pending immediately since we are bypassing payment
+        };
+        
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
         return Ok(order);
@@ -233,8 +246,22 @@ public class ChatController : ControllerBase {
     public ChatController(ApplicationDbContext db, IFileService fileService) { _db = db; _fileService = fileService; }
     
     [HttpGet("Order/{orderId}")] public async Task<IActionResult> GetOrderChat(Guid orderId) {
+        var myIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if(myIdStr == null) return Unauthorized();
+        var myId = Guid.Parse(myIdStr);
+
+        // Verify order exists and user is part of it
+        var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == orderId && (o.StudentId == myId || o.ExecutorId == myId));
+        if (order == null) return NotFound("Order not found or access denied.");
+
         var chat = await _db.Chats.Include(c => c.Messages).ThenInclude(m => m.Sender).FirstOrDefaultAsync(c => c.OrderId == orderId);
-        if (chat == null) return NotFound();
+        
+        if (chat == null) {
+            chat = new Chat { OrderId = orderId };
+            _db.Chats.Add(chat);
+            await _db.SaveChangesAsync();
+        }
+
         return Ok(new {
             chat.Id,
             Messages = chat.Messages.OrderBy(m => m.SentAt).Select(m => new {
