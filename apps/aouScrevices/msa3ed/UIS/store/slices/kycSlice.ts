@@ -9,11 +9,17 @@ export const fetchKycStatus = createAsyncThunk('kyc/fetchStatus', async (_, { re
   }
 });
 
-export const submitKyc = createAsyncThunk('kyc/submit', async (data: { nationalId: string, phone: string }, { rejectWithValue }) => {
+export const submitKyc = createAsyncThunk('kyc/submit', async (data: { nationalId: string, phone: string, frontImage?: any, backImage?: any }, { rejectWithValue }) => {
   try {
+    const formData = new FormData();
+    formData.append('nationalId', data.nationalId);
+    formData.append('phone', data.phone);
+    if (data.frontImage) formData.append('nationalIdFront', data.frontImage);
+    if (data.backImage) formData.append('nationalIdBack', data.backImage);
+
     return await apiFetch('/Kyc', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: formData
     });
   } catch (error: any) {
     return rejectWithValue(error.message);

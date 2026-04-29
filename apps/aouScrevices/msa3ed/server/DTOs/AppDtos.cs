@@ -25,4 +25,6 @@ public class CreateOrderDto {
 public class KycSubmitDto {
     public string NationalId { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
+    public IFormFile? NationalIdFront { get; set; }
+    public IFormFile? NationalIdBack { get; set; }
 }

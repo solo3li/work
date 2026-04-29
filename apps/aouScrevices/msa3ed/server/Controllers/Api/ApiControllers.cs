@@ -406,7 +406,16 @@ public class TicketController : ControllerBase {
 [Route("api/[controller]")]
 [Authorize]
 public class KycController : ControllerBase {
-    private readonly ApplicationDbContext _db; public KycController(ApplicationDbContext db) { _db = db; }
+    private readonly ApplicationDbContext _db;
+    private readonly IFileService _fileService;
+    private readonly IKycService _kycService;
+
+    public KycController(ApplicationDbContext db, IFileService fileService, IKycService kycService) { 
+        _db = db; 
+        _fileService = fileService;
+        _kycService = kycService;
+    }
+
     [HttpGet("Status")] public async Task<IActionResult> GetStatus() {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(userIdStr == null) return Unauthorized();
@@ -415,12 +424,27 @@ public class KycController : ControllerBase {
         return Ok(new { Status = kyc?.Status, RejectionReason = kyc?.RejectionReason });
     }
 
-    [HttpPost] public async Task<IActionResult> Submit(KycSubmitDto dto) {
+    [HttpPost] 
+    [DisableRequestSizeLimit]
+    public async Task<IActionResult> Submit([FromForm] KycSubmitDto dto) {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(userIdStr == null) return Unauthorized();
         var uid = Guid.Parse(userIdStr);
-        _db.KycRequests.Add(new KycRequest { UserId = uid, NationalId = dto.NationalId, Phone = dto.Phone, Status = "Pending" });
-        await _db.SaveChangesAsync();
+
+        string? frontUrl = null;
+        string? backUrl = null;
+
+        if (dto.NationalIdFront != null && dto.NationalIdFront.Length > 0) {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.NationalIdFront.FileName);
+            frontUrl = await _fileService.UploadFileAsync(dto.NationalIdFront.OpenReadStream(), fileName);
+        }
+
+        if (dto.NationalIdBack != null && dto.NationalIdBack.Length > 0) {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.NationalIdBack.FileName);
+            backUrl = await _fileService.UploadFileAsync(dto.NationalIdBack.OpenReadStream(), fileName);
+        }
+
+        await _kycService.SubmitKycAsync(uid, dto.NationalId, dto.Phone, frontUrl, backUrl);
         return Ok(new { success = true });
     }
 }

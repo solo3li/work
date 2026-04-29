@@ -6,11 +6,18 @@ using Uis.Server.DTOs;
 
 namespace Uis.Server.Services;
 
-public interface IKycService { Task<bool> SubmitKycAsync(Guid userId, string nationalId, string phone); Task<IEnumerable<KycRequest>> GetPendingRequestsAsync(); }
+public interface IKycService { Task<bool> SubmitKycAsync(Guid userId, string nationalId, string phone, string? frontUrl, string? backUrl); Task<IEnumerable<KycRequest>> GetPendingRequestsAsync(); }
 public class KycService : IKycService {
     private readonly ApplicationDbContext _db; public KycService(ApplicationDbContext db) { _db = db; }
-    public async Task<bool> SubmitKycAsync(Guid userId, string nationalId, string phone) {
-        _db.KycRequests.Add(new KycRequest { UserId = userId, NationalId = nationalId, Phone = phone });
+    public async Task<bool> SubmitKycAsync(Guid userId, string nationalId, string phone, string? frontUrl, string? backUrl) {
+        _db.KycRequests.Add(new KycRequest { 
+            UserId = userId, 
+            NationalId = nationalId, 
+            Phone = phone,
+            NationalIdFrontUrl = frontUrl,
+            NationalIdBackUrl = backUrl,
+            Status = "Pending"
+        });
         await _db.SaveChangesAsync(); return true;
     }
     public async Task<IEnumerable<KycRequest>> GetPendingRequestsAsync() => await _db.KycRequests.Include(k=>k.User).Where(k => k.Status == "Pending").ToListAsync();

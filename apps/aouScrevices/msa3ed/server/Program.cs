@@ -9,6 +9,12 @@ using Uis.Server.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Increase multipart body size limit for image uploads (100MB)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024;
+});
+
 // Add services to the container.
 builder.Services.AddControllersWithViews(); // MVC for Admin panel & APIs
 

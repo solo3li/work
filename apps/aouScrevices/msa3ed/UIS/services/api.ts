@@ -20,8 +20,14 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     ...options.headers,
   };
 
-  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
-    headers['Content-Type'] = 'application/json';
+  if (!(options.body instanceof FormData)) {
+    if (!headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+  } else {
+    // CRITICAL: When sending FormData, the browser/fetch must set the Content-Type 
+    // including the boundary. If we set it manually, it will fail.
+    delete (headers as any)['Content-Type'];
   }
 
   if (authToken) {

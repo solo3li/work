@@ -72,6 +72,8 @@ public class KycRequest
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
     public string NationalId { get; set; } = string.Empty;
+    public string? NationalIdFrontUrl { get; set; }
+    public string? NationalIdBackUrl { get; set; }
     public string Phone { get; set; } = string.Empty;
     public string? Address { get; set; }
     public DateTime? BirthDate { get; set; }
