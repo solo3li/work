@@ -8,23 +8,41 @@
 <div class="mb-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
     <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">الخدمات المتاحة</h3>
     
+    <a asp-action="CreateService" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md flex items-center">
+        <i class="fas fa-plus ml-2"></i>إضافة خدمة
+    </a>
+</div>
+
+<div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6">
     <!-- Search & Filter Form -->
     <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
         <div class="relative">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
             <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث باسم الخدمة..." 
-                   class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-w-[200px]">
+                   class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none min-w-[150px]">
         </div>
-        <select name="categoryId" onchange="this.form.submit()" class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+        <select name="categoryId" class="px-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
             <option value="">كل التصنيفات</option>
             @foreach(var cat in categories)
             {
                 <option value="@cat.Id" selected="@(ViewBag.SelectedCategoryId?.ToString() == cat.Id.ToString())">@cat.Name</option>
             }
         </select>
-        <a asp-action="CreateService" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md flex items-center">
-            <i class="fas fa-plus ml-2"></i>إضافة خدمة
-        </a>
+        <select name="isActive" class="px-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+            <option value="">كل الحالات</option>
+            <option value="true" selected="@(ViewBag.IsActive == true)">نشطة</option>
+            <option value="false" selected="@(ViewBag.IsActive == false)">معطلة</option>
+        </select>
+        <div class="flex items-center gap-2">
+            <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="السعر من" class="w-20 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+            <span class="text-gray-400">-</span>
+            <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="إلى" class="w-20 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+        <button type="submit" class="bg-gray-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-black transition-all shadow-md text-xs">تصفية</button>
+        @if(!string.IsNullOrEmpty(ViewBag.Search) || ViewBag.SelectedCategoryId != null || ViewBag.IsActive != null || ViewBag.MinPrice != null || ViewBag.MaxPrice != null)
+        {
+            <a href="/Admin/Services" class="text-red-500 text-xs font-bold hover:underline">إلغاء</a>
+        }
     </form>
 </div>
 

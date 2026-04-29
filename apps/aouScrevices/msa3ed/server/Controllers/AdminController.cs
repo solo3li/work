@@ -47,7 +47,7 @@ public class AdminController : Controller
 
     // --- User Management ---
     [HttpGet("Users")]
-    public async Task<IActionResult> Users(string? search, string? role)
+    public async Task<IActionResult> Users(string? search, string? role, bool? isActive, DateTime? startDate, DateTime? endDate)
     {
         var query = _db.Users.Include(u => u.Roles).AsQueryable();
 
@@ -57,10 +57,126 @@ public class AdminController : Controller
         if (!string.IsNullOrEmpty(role))
             query = query.Where(u => u.Roles.Any(r => r.Name == role));
 
+        if (isActive.HasValue)
+            query = query.Where(u => u.IsActive == isActive.Value);
+
+        if (startDate.HasValue)
+        {
+            var start = startDate.Value.ToUniversalTime();
+            query = query.Where(u => u.CreatedAt >= start);
+        }
+
+        if (endDate.HasValue)
+        {
+            var end = endDate.Value.ToUniversalTime();
+            query = query.Where(u => u.CreatedAt <= end);
+        }
+
         var users = await query.OrderByDescending(u => u.CreatedAt).ToListAsync();
         ViewBag.Search = search;
         ViewBag.Role = role;
+        ViewBag.IsActive = isActive;
+        ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+        ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+
         return View(users);
+    }
+
+    [HttpGet("Users/Create")]
+    public async Task<IActionResult> CreateUser()
+    {
+        ViewBag.AllRoles = await _db.Roles.ToListAsync();
+        return View(new User());
+    }
+
+    [HttpPost("Users/Create")]
+    public async Task<IActionResult> CreateUser(User user, Guid[] roleIds, string password)
+    {
+        user.PasswordHash = password;
+        user.CreatedAt = DateTime.UtcNow;
+        
+        if (roleIds != null)
+        {
+            foreach (var roleId in roleIds)
+            {
+                var role = await _db.Roles.FindAsync(roleId);
+                if (role != null)
+                {
+                    user.Roles.Add(role);
+                    if (role.Name == "Admin") user.IsAdmin = true;
+                    if (role.Name == "Executor") user.IsExecutor = true;
+                }
+            }
+        }
+
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Users));
+    }
+
+    [HttpGet("Users/Edit/{id}")]
+    public async Task<IActionResult> EditUser(Guid id)
+    {
+        var user = await _db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == id);
+        if (user == null) return NotFound();
+        
+        ViewBag.AllRoles = await _db.Roles.ToListAsync();
+        return View(user);
+    }
+
+    [HttpPost("Users/Edit/{id}")]
+    public async Task<IActionResult> EditUser(Guid id, User user, Guid[] roleIds, string? password)
+    {
+        if (id != user.Id) return BadRequest();
+
+        var existingUser = await _db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == id);
+        if (existingUser == null) return NotFound();
+
+        existingUser.FullName = user.FullName;
+        existingUser.Email = user.Email;
+        existingUser.University = user.University;
+        existingUser.Major = user.Major;
+        existingUser.Bio = user.Bio;
+        existingUser.IsActive = user.IsActive;
+
+        if (!string.IsNullOrEmpty(password))
+        {
+            existingUser.PasswordHash = password;
+        }
+
+        // Update Roles
+        existingUser.Roles.Clear();
+        existingUser.IsAdmin = false;
+        existingUser.IsExecutor = false;
+        
+        if (roleIds != null)
+        {
+            foreach (var roleId in roleIds)
+            {
+                var role = await _db.Roles.FindAsync(roleId);
+                if (role != null)
+                {
+                    existingUser.Roles.Add(role);
+                    if (role.Name == "Admin") existingUser.IsAdmin = true;
+                    if (role.Name == "Executor") existingUser.IsExecutor = true;
+                }
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Users));
+    }
+
+    [HttpPost("Users/Delete/{id}")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user != null)
+        {
+            _db.Users.Remove(user);
+            await _db.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(Users));
     }
 
     [HttpPost("Users/ToggleStatus/{id}")]
@@ -144,9 +260,19 @@ public class AdminController : Controller
 
     // --- KYC Management ---
     [HttpGet("Kyc")]
-    public async Task<IActionResult> Kyc()
+    public async Task<IActionResult> Kyc(string? search, string? status)
     {
-        var requests = await _db.KycRequests.Include(k => k.User).OrderByDescending(k => k.Status == "Pending").ToListAsync();
+        var query = _db.KycRequests.Include(k => k.User).AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(k => k.User.FullName.Contains(search) || k.User.Email.Contains(search) || k.NationalId.Contains(search));
+
+        if (!string.IsNullOrEmpty(status))
+            query = query.Where(k => k.Status == status);
+
+        var requests = await query.OrderByDescending(k => k.Status == "Pending").ThenByDescending(k => k.Id).ToListAsync();
+        ViewBag.Search = search;
+        ViewBag.Status = status;
         return View(requests);
     }
 
@@ -199,10 +325,23 @@ public class AdminController : Controller
 
     // --- Category Management ---
     [HttpGet("Categories")]
-    public async Task<IActionResult> Categories()
+    public async Task<IActionResult> Categories(string? search)
     {
-        var categories = await _db.Categories.ToListAsync();
+        var query = _db.Categories.AsQueryable();
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(c => c.Name.Contains(search));
+
+        var categories = await query.ToListAsync();
+        ViewBag.Search = search;
         return View(categories);
+    }
+
+    [HttpGet("Categories/{id}")]
+    public async Task<IActionResult> GetCategory(Guid id)
+    {
+        var category = await _db.Categories.FindAsync(id);
+        if (category == null) return NotFound();
+        return Json(category);
     }
 
     [HttpPost("Categories/Create")]
@@ -213,6 +352,17 @@ public class AdminController : Controller
             _db.Categories.Add(new Category { Name = name });
             await _db.SaveChangesAsync();
         }
+        return RedirectToAction(nameof(Categories));
+    }
+
+    [HttpPost("Categories/Edit")]
+    public async Task<IActionResult> EditCategory(Guid id, string name)
+    {
+        var category = await _db.Categories.FindAsync(id);
+        if (category == null) return NotFound();
+
+        category.Name = name;
+        await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Categories));
     }
 
@@ -230,10 +380,43 @@ public class AdminController : Controller
 
     // --- Role Management ---
     [HttpGet("Roles")]
-    public async Task<IActionResult> Roles()
+    public async Task<IActionResult> Roles(string? search, bool? isSystem)
     {
-        var roles = await _db.Roles.OrderByDescending(r => r.IsSystemRole).ToListAsync();
+        var query = _db.Roles.AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(r => r.Name.Contains(search) || r.Description.Contains(search));
+
+        if (isSystem.HasValue)
+            query = query.Where(r => r.IsSystemRole == isSystem.Value);
+
+        var roles = await query.OrderByDescending(r => r.IsSystemRole).ToListAsync();
+        ViewBag.Search = search;
+        ViewBag.IsSystem = isSystem;
         return View(roles);
+    }
+
+    [HttpGet("Roles/Edit/{id}")]
+    public async Task<IActionResult> EditRole(Guid id)
+    {
+        var role = await _db.Roles.FindAsync(id);
+        if (role == null) return NotFound();
+        return View(role);
+    }
+
+    [HttpPost("Roles/Edit/{id}")]
+    public async Task<IActionResult> EditRole(Guid id, string name, string description)
+    {
+        var role = await _db.Roles.FindAsync(id);
+        if (role == null) return NotFound();
+
+        if (!role.IsSystemRole)
+        {
+            role.Name = name;
+        }
+        role.Description = description;
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Roles));
     }
 
     [HttpPost("Roles/Create")]
@@ -323,7 +506,7 @@ public class AdminController : Controller
 
     // --- Service Management ---
     [HttpGet("Services")]
-    public async Task<IActionResult> Services(string? search, Guid? categoryId)
+    public async Task<IActionResult> Services(string? search, Guid? categoryId, decimal? minPrice, decimal? maxPrice, bool? isActive)
     {
         var query = _db.Services.Include(s => s.Category).AsQueryable();
 
@@ -333,11 +516,23 @@ public class AdminController : Controller
         if (categoryId.HasValue)
             query = query.Where(s => s.CategoryId == categoryId.Value);
 
+        if (minPrice.HasValue)
+            query = query.Where(s => s.BasePrice >= minPrice.Value);
+
+        if (maxPrice.HasValue)
+            query = query.Where(s => s.BasePrice <= maxPrice.Value);
+
+        if (isActive.HasValue)
+            query = query.Where(s => s.IsActive == isActive.Value);
+
         var services = await query.OrderByDescending(s => s.Id).ToListAsync();
         
         ViewBag.Categories = await _db.Categories.ToListAsync();
         ViewBag.Search = search;
         ViewBag.SelectedCategoryId = categoryId;
+        ViewBag.MinPrice = minPrice;
+        ViewBag.MaxPrice = maxPrice;
+        ViewBag.IsActive = isActive;
 
         return View(services);
     }
@@ -433,19 +628,49 @@ public class AdminController : Controller
 
     // --- Order Management ---
     [HttpGet("Orders")]
-    public async Task<IActionResult> Orders(string? search, string? status)
+    public async Task<IActionResult> Orders(string? search, string? status, decimal? minPrice, decimal? maxPrice, DateTime? startDate, DateTime? endDate, Guid? executorId)
     {
-        var query = _db.Orders.Include(o => o.Student).Include(o => o.Service).AsQueryable();
+        var query = _db.Orders.Include(o => o.Student).Include(o => o.Service).Include(o => o.Executor).AsQueryable();
 
         if (!string.IsNullOrEmpty(search))
-            query = query.Where(o => o.Id.ToString().Contains(search) || o.Student.FullName.Contains(search));
+            query = query.Where(o => o.Id.ToString().Contains(search) || o.Student.FullName.Contains(search) || o.Service.Title.Contains(search));
 
         if (!string.IsNullOrEmpty(status))
             query = query.Where(o => o.Status == status);
 
+        if (minPrice.HasValue)
+            query = query.Where(o => o.Price >= minPrice.Value);
+
+        if (maxPrice.HasValue)
+            query = query.Where(o => o.Price <= maxPrice.Value);
+
+        if (startDate.HasValue)
+        {
+            var start = startDate.Value.ToUniversalTime();
+            query = query.Where(o => o.CreatedAt >= start);
+        }
+
+        if (endDate.HasValue)
+        {
+            var end = endDate.Value.ToUniversalTime();
+            query = query.Where(o => o.CreatedAt <= end);
+        }
+
+        if (executorId.HasValue)
+            query = query.Where(o => o.ExecutorId == executorId.Value);
+
         var orders = await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
+        
         ViewBag.Search = search;
         ViewBag.Status = status;
+        ViewBag.MinPrice = minPrice;
+        ViewBag.MaxPrice = maxPrice;
+        ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+        ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+        ViewBag.ExecutorId = executorId;
+        
+        ViewBag.Executors = await _db.Users.Where(u => u.IsExecutor).OrderBy(u => u.FullName).ToListAsync();
+
         return View(orders);
     }
 
@@ -486,7 +711,7 @@ public class AdminController : Controller
 
     // --- Ticket Management ---
     [HttpGet("Tickets")]
-    public async Task<IActionResult> Tickets(string? search, string? status)
+    public async Task<IActionResult> Tickets(string? search, string? status, Guid? userId, DateTime? startDate, DateTime? endDate)
     {
         var query = _db.Tickets.Include(t => t.User).AsQueryable();
 
@@ -496,9 +721,31 @@ public class AdminController : Controller
         if (!string.IsNullOrEmpty(status))
             query = query.Where(t => t.Status == status);
 
-        var tickets = await query.OrderByDescending(t => t.Status == "Open").ThenByDescending(t => t.Id).ToListAsync();
+        if (userId.HasValue)
+            query = query.Where(t => t.UserId == userId.Value);
+
+        if (startDate.HasValue)
+        {
+            var start = startDate.Value.ToUniversalTime();
+            query = query.Where(t => t.CreatedAt >= start);
+        }
+
+        if (endDate.HasValue)
+        {
+            var end = endDate.Value.ToUniversalTime();
+            query = query.Where(t => t.CreatedAt <= end);
+        }
+
+        var tickets = await query.OrderByDescending(t => t.Status == "Open").ThenByDescending(t => t.CreatedAt).ToListAsync();
+        
         ViewBag.Search = search;
         ViewBag.Status = status;
+        ViewBag.UserId = userId;
+        ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+        ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+        
+        ViewBag.Users = await _db.Users.OrderBy(u => u.FullName).ToListAsync();
+
         return View(tickets);
     }
 
@@ -655,15 +902,40 @@ public class AdminController : Controller
 
     // --- Monitoring & General Chat ---
     [HttpGet("Chats")]
-    public async Task<IActionResult> Chats()
+    public async Task<IActionResult> Chats(string? search, DateTime? startDate, DateTime? endDate)
     {
-        var chats = await _db.Chats
+        var query = _db.Chats
             .Include(c => c.Order)
             .Include(c => c.Student)
             .Include(c => c.Executor)
             .Include(c => c.Messages)
-            .OrderByDescending(c => c.Messages.Max(m => m.SentAt))
-            .ToListAsync();
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(c => c.Order.Id.ToString().Contains(search) || 
+                                     c.Student.FullName.Contains(search) || 
+                                     c.Executor.FullName.Contains(search));
+        }
+
+        if (startDate.HasValue)
+        {
+            var start = startDate.Value.ToUniversalTime();
+            query = query.Where(c => c.Messages.Any(m => m.SentAt >= start));
+        }
+
+        if (endDate.HasValue)
+        {
+            var end = endDate.Value.ToUniversalTime();
+            query = query.Where(c => c.Messages.Any(m => m.SentAt <= end));
+        }
+
+        var chats = await query.OrderByDescending(c => c.Messages.Max(m => m.SentAt)).ToListAsync();
+        
+        ViewBag.Search = search;
+        ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+        ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+        
         return View(chats);
     }
 
@@ -685,9 +957,43 @@ public class AdminController : Controller
 
     // --- Payment Management ---
     [HttpGet("Payments")]
-    public async Task<IActionResult> Payments()
+    public async Task<IActionResult> Payments(string? search, string? status, decimal? minAmount, decimal? maxAmount, DateTime? startDate, DateTime? endDate)
     {
-        var payments = await _db.Payments.Include(p => p.Order).ThenInclude(o => o.Student).OrderByDescending(p => p.Id).ToListAsync();
+        var query = _db.Payments.Include(p => p.Order).ThenInclude(o => o.Student).AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(p => p.TransactionId.Contains(search) || p.Order.Student.FullName.Contains(search));
+
+        if (!string.IsNullOrEmpty(status))
+            query = query.Where(p => p.Status == status);
+
+        if (minAmount.HasValue)
+            query = query.Where(p => p.Amount >= minAmount.Value);
+
+        if (maxAmount.HasValue)
+            query = query.Where(p => p.Amount <= maxAmount.Value);
+
+        if (startDate.HasValue)
+        {
+            var start = startDate.Value.ToUniversalTime();
+            query = query.Where(p => p.CreatedAt >= start);
+        }
+
+        if (endDate.HasValue)
+        {
+            var end = endDate.Value.ToUniversalTime();
+            query = query.Where(p => p.CreatedAt <= end);
+        }
+
+        var payments = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        
+        ViewBag.Search = search;
+        ViewBag.Status = status;
+        ViewBag.MinAmount = minAmount;
+        ViewBag.MaxAmount = maxAmount;
+        ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+        ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+
         return View(payments);
     }
 
@@ -727,10 +1033,29 @@ public class AdminController : Controller
 
     // --- Notification Management ---
     [HttpGet("Notifications")]
-    public async Task<IActionResult> Notifications()
+    public async Task<IActionResult> Notifications(string? search, Guid? userId, DateTime? date)
     {
-        var notifications = await _notificationService.GetAllNotificationsAsync();
+        var query = _db.Notifications.Include(n => n.User).AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(n => n.Message.Contains(search));
+
+        if (userId.HasValue)
+            query = query.Where(n => n.UserId == userId.Value);
+
+        if (date.HasValue)
+        {
+            var d = date.Value.ToUniversalTime().Date;
+            query = query.Where(n => n.CreatedAt.Date == d);
+        }
+
+        var notifications = await query.OrderByDescending(n => n.CreatedAt).Take(100).ToListAsync();
+        
         ViewBag.Users = await _db.Users.OrderBy(u => u.FullName).ToListAsync();
+        ViewBag.Search = search;
+        ViewBag.UserId = userId;
+        ViewBag.Date = date?.ToString("yyyy-MM-dd");
+
         return View(notifications);
     }
 

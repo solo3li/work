@@ -127,6 +127,7 @@ public class Payment
     public decimal Amount { get; set; }
     public string Status { get; set; } = "Pending";
     public string TransactionId { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public class Escrow
@@ -174,6 +175,7 @@ public class Ticket
     public Guid? OrderId { get; set; }
     public string Subject { get; set; } = string.Empty;
     public string Status { get; set; } = "Open";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<TicketMessage> Messages { get; set; } = new List<TicketMessage>();
 }
 

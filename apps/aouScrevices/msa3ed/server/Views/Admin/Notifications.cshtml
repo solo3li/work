@@ -54,9 +54,34 @@
     <!-- Notifications List -->
     <div class="lg:col-span-2">
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center bg-gray-50/50 gap-4">
                 <h3 class="text-xl font-bold text-gray-800">آخر التنبيهات المرسلة</h3>
-                <span class="text-xs font-bold text-gray-400">عرض آخر 50 تنبيه</span>
+                
+                <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث في الرسائل..." 
+                               class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none w-48">
+                    </div>
+                    
+                    <select name="userId" class="px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+                        <option value="">كل المستخدمين</option>
+                        @foreach (var user in users ?? Enumerable.Empty<Uis.Server.Models.User>())
+                        {
+                            <option value="@user.Id" selected="@(ViewBag.UserId?.ToString() == user.Id.ToString())">@user.FullName</option>
+                        }
+                    </select>
+
+                    <input type="date" name="date" value="@ViewBag.Date"
+                           class="px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-md">تصفية</button>
+                    
+                    @if(!string.IsNullOrEmpty(ViewBag.Search) || ViewBag.UserId != null || !string.IsNullOrEmpty(ViewBag.Date))
+                    {
+                        <a href="/Admin/Notifications" class="text-red-500 text-xs font-bold hover:underline">إلغاء</a>
+                    }
+                </form>
             </div>
             
             <div class="overflow-x-auto">
