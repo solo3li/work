@@ -2,7 +2,7 @@
 
 This document contains a comprehensive list of all backend REST API endpoints available in the UIS platform, along with their testing details using `curl`. 
 
-**Base URL:** `http://localhost:5035/api`
+**Base URL:** `https://der-retrieved-authentication-cocktail.trycloudflare.com/api`
 
 ---
 
@@ -13,7 +13,7 @@ Authenticates a user and triggers an OTP email. Returns a JWT Token.
 * **Endpoint:** `POST /api/Auth/login`
 * **Curl Command:**
   ```bash
-  curl -X POST http://localhost:5035/api/Auth/login \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Auth/login \
        -H "Content-Type: application/json" \
        -d '{"email":"student1@uis.com", "password":"pass123"}'
   ```
@@ -30,7 +30,7 @@ Verifies the OTP and returns the user details.
 * **Endpoint:** `POST /api/Auth/verify-otp`
 * **Curl Command:**
   ```bash
-  curl -X POST http://localhost:5035/api/Auth/verify-otp \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Auth/verify-otp \
        -H "Content-Type: application/json" \
        -d '{"email":"student1@uis.com", "code":"1234"}'
   ```
@@ -50,7 +50,7 @@ Registers a new user (defaults to 'Student' role).
 * **Endpoint:** `POST /api/Auth/register`
 * **Curl Command:**
   ```bash
-  curl -X POST http://localhost:5035/api/Auth/register \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Auth/register \
        -H "Content-Type: application/json" \
        -d '{"email":"new_user@uis.com", "password":"pass123", "fullName":"مستخدم جديد"}'
   ```
@@ -69,7 +69,7 @@ Fetches the current authenticated user's profile and roles.
 * **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Users/Me \
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Users/Me \
        -H "Authorization: Bearer <token>"
   ```
 * **Sample Response:**
@@ -93,7 +93,7 @@ Fetches all service categories.
 * **Endpoint:** `GET /api/Categories`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Categories
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Categories
   ```
 * **Sample Response:**
   ```json
@@ -110,7 +110,7 @@ Fetches all active services.
 * **Endpoint:** `GET /api/Services`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Services
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Services
   ```
 * **Sample Response:**
   ```json
@@ -132,7 +132,7 @@ Fetches a specific service by ID.
 * **Endpoint:** `GET /api/Services/{id}`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Services/0340491d-ddd6-4a09-ae5f-74f8f6f5df77
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Services/0340491d-ddd6-4a09-ae5f-74f8f6f5df77
   ```
 * **Sample Response:**
   ```json
@@ -157,7 +157,7 @@ Get all orders related to the current user (Student or Executor).
 * **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Orders \
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Orders \
        -H "Authorization: Bearer <token>"
   ```
 * **Sample Response:**
@@ -182,7 +182,7 @@ Get all pending orders available for executors to accept.
 * **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Orders/Available \
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Orders/Available \
        -H "Authorization: Bearer <token>"
   ```
 
@@ -192,7 +192,7 @@ Create a new order for a service.
 * **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
 * **Curl Command:**
   ```bash
-  curl -X POST http://localhost:5035/api/Orders \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Orders \
        -H "Authorization: Bearer <token>" \
        -H "Content-Type: application/json" \
        -d '{"serviceId":"0340491d-ddd6-4a09-ae5f-74f8f6f5df77", "price":150}'
@@ -204,7 +204,7 @@ Get details of a specific order.
 * **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Orders/c68cf7bc-f247-4ba1-bffe-5c97836311d0 \
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Orders/c68cf7bc-f247-4ba1-bffe-5c97836311d0 \
        -H "Authorization: Bearer <token>"
   ```
 
@@ -218,7 +218,7 @@ Process a payment for a specific order.
 * **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
 * **Curl Command:**
   ```bash
-  curl -X POST http://localhost:5035/api/Payments/c68cf7bc-f247-4ba1-bffe-5c97836311d0 \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Payments/c68cf7bc-f247-4ba1-bffe-5c97836311d0 \
        -H "Authorization: Bearer <token>" \
        -H "Content-Type: application/json" \
        -d '150'
@@ -240,7 +240,7 @@ Retrieve chat history for a specific order.
 * **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Chat/Order/c68cf7bc-f247-4ba1-bffe-5c97836311d0 \
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Chat/Order/c68cf7bc-f247-4ba1-bffe-5c97836311d0 \
        -H "Authorization: Bearer <token>"
   ```
 
@@ -250,7 +250,7 @@ Retrieve chat history between the current user and another specific user.
 * **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Chat/Private/510145fa-e233-4b9b-91ba-dfe3c750870e \
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Chat/Private/510145fa-e233-4b9b-91ba-dfe3c750870e \
        -H "Authorization: Bearer <token>"
   ```
 
@@ -260,13 +260,13 @@ Send a new message in a chat. Supports `multipart/form-data` for file, image, or
 * **Headers:** `Authorization: Bearer <token>`, `Content-Type: multipart/form-data`
 * **Curl Command (Text only):**
   ```bash
-  curl -X POST http://localhost:5035/api/Chat/<chatId>/Message \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Chat/<chatId>/Message \
        -H "Authorization: Bearer <token>" \
        -F "content=Hello, here is my file"
   ```
 * **Curl Command (With Attachment):**
   ```bash
-  curl -X POST http://localhost:5035/api/Chat/<chatId>/Message \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Chat/<chatId>/Message \
        -H "Authorization: Bearer <token>" \
        -F "content=Please review this document." \
        -F "attachment=@/path/to/file.pdf" \
@@ -284,7 +284,7 @@ Retrieve all support tickets for the current user.
 * **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Ticket \
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Ticket \
        -H "Authorization: Bearer <token>"
   ```
 
@@ -294,7 +294,7 @@ Open a new support ticket.
 * **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
 * **Curl Command:**
   ```bash
-  curl -X POST http://localhost:5035/api/Ticket \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Ticket \
        -H "Authorization: Bearer <token>" \
        -H "Content-Type: application/json" \
        -d '"I have a problem with my order"'
@@ -306,7 +306,7 @@ Get details and messages of a specific ticket.
 * **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Ticket/068ae276-da9b-4013-be16-2b4c5185c37d \
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Ticket/068ae276-da9b-4013-be16-2b4c5185c37d \
        -H "Authorization: Bearer <token>"
   ```
 
@@ -316,7 +316,7 @@ Send a reply to an open ticket. Supports `multipart/form-data` for file, image, 
 * **Headers:** `Authorization: Bearer <token>`, `Content-Type: multipart/form-data`
 * **Curl Command (With Attachment):**
   ```bash
-  curl -X POST http://localhost:5035/api/Ticket/<ticketId>/Reply \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Ticket/<ticketId>/Reply \
        -H "Authorization: Bearer <token>" \
        -F "content=Here is a screenshot of the issue." \
        -F "attachment=@/path/to/screenshot.png" \
@@ -333,7 +333,7 @@ Get the current user's KYC submission status.
 * **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
   ```bash
-  curl -X GET http://localhost:5035/api/Kyc/Status \
+  curl -X GET https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Kyc/Status \
        -H "Authorization: Bearer <token>"
   ```
 * **Sample Response:**
@@ -350,7 +350,7 @@ Submit national ID and phone number for Executor verification.
 * **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
 * **Curl Command:**
   ```bash
-  curl -X POST http://localhost:5035/api/Kyc/Submit \
+  curl -X POST https://der-retrieved-authentication-cocktail.trycloudflare.com/api/Kyc/Submit \
        -H "Authorization: Bearer <token>" \
        -H "Content-Type: application/json" \
        -d '{"nationalId": "29900100000000", "phone": "01000000000"}'

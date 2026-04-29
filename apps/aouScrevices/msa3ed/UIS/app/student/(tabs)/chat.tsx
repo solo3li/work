@@ -7,8 +7,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
 import { useEffect } from 'react';
 import { fetchMyOrders } from '../../../store/slices/ordersSlice';
+import { API_BASE_URL } from '../../../services/api';
 
-const getApiUrl = (path: string) => path ? (path.startsWith('http') ? path : 'http://localhost:5035' + path) : 'https://placehold.co/150';
+const getApiUrl = (path: string) => path ? (path.startsWith('http') ? path : API_BASE_URL + path) : 'https://placehold.co/150';
 
 export default function ChatScreen() {
   const router = useRouter();

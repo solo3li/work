@@ -4,10 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
+import { API_BASE_URL } from '../../../services/api';
 
 const { width } = Dimensions.get('window');
 
-const getApiUrl = (path: string) => path ? (path.startsWith('http') ? path : 'http://localhost:5035' + path) : 'https://placehold.co/150';
+const getApiUrl = (path: string) => path ? (path.startsWith('http') ? path : API_BASE_URL + path) : 'https://placehold.co/150';
 
 export default function ProfileScreen() {
   const router = useRouter();

@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
 import { fetchCategories, fetchServices } from '../../../store/slices/catalogSlice';
 import { useAuth } from '../../../context/AuthContext';
+import { API_BASE_URL } from '../../../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -29,8 +30,7 @@ export default function HomeScreen() {
 
   const getApiUrl = (path: string) => {
     if (!path) return 'https://images.unsplash.com/photo-1542744094-3a31f272c490?q=80&w=600&auto=format&fit=crop';
-    const baseUrl = 'http://localhost:5035'; // Use 10.0.2.2 for android emulator
-    return baseUrl + path;
+    return API_BASE_URL + path;
   };
 
   return (
