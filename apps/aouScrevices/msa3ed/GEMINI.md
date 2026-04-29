@@ -169,11 +169,11 @@ The ASP.NET Core backend exposes the following REST API endpoints for the mobile
 
 ### 🏁 Task Status
 1. [DONE] Map API endpoints and seed database.
-2. [DONE] Implement File/Voice attachments for chat/tickets.
+2. [DONE] Implement File/Voice attachments for chat/tickets (Send & Receive).
 3. [DONE] Configure SMTP OTP with professional templates.
 4. [DONE] Setup Public Access via Cloudflare Tunnel.
 5. [DONE] Synchronize Service model (Rating, Delivery Time, Reviews).
 6. [DONE] Implement dynamic Email/SMTP settings in Admin Panel.
-7. [IN PROGRESS] Integrate SignalR in the Expo app for real-time updates.
+7. [DONE] Integrate SignalR for real-time chat and support tickets.
 8. [TODO] Implement Paymob integration for student payments.
 

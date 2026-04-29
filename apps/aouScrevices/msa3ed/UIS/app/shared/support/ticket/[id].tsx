@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator, Image } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
+import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store';
 import { fetchTicketById, replyToTicket, addLocalTicketMessage } from '../../../../store/slices/ticketsSlice';
@@ -22,6 +23,7 @@ export default function TicketDetailsScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const [sending, setSending] = useState(false);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     if (id) {
@@ -29,10 +31,10 @@ export default function TicketDetailsScreen() {
     }
   }, [id, dispatch]);
 
-  // SignalR integration
   useEffect(() => {
     if (!id || !token) return;
 
+    let isMounted = true;
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${API_BASE_URL}/hubs/chat`, {
         accessTokenFactory: () => token
@@ -40,31 +42,46 @@ export default function TicketDetailsScreen() {
       .withAutomaticReconnect()
       .build();
 
-    connection.start()
-      .then(() => {
-        console.log('Connected to Ticket Hub');
-        connection.invoke('JoinChat', "ticket-" + id);
-      })
-      .catch(err => console.error('Ticket Hub Error: ', err));
+    const startConnection = async () => {
+      try {
+        await connection.start();
+        if (isMounted) {
+          console.log('Connected to Ticket Hub');
+          await connection.invoke('JoinChat', "ticket-" + id);
+          connectionRef.current = connection;
+        } else {
+          await connection.stop();
+        }
+      } catch (err) {
+        console.error('Ticket Hub Start Error: ', err);
+      }
+    };
 
     connection.on('ReceiveTicketMessage', (message) => {
       dispatch(addLocalTicketMessage(message));
+      setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
     });
 
-    connectionRef.current = connection;
+    startConnection();
 
     return () => {
-      if (connectionRef.current) {
-        connectionRef.current.stop();
+      isMounted = false;
+      if (connection.state === signalR.HubConnectionState.Connected || connection.state === signalR.HubConnectionState.Connecting) {
+        connection.stop().catch(e => console.log('Stop error ignored:', e));
       }
     };
   }, [id, token, dispatch]);
 
-  const handleSend = async () => {
-    if (!inputText.trim()) return;
+  const handleSend = async (content?: string, attachment?: any, type: string = 'file') => {
+    if (!content?.trim() && !attachment) return;
     setSending(true);
     try {
-      await dispatch(replyToTicket({ id: id as string, content: inputText })).unwrap();
+      await dispatch(replyToTicket({ 
+        id: id as string, 
+        content: content || '', 
+        attachment, 
+        attachmentType: type 
+      })).unwrap();
       setInputText('');
     } catch (err: any) {
       alert('فشل في إرسال الرد: ' + err.message);
@@ -73,51 +90,89 @@ export default function TicketDetailsScreen() {
     }
   };
 
-  const renderMessage = ({ item }: any) => {
-    const isSender = item.senderId === user?.id;
-    return (
-      <View style={[styles.messageBubble, isSender ? styles.userBubble : styles.supportBubble]}>
-        <Text style={[styles.messageText, isSender ? styles.userText : styles.supportText]}>{item.content}</Text>
-        <Text style={[styles.timeText, isSender ? styles.userTime : styles.supportTime]}>
-            {new Date(item.sentAt || item.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-        </Text>
-      </View>
-    );
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      const file = {
+        uri: asset.uri,
+        name: asset.fileName || 'upload.jpg',
+        type: asset.mimeType || 'image/jpeg',
+      };
+      await handleSend('', file, 'image');
+    }
   };
 
   async function startRecording() {
     try {
-      console.log('Requesting permissions..');
-      await Audio.requestPermissionsAsync();
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status !== 'granted') return;
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
 
-      console.log('Starting recording..');
-      const { recording } = await Audio.Recording.createAsync( Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
+      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
       setRecording(recording);
       setIsRecording(true);
-      console.log('Recording started');
     } catch (err) {
       console.error('Failed to start recording', err);
     }
   }
 
   async function stopRecording() {
-    console.log('Stopping recording..');
-    setRecording(undefined);
     setIsRecording(false);
     if (!recording) return;
     await recording.stopAndUnloadAsync();
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-    });
     const uri = recording.getURI();
-    console.log('Recording stopped and stored at', uri);
-    alert('تم تسجيل المقطع الصوتي وسيتم إرساله: ' + uri);
+    setRecording(undefined);
+
+    if (uri) {
+        const file = {
+            uri,
+            name: 'voice_note.m4a',
+            type: 'audio/m4a'
+        };
+        await handleSend('', file, 'voice');
+    }
   }
+
+  const renderMessage = ({ item }: any) => {
+    const isSender = item.senderId === user?.id;
+    return (
+      <View style={[styles.messageBubble, isSender ? styles.userBubble : styles.supportBubble]}>
+        {item.content ? <Text style={[styles.messageText, isSender ? styles.userText : styles.supportText]}>{item.content}</Text> : null}
+        
+        {item.attachmentUrl && item.attachmentType === 'image' && (
+            <Image source={{ uri: item.attachmentUrl }} style={styles.messageImage} resizeMode="cover" />
+        )}
+
+        {item.attachmentUrl && item.attachmentType === 'voice' && (
+            <View style={styles.voiceContainer}>
+                <Ionicons name="play-circle" size={32} color={isSender ? Colors.primary : Colors.white} />
+                <View style={[styles.voiceWave, { backgroundColor: isSender ? Colors.primary + '20' : 'rgba(255,255,255,0.3)' }]} />
+                <Text style={[styles.voiceText, { color: isSender ? Colors.textSecondary : 'rgba(255,255,255,0.8)' }]}>مقطع صوتي</Text>
+            </View>
+        )}
+
+        {item.attachmentUrl && item.attachmentType === 'file' && (
+            <View style={styles.fileContainer}>
+                <Ionicons name="document-attach" size={24} color={isSender ? Colors.primary : Colors.white} />
+                <Text style={[styles.fileText, { color: isSender ? Colors.text : Colors.white }]} numberOfLines={1}>ملف مرفق</Text>
+            </View>
+        )}
+
+        <Text style={[styles.timeText, isSender ? styles.userTime : styles.supportTime]}>
+            {new Date(item.sentAt || item.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+        </Text>
+      </View>
+    );
+  };
 
   if (loading || !ticket) {
     return (
@@ -134,8 +189,8 @@ export default function TicketDetailsScreen() {
           <Ionicons name="arrow-forward" size={24} color={Colors.text} />
         </Pressable>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>#{ticket.id}</Text>
-          <Text style={styles.headerStatus}>{ticket.status}</Text>
+          <Text style={styles.headerTitle}>#{ticket.id.toString().substring(0,8)}</Text>
+          <Text style={styles.headerStatus}>{ticket.status === 'Open' ? 'نشطة' : 'مغلقة'}</Text>
         </View>
         <View style={styles.backBtn} />
       </View>
@@ -145,11 +200,13 @@ export default function TicketDetailsScreen() {
       </View>
 
       <FlatList
+        ref={flatListRef}
         data={ticket.messages || []}
         keyExtractor={item => item.id?.toString() || Math.random().toString()}
         renderItem={renderMessage}
         contentContainerStyle={styles.chatList}
         showsVerticalScrollIndicator={false}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
         ListEmptyComponent={
           <View style={{ alignItems: 'center', marginTop: 20 }}>
             <Text style={{ color: Colors.textSecondary }}>لا توجد رسائل</Text>
@@ -158,8 +215,8 @@ export default function TicketDetailsScreen() {
       />
 
       <View style={styles.inputContainer}>
-        <Pressable style={styles.attachBtn}>
-          <Ionicons name="attach" size={24} color={Colors.textSecondary} />
+        <Pressable style={styles.attachBtn} onPress={pickImage} disabled={sending || isRecording}>
+          <Ionicons name="image" size={24} color={Colors.textSecondary} />
         </Pressable>
 
         <TextInput 
@@ -173,7 +230,7 @@ export default function TicketDetailsScreen() {
         />
 
         {inputText.length > 0 ? (
-          <Pressable style={styles.sendBtn} onPress={handleSend} disabled={sending}>
+          <Pressable style={styles.sendBtn} onPress={() => handleSend(inputText)} disabled={sending}>
             {sending ? <ActivityIndicator size="small" color={Colors.white} /> : <Ionicons name="send" size={20} color={Colors.white} style={{ marginLeft: 4 }} />}
           </Pressable>
         ) : (
@@ -200,13 +257,19 @@ const styles = StyleSheet.create({
   subjectBox: { backgroundColor: Colors.primary + '10', padding: 16, marginHorizontal: 24, marginTop: 16, borderRadius: 12, borderWidth: 1, borderColor: Colors.primary + '30' },
   subjectTitle: { fontSize: 15, fontWeight: 'bold', color: Colors.text },
   chatList: { padding: 24 },
-  messageBubble: { maxWidth: '85%', padding: 16, borderRadius: 20, marginBottom: 12 },
+  messageBubble: { maxWidth: '85%', padding: 16, borderRadius: 20, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5, elevation: 1 },
   userBubble: { alignSelf: 'flex-start', backgroundColor: Colors.white, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: Colors.border },
   supportBubble: { alignSelf: 'flex-end', backgroundColor: Colors.primary, borderBottomRightRadius: 4 },
-  messageText: { fontSize: 16, lineHeight: 24 },
+  messageText: { fontSize: 15, lineHeight: 22, fontWeight: '500' },
   userText: { color: Colors.text },
   supportText: { color: Colors.white },
-  timeText: { fontSize: 11, marginTop: 8, alignSelf: 'flex-end' },
+  messageImage: { width: 200, height: 200, borderRadius: 12, marginTop: 8 },
+  voiceContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 12 },
+  voiceWave: { flex: 1, height: 4, borderRadius: 2 },
+  voiceText: { fontSize: 12, fontWeight: 'bold' },
+  fileContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 8, padding: 8, backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 8 },
+  fileText: { fontSize: 13, fontWeight: '600' },
+  timeText: { fontSize: 10, marginTop: 8, alignSelf: 'flex-end', fontWeight: 'bold' },
   userTime: { color: Colors.textSecondary },
   supportTime: { color: 'rgba(255,255,255,0.7)' },
   inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16, backgroundColor: Colors.white, borderTopWidth: 1, borderTopColor: Colors.border },

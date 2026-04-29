@@ -159,26 +159,26 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@6.0.1/dist/browser/signalr.min.js"></script>
     <script>
         const container = document.getElementById('messagesContainer');
         container.scrollTop = container.scrollHeight;
 
-        // SignalR Setup - USING ABSOLUTE PATH TO HUB
+        // SignalR Setup - USING EXPLICIT HUB PATH
+        const hubUrl = window.location.origin + "/hubs/chat";
+        console.log("Connecting to hub:", hubUrl);
+
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/hubs/chat")
+            .withUrl(hubUrl)
             .withAutomaticReconnect()
             .build();
 
         connection.on("ReceiveTicketMessage", function (data) {
-            // Avoid duplicate if we appended locally
             if (document.getElementById('msg-' + data.id)) return;
-            
             appendMessage(data);
         });
 
         connection.start().then(function () {
-            console.log("SignalR Connected to Hub");
+            console.log("SignalR Connected!");
             connection.invoke("JoinChat", "ticket-@Model.Id").catch(function (err) {
                 return console.error(err.toString());
             });
@@ -214,20 +214,14 @@
 
                 const response = await fetch('/Admin/Tickets/ReplyApi', {
                     method: 'POST',
-                    headers: { 
-                        'RequestVerificationToken': token 
-                    },
+                    headers: { 'RequestVerificationToken': token },
                     body: formData
                 });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText || 'Server error');
-                }
+                if (!response.ok) throw new Error('Server error');
 
                 const data = await response.json();
                 if (data.success) {
-                    // Message will be appended by SignalR event to keep it consistent
                     document.getElementById('replyContent').value = '';
                     document.getElementById('replyFile').value = '';
                 }

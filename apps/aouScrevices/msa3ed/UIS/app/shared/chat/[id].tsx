@@ -20,6 +20,7 @@ export default function ChatDetailsScreen() {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     if (id) {
@@ -27,10 +28,10 @@ export default function ChatDetailsScreen() {
     }
   }, [id, dispatch]);
 
-  // SignalR setup
   useEffect(() => {
     if (!currentChat?.id || !token) return;
 
+    let isMounted = true;
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${API_BASE_URL}/hubs/chat`, {
         accessTokenFactory: () => token
@@ -38,23 +39,32 @@ export default function ChatDetailsScreen() {
       .withAutomaticReconnect()
       .build();
 
-    connection.start()
-      .then(() => {
-        console.log('Connected to SignalR');
-        connection.invoke('JoinChat', currentChat.id);
-      })
-      .catch(err => console.error('SignalR Connection Error: ', err));
+    const startConnection = async () => {
+      try {
+        await connection.start();
+        if (isMounted) {
+          console.log('Connected to Chat Hub');
+          await connection.invoke('JoinChat', currentChat.id);
+          connectionRef.current = connection;
+        } else {
+          await connection.stop();
+        }
+      } catch (err) {
+        console.error('Chat Hub Start Error: ', err);
+      }
+    };
 
     connection.on('ReceiveMessage', (message) => {
-      // Avoid duplicating our own sent messages if the server broadcasts to sender too
       dispatch(addLocalMessage(message));
+      setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
     });
 
-    connectionRef.current = connection;
+    startConnection();
 
     return () => {
-      if (connectionRef.current) {
-        connectionRef.current.stop();
+      isMounted = false;
+      if (connection.state === signalR.HubConnectionState.Connected || connection.state === signalR.HubConnectionState.Connecting) {
+        connection.stop().catch(e => console.log('Stop error ignored:', e));
       }
     };
   }, [currentChat?.id, token, dispatch]);
@@ -65,7 +75,6 @@ export default function ChatDetailsScreen() {
     try {
       await dispatch(sendMessage({ chatId: currentChat.id, content: inputText })).unwrap();
       setInputText('');
-      // No need to fetch, SignalR will deliver the message back or we can add it locally
     } catch (err: any) {
       alert('فشل في إرسال الرسالة: ' + err.message);
     } finally {
@@ -76,12 +85,12 @@ export default function ChatDetailsScreen() {
   const renderMessage = ({ item, index }: any) => {
     const isSender = item.senderId === user?.id;
     return (
-      <Animated.View entering={FadeInUp.delay(index * 10)} style={[styles.messageBubble, isSender ? styles.senderBubble : styles.receiverBubble]}>
+      <View style={[styles.messageBubble, isSender ? styles.senderBubble : styles.receiverBubble]}>
         <Text style={[styles.messageText, isSender ? styles.senderText : styles.receiverText]}>{item.content}</Text>
         <Text style={[styles.timeText, isSender ? styles.senderTime : styles.receiverTime]}>
             {new Date(item.sentAt || item.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
         </Text>
-      </Animated.View>
+      </View>
     );
   };
 
@@ -99,22 +108,21 @@ export default function ChatDetailsScreen() {
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-forward" size={24} color={Colors.text} />
         </Pressable>
-        <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>المحادثة #{id}</Text>
+        <div className="flex flex-col items-center">
+          <Text style={styles.headerTitle}>المحادثة #{id?.toString().substring(0,8)}</Text>
           <Text style={styles.headerStatus}>متصل الآن</Text>
-        </View>
-        <Pressable style={styles.backBtn}>
-          <Ionicons name="ellipsis-vertical" size={24} color={Colors.text} />
-        </Pressable>
+        </div>
+        <View style={styles.backBtn} />
       </View>
 
       <FlatList
+        ref={flatListRef}
         data={currentChat?.messages || []}
         keyExtractor={item => item.id?.toString() || Math.random().toString()}
         renderItem={renderMessage}
         contentContainerStyle={styles.chatList}
         showsVerticalScrollIndicator={false}
-        inverted={false}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
         ListEmptyComponent={
           <View style={{ alignItems: 'center', marginTop: 50 }}>
             <Text style={{ color: Colors.textSecondary }}>لا توجد رسائل</Text>
@@ -145,12 +153,8 @@ export default function ChatDetailsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60,
-    backgroundColor: Colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, zIndex: 10,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: Colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, zIndex: 10 },
   backBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  headerInfo: { alignItems: 'center' },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text },
   headerStatus: { fontSize: 12, color: Colors.success, fontWeight: '500' },
   chatList: { padding: 24, paddingBottom: 16 },
@@ -163,10 +167,7 @@ const styles = StyleSheet.create({
   timeText: { fontSize: 11, marginTop: 8, alignSelf: 'flex-end' },
   senderTime: { color: 'rgba(255,255,255,0.7)' },
   receiverTime: { color: Colors.textSecondary },
-  inputContainer: {
-    flexDirection: 'row', alignItems: 'center', padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16,
-    backgroundColor: Colors.white, borderTopWidth: 1, borderTopColor: Colors.border,
-  },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16, backgroundColor: Colors.white, borderTopWidth: 1, borderTopColor: Colors.border },
   attachBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   input: { flex: 1, minHeight: 44, maxHeight: 100, backgroundColor: Colors.background, borderRadius: 22, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, fontSize: 16, color: Colors.text, textAlign: 'right' },
   sendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', marginLeft: 12 },

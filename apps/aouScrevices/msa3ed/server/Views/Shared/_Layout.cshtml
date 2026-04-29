@@ -8,14 +8,14 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS (Fixed CDN to resolve production warning) -->
+    <!-- Tailwind CSS (Fixed version to resolve production warning) -->
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
-    
-    <!-- SignalR Client (Global) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SignalR Client (Global) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -37,7 +37,7 @@
 <body class="text-gray-800 antialiased flex h-screen overflow-hidden">
     
     <!-- Sidebar -->
-    <aside class="w-64 bg-indigo-600 text-white flex flex-col shadow-xl sidebar">
+    <aside class="w-64 bg-indigo-600 text-white flex flex-col shadow-xl sidebar shrink-0">
         <div class="p-6 text-center border-b border-indigo-500/50">
             <h1 class="text-3xl font-extrabold tracking-wider">UIS<span class="text-indigo-200">Admin</span></h1>
             <p class="text-indigo-200 text-sm mt-1">لوحة تحكم النظام</p>
@@ -103,7 +103,7 @@
     <!-- Main Content -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
         <!-- Top Header -->
-        <header class="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+        <header class="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shrink-0">
             <div class="flex items-center">
                 <button class="text-gray-500 focus:outline-none lg:hidden">
                     <i class="fas fa-bars text-xl"></i>
