@@ -43,6 +43,38 @@ public class AuthController : ControllerBase
             Roles = user?.Roles.Select(r => r.Name)
         });
     }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] string email)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user == null) return NotFound("User not found.");
+
+        await _otp.GenerateOtpAsync(email);
+        return Ok(new { Message = "OTP sent to your email." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        var success = await _otp.VerifyOtpAsync(request.Email, request.Code);
+        if (!success) return BadRequest("Invalid or expired OTP.");
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        if (user == null) return NotFound("User not found.");
+
+        user.PasswordHash = request.NewPassword;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { Message = "Password reset successfully." });
+    }
+}
+
+public class ResetPasswordRequest
+{
+    public string Email { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
 }
 
 [ApiController]
@@ -62,6 +94,12 @@ public class UsersController : ControllerBase {
             user.Email,
             user.IsExecutor,
             user.IsAdmin,
+            user.Rating,
+            user.CompletedOrdersCount,
+            user.ProfilePicture,
+            user.University,
+            user.Major,
+            user.Bio,
             Roles = user.Roles.Select(r => r.Name)
         });
     }
@@ -143,14 +181,44 @@ public class OrdersController : ControllerBase {
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PaymentsController : ControllerBase {
     private readonly ApplicationDbContext _db; public PaymentsController(ApplicationDbContext db) { _db = db; }
+    
     [HttpPost("{orderId}")] public async Task<IActionResult> Process(Guid orderId, [FromBody] decimal amount) {
         _db.Payments.Add(new Payment { OrderId = orderId, Amount = amount, Status = "Completed", TransactionId = Guid.NewGuid().ToString() });
         var order = await _db.Orders.FindAsync(orderId);
         if(order != null) { order.Status = "Pending"; } // paid
         await _db.SaveChangesAsync();
         return Ok(new { success = true });
+    }
+
+    [HttpGet("Earnings")]
+    public async Task<IActionResult> GetMyEarnings()
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if(userIdStr == null) return Unauthorized();
+        var uid = Guid.Parse(userIdStr);
+
+        var earnings = await _db.Payments
+            .Include(p => p.Order)
+            .Where(p => p.Order.ExecutorId == uid && p.Status == "Completed")
+            .OrderByDescending(p => p.Id)
+            .ToListAsync();
+
+        var total = earnings.Sum(e => e.Amount);
+        
+        return Ok(new {
+            Total = total,
+            Transactions = earnings.Select(e => new {
+                e.Id,
+                e.Amount,
+                e.Order.ServiceId,
+                Title = "إتمام طلب #" + e.OrderId.ToString().Substring(0, 8),
+                Date = e.Order.CreatedAt,
+                Type = "in"
+            })
+        });
     }
 }
 

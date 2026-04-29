@@ -60,6 +60,18 @@ export const verifyOtp = createAsyncThunk('auth/verifyOtp', async (credentials: 
   }
 });
 
+export const forgotPassword = createAsyncThunk('auth/forgotPassword', async (email: string, { rejectWithValue }) => {
+  try {
+    const data = await apiFetch('/Auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify(email),
+    });
+    return data;
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
+
 export const fetchMe = createAsyncThunk('auth/fetchMe', async (_, { rejectWithValue }) => {
   try {
     const data = await apiFetch('/Users/Me');

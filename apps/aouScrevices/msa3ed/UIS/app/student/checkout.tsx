@@ -34,10 +34,10 @@ export default function CheckoutScreen() {
       // 1. Create Order
       const order = await dispatch(createOrder({ serviceId: sId as string, price: totalAmount })).unwrap();
       
-      // 2. Mock payment API call
-      await apiFetch('/Payments/Process', {
+      // 2. Mock payment API call (passing payment until gateway integration)
+      await apiFetch(`/Payments/${order.id}`, {
         method: 'POST',
-        body: JSON.stringify({ orderId: order.id, amount: totalAmount })
+        body: JSON.stringify(totalAmount)
       });
       
       router.replace('/student/payment-result');

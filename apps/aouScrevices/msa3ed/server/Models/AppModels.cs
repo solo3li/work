@@ -24,6 +24,10 @@ public class User
     
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Stats
+    public decimal Rating { get; set; } = 5.0m;
+    public int CompletedOrdersCount { get; set; } = 0;
 }
 
 public class Role
@@ -104,7 +108,7 @@ public class Order
     public Guid ServiceId { get; set; }
     public Service Service { get; set; } = null!;
     public decimal Price { get; set; }
-    public string Status { get; set; } = "Pending";
+    public string Status { get; set; } = "AwaitingPayment";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 

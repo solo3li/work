@@ -1,17 +1,36 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { forgotPassword } from '../../store/slices/authSlice';
 
 const { width } = Dimensions.get('window');
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading } = useSelector((state: RootState) => state.auth);
+  
+  const [email, setEmail] = useState('');
 
-  const handleReset = () => {
-    router.replace('/(auth)/otp-verify');
+  const handleReset = async () => {
+    if (!email.trim()) {
+      alert('يرجى إدخال البريد الإلكتروني');
+      return;
+    }
+    
+    const result = await dispatch(forgotPassword(email));
+    if (forgotPassword.fulfilled.match(result)) {
+      alert('تم إرسال رمز التحقق إلى بريدك الإلكتروني');
+      router.replace({ pathname: '/(auth)/otp-verify', params: { email } });
+    } else {
+      alert('فشل إرسال الرمز: ' + (result.payload || 'خطأ غير معروف'));
+    }
   };
 
   return (
@@ -45,17 +64,19 @@ export default function ForgotPasswordScreen() {
               placeholder="البريد الإلكتروني" 
               placeholderTextColor={Colors.textSecondary}
               keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
 
-          <Pressable onPress={handleReset}>
+          <Pressable onPress={handleReset} disabled={loading}>
             <LinearGradient
               colors={[Colors.primary, Colors.secondary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={styles.button}
+              style={[styles.button, loading && { opacity: 0.7 }]}
             >
-              <Text style={styles.buttonText}>إرسال الرمز</Text>
+              {loading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.buttonText}>إرسال الرمز</Text>}
             </LinearGradient>
           </Pressable>
         </Animated.View>
