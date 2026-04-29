@@ -18,13 +18,18 @@ public static class DbSeeder
 
         await context.Database.MigrateAsync();
 
-        // 1. Seed Roles
+        // 1. Clear existing data for a fresh start (Optional but requested)
+        // context.Services.RemoveRange(context.Services);
+        // context.Categories.RemoveRange(context.Categories);
+        // await context.SaveChangesAsync();
+
+        // 2. Seed Roles
         var adminRole = await GetOrCreateRole(context, "Admin", "Full access to all system features", true);
         var studentRole = await GetOrCreateRole(context, "Student", "Standard student access", true);
         var executorRole = await GetOrCreateRole(context, "Executor", "Service execution access", true);
         await context.SaveChangesAsync();
 
-        // 1.1 Seed Permissions
+        // 3. Seed Permissions
         if (!await context.Permissions.AnyAsync())
         {
             var permissions = new List<Permission>
@@ -43,7 +48,6 @@ public static class DbSeeder
             context.Permissions.AddRange(permissions);
             await context.SaveChangesAsync();
 
-            // Assign all permissions to Admin role
             foreach (var p in permissions)
             {
                 context.RolePermissions.Add(new RolePermission { RoleId = adminRole.Id, PermissionId = p.Id });
@@ -51,62 +55,12 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
-        // 2. Seed Admin
+        // 4. Seed Admin
         await GetOrCreateUser(context, "admin@uis.com", "مدير النظام الرئيسي", "admin123", new List<Role> { adminRole, studentRole }, 
             isAdmin: true, isStaff: true, uni: "جامعة القاهرة", major: "إدارة نظم معلومات", 
             bio: "مدير المنصة المسؤول عن المراجعة والتحكيم.");
 
-        // 3. Seed Students (Large batch with details)
-        var students = new List<User>();
-        var universities = new[] { "جامعة القاهرة", "جامعة عين شمس", "جامعة الإسكندرية", "جامعة المنصورة" };
-        var majors = new[] { "هندسة حاسبات", "علوم حاسب", "تجارة", "آداب لغة إنجليزية", "حقوق" };
-
-        for (int i = 1; i <= 20; i++)
-        {
-            var user = await GetOrCreateUser(context, $"student{i}@uis.com", $"طالب رقم {i}", "pass123", new List<Role> { studentRole },
-                isAdmin: false, isStaff: false, uni: universities[i % universities.Length], 
-                major: majors[i % majors.Length], 
-                bio: $"أنا طالب في السنة {((i%4)+1)}، أحتاج لمساعدة في بعض المشاريع الأكاديمية.");
-            students.Add(user);
-        }
-
-        // 4. Seed Executors (Large batch with details)
-        var executors = new List<User>();
-        for (int i = 1; i <= 15; i++)
-        {
-            // Executors also have Student role
-            var user = await GetOrCreateUser(context, $"executor{i}@uis.com", $"منفذ خدمات {i}", "pass123", new List<Role> { studentRole, executorRole },
-                isAdmin: false, isStaff: false, isExecutor: true, uni: universities[(i+2) % universities.Length],
-                major: majors[(i+1) % majors.Length],
-                bio: $"خبير في مجال {majors[(i+1) % majors.Length]} ولدي خبرة أكثر من 3 سنوات في تنفيذ المشاريع الطلابية بجودة عالية.");
-            executors.Add(user);
-        }
-        await context.SaveChangesAsync();
-
-        // 5. Seed KYC Requests for Executors (With extra details)
-        if (await context.KycRequests.CountAsync() < 10)
-        {
-            var cities = new[] { "القاهرة، مدينة نصر", "الجيزة، الدقي", "الإسكندرية، سموحة", "المنصورة، المشاية" };
-            foreach (var ex in executors)
-            {
-                if (!await context.KycRequests.AnyAsync(k => k.UserId == ex.Id))
-                {
-                    context.KycRequests.Add(new KycRequest 
-                    { 
-                        UserId = ex.Id, 
-                        NationalId = "2900000" + (1000000 + ex.Email.Length * 100), 
-                        Phone = "010" + (10000000 + ex.Email.Length * 50),
-                        Address = cities[ex.FullName.Length % cities.Length],
-                        BirthDate = DateTime.UtcNow.AddYears(-25).AddDays(ex.FullName.Length),
-                        IdExpiryDate = DateTime.UtcNow.AddYears(5),
-                        Status = ex.Email.Length % 3 == 0 ? "Pending" : "Approved"
-                    });
-                }
-            }
-            await context.SaveChangesAsync();
-        }
-
-        // 6. Seed Categories
+        // 5. Seed Categories
         if (!await context.Categories.AnyAsync())
         {
             context.Categories.AddRange(
@@ -114,139 +68,70 @@ public static class DbSeeder
                 new Category { Name = "تصميم جرافيك" },
                 new Category { Name = "برمجة تطبيقات" },
                 new Category { Name = "ترجمة معتمدة" },
-                new Category { Name = "شرح مواد هندسية" },
                 new Category { Name = "أبحاث علمية" },
                 new Category { Name = "تحليل بيانات" },
-                new Category { Name = "كتابة محتوى" }
+                new Category { Name = "كتابة محتوى" },
+                new Category { Name = "استشارات أكاديمية" }
             );
             await context.SaveChangesAsync();
         }
         var categories = await context.Categories.ToListAsync();
 
-        // 7. Seed Services
-        if (await context.Services.CountAsync() < 10)
+        // 6. Seed Services with High-Quality Images
+        if (!await context.Services.AnyAsync())
         {
-            var random = new Random();
-            foreach (var cat in categories)
+            var services = new List<Service>
             {
-                for (int i = 1; i <= 3; i++)
-                {
-                    context.Services.Add(new Service 
-                    { 
-                        Title = $"{cat.Name} - خدمة رقم {i}", 
-                        Description = $"وصف تفصيلي لخدمة {cat.Name} المتميزة رقم {i}. نضمن لك الجودة والالتزام بالمواعيد.", 
-                        BasePrice = random.Next(50, 1000), 
-                        CategoryId = cat.Id 
-                    });
+                new Service { 
+                    Title = "تصميم عرض تقديمي احترافي لمشروع التخرج", 
+                    Description = "تصميم عروض PowerPoint و Canva احترافية متوافقة مع معايير الجامعة، تشمل الرسوم البيانية والتحريك السلس.", 
+                    BasePrice = 150, 
+                    CategoryId = categories.First(c => c.Name == "تصميم جرافيك").Id,
+                    ImageUrl = "https://images.unsplash.com/photo-1542744094-3a31f272c490?q=80&w=800",
+                    Rating = 4.9m, ReviewsCount = 128, DeliveryTime = "يومان"
+                },
+                new Service { 
+                    Title = "برمجة تطبيق موبايل (React Native) متكامل", 
+                    Description = "تنفيذ الجانب البرمجي لمشاريع التخرج باستخدام تقنيات حديثة مع ربط بقواعد البيانات وشرح الكود.", 
+                    BasePrice = 1200, 
+                    CategoryId = categories.First(c => c.Name == "برمجة تطبيقات").Id,
+                    ImageUrl = "https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800",
+                    Rating = 5.0m, ReviewsCount = 45, DeliveryTime = "7 أيام"
+                },
+                new Service { 
+                    Title = "ترجمة أكاديمية للمقالات والأبحاث العلمية", 
+                    Description = "ترجمة دقيقة من الإنجليزية للعربية وبالعكس مع مراعاة المصطلحات العلمية والتدقيق اللغوي.", 
+                    BasePrice = 80, 
+                    CategoryId = categories.First(c => c.Name == "ترجمة معتمدة").Id,
+                    ImageUrl = "https://images.unsplash.com/photo-1544650039-2287f6071477?q=80&w=800",
+                    Rating = 4.7m, ReviewsCount = 89, DeliveryTime = "يوم واحد"
+                },
+                new Service { 
+                    Title = "كتابة وتنسيق البحث العلمي (APA Style)", 
+                    Description = "مساعدة في صياغة الأبحاث وتنسيق المراجع حسب المعايير العالمية المطلوبة في الجامعات.", 
+                    BasePrice = 300, 
+                    CategoryId = categories.First(c => c.Name == "أبحاث علمية").Id,
+                    ImageUrl = "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?q=80&w=800",
+                    Rating = 4.8m, ReviewsCount = 210, DeliveryTime = "4 أيام"
+                },
+                new Service { 
+                    Title = "تحليل بيانات باستخدام SPSS أو Python", 
+                    Description = "إجراء التحليلات الإحصائية وتفسير النتائج لمشاريع التخرج والرسائل العلمية.", 
+                    BasePrice = 450, 
+                    CategoryId = categories.First(c => c.Name == "تحليل بيانات").Id,
+                    ImageUrl = "https://images.unsplash.com/photo-1551288049-bbdac8626ad1?q=80&w=800",
+                    Rating = 4.9m, ReviewsCount = 34, DeliveryTime = "3 أيام"
+                },
+                new Service { 
+                    Title = "تصميم هوية بصرية متكاملة (Logo & Branding)", 
+                    Description = "تصميم شعار واختيار ألوان وخطوط لمشروعك الناشئ أو مسابقتك الجامعية.", 
+                    BasePrice = 250, 
+                    CategoryId = categories.First(c => c.Name == "تصميم جرافيك").Id,
+                    ImageUrl = "https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800",
+                    Rating = 4.6m, ReviewsCount = 67, DeliveryTime = "3 أيام"
                 }
-            }
-            await context.SaveChangesAsync();
-        }
-        var services = await context.Services.ToListAsync();
-
-        // 8. Seed Orders
-        if (await context.Orders.CountAsync() < 50)
-        {
-            var random = new Random();
-            var statuses = new[] { "Pending", "In Progress", "Completed", "Cancelled" };
-            
-            for (int i = 0; i < 60; i++)
-            {
-                var student = students[random.Next(students.Count)];
-                var service = services[random.Next(services.Count)];
-                var status = statuses[random.Next(statuses.Length)];
-                User? executor = status != "Pending" ? executors[random.Next(executors.Count)] : null;
-
-                context.Orders.Add(new Order 
-                { 
-                    StudentId = student.Id, 
-                    ExecutorId = executor?.Id, 
-                    ServiceId = service.Id, 
-                    Price = service.BasePrice + random.Next(-20, 100), 
-                    Status = status,
-                    CreatedAt = DateTime.UtcNow.AddDays(-random.Next(1, 60))
-                });
-            }
-            await context.SaveChangesAsync();
-        }
-
-        // 9. Seed Payments & Escrows (Ensuring all eligible orders have transactions)
-        var allOrders = await context.Orders.ToListAsync();
-        var existingPaymentOrderIds = await context.Payments.Select(p => p.OrderId).ToListAsync();
-        
-        foreach (var order in allOrders)
-        {
-            if (order.Status != "Pending" && !existingPaymentOrderIds.Contains(order.Id))
-            {
-                var paymentStatus = order.Status == "Cancelled" ? "Refunded" : "Completed";
-                
-                // Occasionally add a 'Failed' payment for realism
-                if (order.GetHashCode() % 10 == 0 && order.Status == "Pending") paymentStatus = "Failed";
-
-                context.Payments.Add(new Payment 
-                { 
-                    OrderId = order.Id, 
-                    Amount = order.Price, 
-                    Status = paymentStatus, 
-                    TransactionId = "TXN_" + Guid.NewGuid().ToString().Substring(0, 12).ToUpper() 
-                });
-
-                var escrowStatus = order.Status == "Completed" ? "Released" : 
-                                  order.Status == "Cancelled" ? "Refunded" : "Held";
-
-                context.Escrows.Add(new Escrow 
-                { 
-                    OrderId = order.Id, 
-                    Amount = order.Price, 
-                    Status = escrowStatus 
-                });
-
-                // 10. Seed Chat & Messages for this order
-                if (order.ExecutorId.HasValue && !await context.Chats.AnyAsync(c => c.OrderId == order.Id))
-                {
-                    var chat = new Chat { OrderId = order.Id };
-                    context.Chats.Add(chat);
-                    await context.SaveChangesAsync();
-
-                    var msgs = new List<Message>
-                    {
-                        new Message { ChatId = chat.Id, SenderId = order.StudentId, Content = "مرحباً، هل بدأت العمل؟", SentAt = order.CreatedAt.AddMinutes(10) },
-                        new Message { ChatId = chat.Id, SenderId = order.ExecutorId.Value, Content = "أهلاً بك، نعم سأبدأ الآن وسأوافيك بالتطورات.", SentAt = order.CreatedAt.AddHours(1) },
-                        new Message { ChatId = chat.Id, SenderId = order.StudentId, Content = "ممتاز، شكراً جزيلاً لك.", SentAt = order.CreatedAt.AddHours(2) }
-                    };
-
-                    if (order.Status == "Completed")
-                    {
-                        msgs.Add(new Message { ChatId = chat.Id, SenderId = order.ExecutorId.Value, Content = "لقد انتهيت من العمل ورفعت الملفات المطلوبة.", SentAt = order.CreatedAt.AddDays(1) });
-                        msgs.Add(new Message { ChatId = chat.Id, SenderId = order.StudentId, Content = "تم الاستلام، جودة رائعة!", SentAt = order.CreatedAt.AddDays(1).AddHours(2) });
-                    }
-
-                    context.Messages.AddRange(msgs);
-                }
-            }
-        }
-        await context.SaveChangesAsync();
-
-        // 11. Seed Private Chats (Direct Messages without orders)
-        if (await context.Chats.CountAsync(c => c.OrderId == null) < 5)
-        {
-            var allStudents = await context.Users.Where(u => u.Roles.Any(r => r.Name == "Student")).ToListAsync();
-            var allExecutors = await context.Users.Where(u => u.Roles.Any(r => r.Name == "Executor")).ToListAsync();
-
-            for (int i = 0; i < 5; i++)
-            {
-                var student = allStudents[i % allStudents.Count];
-                var executor = allExecutors[i % allExecutors.Count];
-                
-                var privateChat = new Chat { StudentId = student.Id, ExecutorId = executor.Id };
-                context.Chats.Add(privateChat);
-                await context.SaveChangesAsync();
-
-                context.Messages.AddRange(
-                    new Message { ChatId = privateChat.Id, SenderId = student.Id, Content = "مرحباً، أود الاستفسار عن خدماتك بشكل مباشر.", SentAt = DateTime.UtcNow.AddDays(-2) },
-                    new Message { ChatId = privateChat.Id, SenderId = executor.Id, Content = "أهلاً بك! أنا متاح للرد على أي استفسار بخصوص البرمجة أو التصميم.", SentAt = DateTime.UtcNow.AddDays(-2).AddMinutes(15) }
-                );
-            }
+            };
+            context.Services.AddRange(services);
             await context.SaveChangesAsync();
         }
 

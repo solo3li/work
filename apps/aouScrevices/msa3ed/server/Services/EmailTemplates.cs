@@ -66,7 +66,7 @@ public static class EmailTemplates
             </div>";
         }
 
-        return html.Replace("{{TITLE}}", title).Replace("{{CONTENT}}", finalContent);
+        return html.Replace("{TITLE}", title).Replace("{CONTENT}", finalContent);
     }
 
     public static string GetOtpTemplate(string code)

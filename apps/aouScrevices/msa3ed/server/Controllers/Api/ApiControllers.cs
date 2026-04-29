@@ -112,7 +112,8 @@ public class ServicesController : ControllerBase {
     [HttpGet] public async Task<IActionResult> GetAll() {
         var services = await _db.Services.Include(s => s.Category).Where(s => s.IsActive).ToListAsync();
         return Ok(services.Select(s => new {
-            s.Id, s.Title, s.Description, s.BasePrice, CategoryName = s.Category.Name, s.CategoryId, s.ImageUrl
+            s.Id, s.Title, s.Description, s.BasePrice, CategoryName = s.Category.Name, s.CategoryId, s.ImageUrl,
+            s.Rating, s.ReviewsCount, s.DeliveryTime
         }));
     }
     
@@ -120,7 +121,8 @@ public class ServicesController : ControllerBase {
         var s = await _db.Services.Include(s => s.Category).FirstOrDefaultAsync(x => x.Id == id);
         if (s == null) return NotFound();
         return Ok(new {
-            s.Id, s.Title, s.Description, s.BasePrice, CategoryName = s.Category.Name, s.CategoryId, s.ImageUrl
+            s.Id, s.Title, s.Description, s.BasePrice, CategoryName = s.Category.Name, s.CategoryId, s.ImageUrl,
+            s.Rating, s.ReviewsCount, s.DeliveryTime
         });
     }
 }

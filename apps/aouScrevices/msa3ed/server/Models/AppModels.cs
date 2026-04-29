@@ -96,6 +96,11 @@ public class Service
     public Category Category { get; set; } = null!;
     public bool IsActive { get; set; } = true;
     public string? ImageUrl { get; set; }
+    
+    // New fields
+    public decimal Rating { get; set; } = 5.0m;
+    public int ReviewsCount { get; set; } = 0;
+    public string DeliveryTime { get; set; } = "يومان";
 }
 
 public class Order

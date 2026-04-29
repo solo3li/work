@@ -29,8 +29,8 @@ export default function HomeScreen() {
   }, [dispatch]);
 
   const getApiUrl = (path: string) => {
-    if (!path) return 'https://images.unsplash.com/photo-1542744094-3a31f272c490?q=80&w=600&auto=format&fit=crop';
-    return API_BASE_URL + path;
+    if (!path) return 'https://images.unsplash.com/photo-1542744094-3a31f272c490?q=80&w=600';
+    return path.startsWith('http') ? path : API_BASE_URL + path;
   };
 
   return (
@@ -45,10 +45,10 @@ export default function HomeScreen() {
         >
           <View style={styles.headerTop}>
             <View>
-              <Text style={styles.greeting}>مرحباً، {user?.name?.split(' ')[0] || 'أحمد'} 👋</Text>
+              <Text style={styles.greeting}>مرحباً، {user?.fullName?.split(' ')[0] || user?.name?.split(' ')[0] || 'أحمد'} 👋</Text>
               <Text style={styles.subtitle}>ماذا تحتاج اليوم؟</Text>
             </View>
-            <Pressable style={styles.notificationBtn}>
+            <Pressable style={styles.notificationBtn} onPress={() => router.push('/Admin/Notifications' as any)}>
               <Ionicons name="notifications-outline" size={24} color={Colors.white} />
               <View style={styles.badge} />
             </Pressable>
@@ -74,7 +74,7 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>التصنيفات</Text>
-            <Pressable onPress={() => router.push('/(tabs)/categories')}>
+            <Pressable onPress={() => router.push('/student/(tabs)/categories' as any)}>
               <Text style={styles.seeAll}>الكل</Text>
             </Pressable>
           </View>
@@ -82,9 +82,9 @@ export default function HomeScreen() {
             <ActivityIndicator color={Colors.primary} />
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesList}>
-              {categories.slice(0, 6).map((cat: any, index: number) => (
+              {categories.slice(0, 8).map((cat: any, index: number) => (
                 <Animated.View key={cat.id} entering={FadeInDown.delay(index * 50).springify()}>
-                  <Pressable style={styles.categoryCard}>
+                  <Pressable style={styles.categoryCard} onPress={() => router.push(`/student/service/${cat.id}`)}>
                     <View style={[styles.iconContainer, { backgroundColor: defaultColors[index % defaultColors.length] }]}>
                       <Ionicons name={defaultIcons[index % defaultIcons.length] as any} size={28} color={Colors.primary} />
                     </View>
@@ -136,14 +136,14 @@ export default function HomeScreen() {
                       <Text style={styles.serviceTitle} numberOfLines={2}>{service.title}</Text>
                       
                       <View style={styles.providerInfo}>
-                        <Image source={{ uri: 'https://i.pravatar.cc/150?u=' + service.id }} style={styles.providerAvatar} />
-                        <Text style={styles.providerName}>موثوق UIS</Text>
+                        <Image source={{ uri: 'https://ui-avatars.com/api/?name=Executor&background=6366F1&color=fff' }} style={styles.providerAvatar} />
+                        <Text style={styles.providerName}>منفذ موثوق</Text>
                       </View>
 
                       <View style={styles.serviceFooter}>
                         <View style={styles.rating}>
                           <Ionicons name="star" size={16} color={Colors.warning} />
-                          <Text style={styles.ratingText}>5.0</Text>
+                          <Text style={styles.ratingText}>{parseFloat(service.rating || '5.0').toFixed(1)}</Text>
                         </View>
                         <Text style={styles.price}>{service.basePrice} ج.م</Text>
                       </View>

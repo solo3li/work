@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 // Centralized configuration for API access
 // This URL is generated via Cloudflare Tunnel
-export const API_BASE_URL = 'https://der-retrieved-authentication-cocktail.trycloudflare.com'; 
+export const API_BASE_URL = 'https://specifics-protection-suddenly-beliefs.trycloudflare.com'; 
 
 // For local development fallback if needed
 const DEV_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5035' : 'http://localhost:5035';

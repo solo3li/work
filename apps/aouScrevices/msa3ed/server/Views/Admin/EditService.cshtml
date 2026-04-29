@@ -18,7 +18,7 @@
             <p class="text-indigo-100 text-sm mt-1">تحديث بيانات "@Model.Title" لتظهر بشكل دقيق للمستخدمين.</p>
         </div>
 
-        <form asp-action="EditService" asp-route-id="@Model.Id" method="post" class="p-8 space-y-6">
+        <form asp-action="EditService" asp-route-id="@Model.Id" method="post" class="p-8 space-y-6" enctype="multipart/form-data">
             <input type="hidden" asp-for="Id" />
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -47,13 +47,27 @@
                     <textarea asp-for="Description" required rows="4" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none" placeholder="اشرح ما سيحصل عليه العميل من هذه الخدمة..."></textarea>
                 </div>
 
-                <div class="md:col-span-2">
+                <div class="md:col-span-2 space-y-4">
                     <label class="block text-sm font-bold text-gray-700 mb-2">صورة الخدمة</label>
+                    
                     @if(!string.IsNullOrEmpty(Model.ImageUrl)) {
-                        <img src="@Model.ImageUrl" class="h-20 mb-3 rounded-lg shadow-sm" />
+                        <div class="flex items-center space-x-4 rtl:space-x-reverse mb-2">
+                            <img src="@(Model.ImageUrl.StartsWith("http") ? Model.ImageUrl : "/uploads/" + Model.ImageUrl)" class="h-24 rounded-2xl shadow-sm border border-gray-100" />
+                            <p class="text-xs text-gray-400">الصورة الحالية</p>
+                        </div>
                     }
-                    <input type="file" name="imageFile" accept="image/*" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-white">
-                    <p class="text-xs text-gray-500 mt-2">اترك هذا الحقل فارغاً إذا كنت لا تود تغيير الصورة الحالية.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 mr-1">تغيير عبر رفع ملف</p>
+                            <input type="file" name="imageFile" accept="image/*" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-white">
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 mr-1">أو تغيير عبر رابط (URL)</p>
+                            <input type="text" asp-for="ImageUrl" placeholder="https://..." class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-indigo-400 mt-2 font-bold mr-1">ملاحظة: رفع ملف جديد سيتجاوز الرابط المدخل.</p>
                 </div>
 
                 <div class="md:col-span-2 flex items-center bg-gray-50 p-4 rounded-xl">
