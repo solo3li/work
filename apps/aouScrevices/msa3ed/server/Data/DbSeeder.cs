@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Uis.Server.Models;
+using Uis.Server.Services;
 
 namespace Uis.Server.Data;
 
@@ -247,6 +248,24 @@ public static class DbSeeder
                 );
             }
             await context.SaveChangesAsync();
+        }
+
+        await SeedSystemSettings(context);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedSystemSettings(ApplicationDbContext context)
+    {
+        if (!await context.SystemSettings.AnyAsync())
+        {
+            context.SystemSettings.AddRange(
+                new SystemSetting { Key = "Email.SmtpServer", Value = "smtp.gmail.com", Description = "SMTP Server Host" },
+                new SystemSetting { Key = "Email.SmtpPort", Value = "587", Description = "SMTP Server Port" },
+                new SystemSetting { Key = "Email.SenderName", Value = "UIS", Description = "Sender Display Name" },
+                new SystemSetting { Key = "Email.SenderEmail", Value = "fps60y@gmail.com", Description = "Sender Email Address" },
+                new SystemSetting { Key = "Email.Password", Value = "pljh isws wssg oakn", Description = "SMTP App Password" },
+                new SystemSetting { Key = "Email.Template.Base", Value = EmailTemplates.GetDefaultBaseTemplate(), Description = "Main HTML Template Wrapper (Use {TITLE} and {CONTENT})" }
+            );
         }
     }
 

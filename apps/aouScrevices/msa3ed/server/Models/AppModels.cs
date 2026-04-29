@@ -197,3 +197,10 @@ public class FileAttachment
     public string EntityType { get; set; } = string.Empty; // Order, Kyc, Ticket
     public Guid EntityId { get; set; }
 }
+
+public class SystemSetting
+{
+    public string Key { get; set; } = string.Empty; // e.g., "SmtpHost", "EmailTemplate"
+    public string Value { get; set; } = string.Empty;
+    public string? Description { get; set; }
+}

@@ -23,36 +23,68 @@ public interface IEmailService
 
 public class EmailService : IEmailService {
     private readonly IConfiguration _config;
-    public EmailService(IConfiguration config) { _config = config; }
+    private readonly IServiceProvider _serviceProvider;
+    public EmailService(IConfiguration config, IServiceProvider serviceProvider) { 
+        _config = config; 
+        _serviceProvider = serviceProvider;
+    }
     
+    private async Task<string> GetSettingAsync(string key, string defaultValue)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var setting = await db.SystemSettings.FindAsync(key);
+        return setting?.Value ?? defaultValue;
+    }
+
     public async Task SendEmailAsync(string to, string subject, string body) {
+        var smtpServer = await GetSettingAsync("Email.SmtpServer", _config["EmailSettings:SmtpServer"] ?? "");
+        var smtpPort = await GetSettingAsync("Email.SmtpPort", _config["EmailSettings:SmtpPort"] ?? "587");
+        var senderName = await GetSettingAsync("Email.SenderName", _config["EmailSettings:SenderName"] ?? "UIS");
+        var senderEmail = await GetSettingAsync("Email.SenderEmail", _config["EmailSettings:SenderEmail"] ?? "");
+        var password = await GetSettingAsync("Email.Password", _config["EmailSettings:Password"] ?? "");
+
         var email = new MimeMessage();
-        email.From.Add(new MailboxAddress(_config["EmailSettings:SenderName"], _config["EmailSettings:SenderEmail"]));
+        email.From.Add(new MailboxAddress(senderName, senderEmail));
         email.To.Add(MailboxAddress.Parse(to));
         email.Subject = subject;
         email.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = body };
 
         using var smtp = new SmtpClient();
-        await smtp.ConnectAsync(_config["EmailSettings:SmtpServer"], int.Parse(_config["EmailSettings:SmtpPort"]), SecureSocketOptions.StartTls);
-        await smtp.AuthenticateAsync(_config["EmailSettings:SenderEmail"], _config["EmailSettings:Password"]);
+        await smtp.ConnectAsync(smtpServer, int.Parse(smtpPort), SecureSocketOptions.StartTls);
+        await smtp.AuthenticateAsync(senderEmail, password);
         await smtp.SendAsync(email);
         await smtp.DisconnectAsync(true);
     }
 
     public async Task SendOtpEmailAsync(string to, string code)
     {
-        var body = EmailTemplates.GetOtpTemplate(code);
+        var baseTemplate = await GetSettingAsync("Email.Template.Base", EmailTemplates.GetDefaultBaseTemplate());
+        var body = EmailTemplates.Wrap("تأكيد هويتك", $@"
+            <p>مرحباً بك في UIS! لإتمام عملية الدخول، يرجى استخدام رمز التحقق التالي:</p>
+            <div style='margin: 35px 0; background-color: #f8fafc; border: 2px dashed #6366F1; border-radius: 24px; padding: 30px; display: inline-block;'>
+                <span style='font-size: 48px; font-weight: 900; color: #6366F1; letter-spacing: 15px; font-family: monospace;'>{code}</span>
+            </div>
+            <p style='font-size: 14px; font-weight: 500;'>الرمز صالح لمدة 10 دقائق فقط. لا تشارك هذا الرمز مع أي شخص.</p>", baseTemplate: baseTemplate);
+        
         await SendEmailAsync(to, "رمز التحقق الخاص بك - UIS", body);
     }
 
     public async Task SendWelcomeEmailAsync(string to, string name)
     {
-        var body = EmailTemplates.GetWelcomeTemplate(name);
+        var baseTemplate = await GetSettingAsync("Email.Template.Base", EmailTemplates.GetDefaultBaseTemplate());
+        var body = EmailTemplates.Wrap("مرحباً بك في رحاب UIS", $@"
+            <p>أهلاً بك يا <strong>{name}</strong> في عائلة UIS!</p>
+            <p>نحن سعداء جداً بانضمامك إلينا. الآن يمكنك البدء في طلب الخدمات الجامعية أو العمل كمنفذ للمشاريع.</p>
+            <p style='margin-top: 15px;'>اكتشف عالمنا الجديد وجرب خدماتنا المتميزة.</p>", 
+            "ابدأ الآن", "https://uis-app.com/get-started", baseTemplate: baseTemplate);
+
         await SendEmailAsync(to, "مرحباً بك في UIS!", body);
     }
 
     public async Task SendTemplatedEmailAsync(string to, string subject, string title, string message, string? buttonText = null, string? buttonUrl = null) {
-        var body = EmailTemplates.Wrap(title, message, buttonText, buttonUrl);
+        var baseTemplate = await GetSettingAsync("Email.Template.Base", EmailTemplates.GetDefaultBaseTemplate());
+        var body = EmailTemplates.Wrap(title, message, buttonText, buttonUrl, baseTemplate: baseTemplate);
         await SendEmailAsync(to, subject, body);
     }
 }

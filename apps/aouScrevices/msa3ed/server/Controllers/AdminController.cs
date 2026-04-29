@@ -733,4 +733,32 @@ public class AdminController : Controller
         await _notificationService.DeleteNotificationAsync(id);
         return RedirectToAction(nameof(Notifications));
     }
+
+    // --- System Settings ---
+    [HttpGet("Settings/Email")]
+    public async Task<IActionResult> EmailSettings()
+    {
+        var settings = await _db.SystemSettings.Where(s => s.Key.StartsWith("Email")).ToListAsync();
+        return View(settings);
+    }
+
+    [HttpPost("Settings/Email/Update")]
+    public async Task<IActionResult> UpdateEmailSettings(Dictionary<string, string> settings)
+    {
+        foreach (var (key, value) in settings)
+        {
+            var s = await _db.SystemSettings.FindAsync(key);
+            if (s != null)
+            {
+                s.Value = value;
+            }
+            else
+            {
+                _db.SystemSettings.Add(new SystemSetting { Key = key, Value = value });
+            }
+        }
+        await _db.SaveChangesAsync();
+        TempData["Success"] = "تم تحديث إعدادات البريد بنجاح";
+        return RedirectToAction(nameof(EmailSettings));
+    }
 }

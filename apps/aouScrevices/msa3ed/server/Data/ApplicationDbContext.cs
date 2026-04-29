@@ -27,6 +27,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<FileAttachment> Files { get; set; } = null!;
     public DbSet<Permission> Permissions { get; set; } = null!;
     public DbSet<RolePermission> RolePermissions { get; set; } = null!;
+    public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,5 +38,8 @@ public class ApplicationDbContext : DbContext
             .HasMany(u => u.Roles)
             .WithMany(r => r.Users)
             .UsingEntity(j => j.ToTable("UserRoles"));
+
+        // Configure SystemSetting
+        modelBuilder.Entity<SystemSetting>().HasKey(s => s.Key);
     }
 }

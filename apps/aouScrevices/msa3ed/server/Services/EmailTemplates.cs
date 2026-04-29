@@ -6,17 +6,8 @@ public static class EmailTemplates
     private const string SecondaryColor = "#A855F7";
     private const string FontStack = "'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 
-    public static string Wrap(string title, string content, string? buttonText = null, string? buttonUrl = null)
+    public static string GetDefaultBaseTemplate()
     {
-        var buttonHtml = !string.IsNullOrEmpty(buttonText) && !string.IsNullOrEmpty(buttonUrl)
-            ? $@"
-            <div style='margin-top: 40px;'>
-                <a href='{buttonUrl}' style='background: linear-gradient(135deg, {PrimaryColor} 0%, {SecondaryColor} 100%); color: #ffffff; padding: 16px 36px; border-radius: 16px; text-decoration: none; font-weight: 800; font-size: 16px; display: inline-block; box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4); transition: all 0.3s ease;'>
-                    {buttonText}
-                </a>
-            </div>"
-            : "";
-
         return $@"
 <!DOCTYPE html>
 <html lang='ar' dir='rtl'>
@@ -43,9 +34,8 @@ public static class EmailTemplates
             <div class='badge'>المنصة الجامعية الذكية</div>
         </div>
         <div class='content'>
-            <h2>{title}</h2>
-            <div style='color: #475569; font-size: 16px;'>{content}</div>
-            {buttonHtml}
+            <h2>{{TITLE}}</h2>
+            <div style='color: #475569; font-size: 16px;'>{{CONTENT}}</div>
         </div>
         <div class='footer'>
             <p style='font-size: 13px; color: #94a3b8;'>هذا بريد تلقائي، يرجى عدم الرد عليه مباشرة.</p>
@@ -59,6 +49,24 @@ public static class EmailTemplates
     </div>
 </body>
 </html>";
+    }
+
+    public static string Wrap(string title, string content, string? buttonText = null, string? buttonUrl = null, string? baseTemplate = null)
+    {
+        var html = baseTemplate ?? GetDefaultBaseTemplate();
+
+        var finalContent = content;
+        if (!string.IsNullOrEmpty(buttonText) && !string.IsNullOrEmpty(buttonUrl))
+        {
+            finalContent += $@"
+            <div style='margin-top: 40px;'>
+                <a href='{buttonUrl}' style='background: linear-gradient(135deg, {PrimaryColor} 0%, {SecondaryColor} 100%); color: #ffffff; padding: 16px 36px; border-radius: 16px; text-decoration: none; font-weight: 800; font-size: 16px; display: inline-block; box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4); transition: all 0.3s ease;'>
+                    {buttonText}
+                </a>
+            </div>";
+        }
+
+        return html.Replace("{{TITLE}}", title).Replace("{{CONTENT}}", finalContent);
     }
 
     public static string GetOtpTemplate(string code)
