@@ -121,7 +121,8 @@ Fetches all active services.
       "description": "وصف تفصيلي لخدمة تحليل بيانات المتميزة رقم 3.",
       "basePrice": 111,
       "categoryName": "تحليل بيانات",
-      "categoryId": "ab13a247-6e25-41e3-8c0e-066abc87aaae"
+      "categoryId": "ab13a247-6e25-41e3-8c0e-066abc87aaae",
+      "imageUrl": "/uploads/sample-image.jpg"
     }
   ]
   ```
@@ -141,7 +142,8 @@ Fetches a specific service by ID.
     "description": "وصف تفصيلي لخدمة تحليل بيانات المتميزة رقم 3.",
     "basePrice": 111,
     "categoryName": "تحليل بيانات",
-    "categoryId": "ab13a247-6e25-41e3-8c0e-066abc87aaae"
+    "categoryId": "ab13a247-6e25-41e3-8c0e-066abc87aaae",
+      "imageUrl": "/uploads/sample-image.jpg"
   }
   ```
 

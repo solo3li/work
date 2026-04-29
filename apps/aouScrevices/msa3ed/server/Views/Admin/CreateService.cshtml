@@ -18,7 +18,7 @@
             <p class="text-indigo-100 text-sm mt-1">يرجى ملء كافة الحقول بعناية لتظهر الخدمة بشكل صحيح للمستخدمين.</p>
         </div>
 
-        <form asp-action="CreateService" method="post" class="p-8 space-y-6">
+        <form asp-action="CreateService" method="post" class="p-8 space-y-6" enctype="multipart/form-data">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-bold text-gray-700 mb-2">عنوان الخدمة</label>
@@ -43,6 +43,11 @@
                 <div class="md:col-span-2">
                     <label class="block text-sm font-bold text-gray-700 mb-2">الوصف التفصيلي</label>
                     <textarea asp-for="Description" required rows="4" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none" placeholder="اشرح ما سيحصل عليه العميل من هذه الخدمة..."></textarea>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">صورة الخدمة</label>
+                    <input type="file" name="imageFile" accept="image/*" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-white">
                 </div>
 
                 <div class="md:col-span-2 flex items-center bg-gray-50 p-4 rounded-xl">

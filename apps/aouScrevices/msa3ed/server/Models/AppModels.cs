@@ -91,6 +91,7 @@ public class Service
     public Guid CategoryId { get; set; }
     public Category Category { get; set; } = null!;
     public bool IsActive { get; set; } = true;
+    public string? ImageUrl { get; set; }
 }
 
 public class Order

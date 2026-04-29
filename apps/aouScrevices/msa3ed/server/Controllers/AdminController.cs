@@ -11,11 +11,13 @@ public class AdminController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly INotificationService _notificationService;
+    private readonly IFileService _fileService;
 
-    public AdminController(ApplicationDbContext db, INotificationService notificationService)
+    public AdminController(ApplicationDbContext db, INotificationService notificationService, IFileService fileService)
     {
         _db = db;
         _notificationService = notificationService;
+        _fileService = fileService;
     }
 
     [HttpGet("")]
@@ -345,10 +347,16 @@ public class AdminController : Controller
     }
 
     [HttpPost("Services/Create")]
-    public async Task<IActionResult> CreateService(Service service)
+    public async Task<IActionResult> CreateService(Service service, IFormFile? imageFile)
     {
         if (ModelState.IsValid)
         {
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                service.ImageUrl = await _fileService.UploadFileAsync(imageFile.OpenReadStream(), fileName);
+            }
+
             _db.Services.Add(service);
             await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Services));
@@ -368,12 +376,26 @@ public class AdminController : Controller
     }
 
     [HttpPost("Services/Edit/{id}")]
-    public async Task<IActionResult> EditService(Guid id, Service service)
+    public async Task<IActionResult> EditService(Guid id, Service service, IFormFile? imageFile)
     {
         if (id != service.Id) return BadRequest();
 
         if (ModelState.IsValid)
         {
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                service.ImageUrl = await _fileService.UploadFileAsync(imageFile.OpenReadStream(), fileName);
+            }
+            else
+            {
+                var existingService = await _db.Services.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+                if (existingService != null)
+                {
+                    service.ImageUrl = existingService.ImageUrl;
+                }
+            }
+
             _db.Entry(service).State = EntityState.Modified;
             await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Services));
