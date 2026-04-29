@@ -61,6 +61,7 @@ UIS is a multi-role platform (Student and Executor) designed for university serv
 **Current State:**
 All screens for both Student and Executor roles have been implemented according to the PRD. The unified frontend uses `isExecutor` state for Role-Based conditional rendering.
 The ASP.NET Core backend has been updated to include all necessary REST API endpoints mapping directly to the frontend screens (Auth, Users/Me, Services, Orders, Payments, Chat, Tickets, KYC).
+The system now fully supports `multipart/form-data` uploads for `Services` (images) and `Chat`/`Tickets` (images, files, voice notes).
 The frontend includes an `apiFetch` client in `UIS/services/api.ts` ready to replace the static dummy data.
 
 ### Backend (server)

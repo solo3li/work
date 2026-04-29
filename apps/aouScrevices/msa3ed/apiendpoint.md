@@ -244,17 +244,35 @@ Retrieve chat history for a specific order.
        -H "Authorization: Bearer <token>"
   ```
 
-### 2. Send Chat Message
-Send a new message in a chat.
-* **Endpoint:** `POST /api/Chat/{chatId}/Message`
-* **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+### 2. Get Private Chat
+Retrieve chat history between the current user and another specific user.
+* **Endpoint:** `GET /api/Chat/Private/{userId}`
+* **Headers:** `Authorization: Bearer <token>`
 * **Curl Command:**
+  ```bash
+  curl -X GET http://localhost:5035/api/Chat/Private/510145fa-e233-4b9b-91ba-dfe3c750870e \
+       -H "Authorization: Bearer <token>"
+  ```
+
+### 3. Send Chat Message (with optional attachment)
+Send a new message in a chat. Supports `multipart/form-data` for file, image, or voice uploads.
+* **Endpoint:** `POST /api/Chat/{chatId}/Message`
+* **Headers:** `Authorization: Bearer <token>`, `Content-Type: multipart/form-data`
+* **Curl Command (Text only):**
   ```bash
   curl -X POST http://localhost:5035/api/Chat/<chatId>/Message \
        -H "Authorization: Bearer <token>" \
-       -H "Content-Type: application/json" \
-       -d '"Hello, I would like to check on my order progress."'
+       -F "content=Hello, here is my file"
   ```
+* **Curl Command (With Attachment):**
+  ```bash
+  curl -X POST http://localhost:5035/api/Chat/<chatId>/Message \
+       -H "Authorization: Bearer <token>" \
+       -F "content=Please review this document." \
+       -F "attachment=@/path/to/file.pdf" \
+       -F "attachmentType=file"
+  ```
+* **Note:** `attachmentType` can be `image`, `file`, or `voice`.
 
 ---
 
@@ -281,16 +299,6 @@ Open a new support ticket.
        -H "Content-Type: application/json" \
        -d '"I have a problem with my order"'
   ```
-* **Sample Response:**
-  ```json
-  {
-    "id": "068ae276-da9b-4013-be16-2b4c5185c37d",
-    "userId": "510145fa-e233-4b9b-91ba-dfe3c750870e",
-    "subject": "I have a problem with my order",
-    "status": "Open",
-    "messages": []
-  }
-  ```
 
 ### 3. Get Ticket By ID
 Get details and messages of a specific ticket.
@@ -300,6 +308,19 @@ Get details and messages of a specific ticket.
   ```bash
   curl -X GET http://localhost:5035/api/Ticket/068ae276-da9b-4013-be16-2b4c5185c37d \
        -H "Authorization: Bearer <token>"
+  ```
+
+### 4. Reply to Ticket (with optional attachment)
+Send a reply to an open ticket. Supports `multipart/form-data` for file, image, or voice uploads.
+* **Endpoint:** `POST /api/Ticket/{id}/Reply`
+* **Headers:** `Authorization: Bearer <token>`, `Content-Type: multipart/form-data`
+* **Curl Command (With Attachment):**
+  ```bash
+  curl -X POST http://localhost:5035/api/Ticket/<ticketId>/Reply \
+       -H "Authorization: Bearer <token>" \
+       -F "content=Here is a screenshot of the issue." \
+       -F "attachment=@/path/to/screenshot.png" \
+       -F "attachmentType=image"
   ```
 
 ---

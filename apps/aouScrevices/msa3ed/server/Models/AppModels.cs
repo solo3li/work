@@ -150,6 +150,8 @@ public class Message
     public Guid SenderId { get; set; }
     public User Sender { get; set; } = null!;
     public string Content { get; set; } = string.Empty;
+    public string? AttachmentUrl { get; set; }
+    public string? AttachmentType { get; set; }
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
 }
 
@@ -172,6 +174,8 @@ public class TicketMessage
     public Guid SenderId { get; set; }
     public User Sender { get; set; } = null!;
     public string Content { get; set; } = string.Empty;
+    public string? AttachmentUrl { get; set; }
+    public string? AttachmentType { get; set; }
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
 }
 

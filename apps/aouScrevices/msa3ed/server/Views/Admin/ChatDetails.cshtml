@@ -86,6 +86,20 @@
                             <span class="text-[9px] opacity-60">@msg.SentAt.ToLocalTime().ToString("f")</span>
                         </div>
                         <p class="text-sm font-medium leading-relaxed">@msg.Content</p>
+                        @if (!string.IsNullOrEmpty(msg.AttachmentUrl))
+                        {
+                            <div class="mt-3">
+                                @if(msg.AttachmentType == "image") {
+                                    <a href="@msg.AttachmentUrl" target="_blank"><img src="@msg.AttachmentUrl" class="max-w-full rounded-lg max-h-40" /></a>
+                                } else if(msg.AttachmentType == "voice") {
+                                    <audio controls src="@msg.AttachmentUrl" class="w-full max-w-[200px] mt-2"></audio>
+                                } else {
+                                    <a href="@msg.AttachmentUrl" target="_blank" class="flex items-center p-2 bg-black/10 rounded-lg text-xs font-bold hover:bg-black/20 w-fit">
+                                        <i class="fas fa-file-download ml-2"></i> تحميل المرفق
+                                    </a>
+                                }
+                            </div>
+                        }
                     </div>
                 </div>
             }

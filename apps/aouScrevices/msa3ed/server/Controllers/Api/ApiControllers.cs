@@ -158,22 +158,57 @@ public class PaymentsController : ControllerBase {
 [Route("api/[controller]")]
 [Authorize]
 public class ChatController : ControllerBase {
-    private readonly ApplicationDbContext _db; public ChatController(ApplicationDbContext db) { _db = db; }
+    private readonly ApplicationDbContext _db; 
+    private readonly IFileService _fileService;
+    public ChatController(ApplicationDbContext db, IFileService fileService) { _db = db; _fileService = fileService; }
+    
     [HttpGet("Order/{orderId}")] public async Task<IActionResult> GetOrderChat(Guid orderId) {
         var chat = await _db.Chats.Include(c => c.Messages).ThenInclude(m => m.Sender).FirstOrDefaultAsync(c => c.OrderId == orderId);
         if (chat == null) return NotFound();
         return Ok(new {
             chat.Id,
             Messages = chat.Messages.OrderBy(m => m.SentAt).Select(m => new {
-                m.Id, m.Content, m.SentAt, m.SenderId, SenderName = m.Sender.FullName
+                m.Id, m.Content, m.SentAt, m.SenderId, SenderName = m.Sender.FullName, m.AttachmentUrl, m.AttachmentType
             })
         });
     }
 
-    [HttpPost("{chatId}/Message")] public async Task<IActionResult> SendMessage(Guid chatId, [FromBody] string content) {
+    [HttpGet("Private/{userId}")] public async Task<IActionResult> GetPrivateChat(Guid userId) {
+        var myIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if(myIdStr == null) return Unauthorized();
+        var myId = Guid.Parse(myIdStr);
+
+        var chat = await _db.Chats.Include(c => c.Messages).ThenInclude(m => m.Sender)
+            .FirstOrDefaultAsync(c => c.OrderId == null && 
+            ((c.StudentId == myId && c.ExecutorId == userId) || (c.StudentId == userId && c.ExecutorId == myId)));
+        
+        if (chat == null) {
+            chat = new Chat { StudentId = myId, ExecutorId = userId };
+            _db.Chats.Add(chat);
+            await _db.SaveChangesAsync();
+        }
+
+        return Ok(new {
+            chat.Id,
+            Messages = chat.Messages.OrderBy(m => m.SentAt).Select(m => new {
+                m.Id, m.Content, m.SentAt, m.SenderId, SenderName = m.Sender.FullName, m.AttachmentUrl, m.AttachmentType
+            })
+        });
+    }
+
+    [HttpPost("{chatId}/Message")] public async Task<IActionResult> SendMessage(Guid chatId, [FromForm] string? content, IFormFile? attachment, [FromForm] string? attachmentType) {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(userIdStr == null) return Unauthorized();
-        var msg = new Message { ChatId = chatId, SenderId = Guid.Parse(userIdStr), Content = content, SentAt = DateTime.UtcNow };
+        
+        var msg = new Message { ChatId = chatId, SenderId = Guid.Parse(userIdStr), Content = content ?? "", SentAt = DateTime.UtcNow };
+
+        if (attachment != null && attachment.Length > 0)
+        {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(attachment.FileName);
+            msg.AttachmentUrl = await _fileService.UploadFileAsync(attachment.OpenReadStream(), fileName);
+            msg.AttachmentType = attachmentType ?? "file";
+        }
+
         _db.Messages.Add(msg);
         await _db.SaveChangesAsync();
         return Ok(msg);
@@ -184,7 +219,10 @@ public class ChatController : ControllerBase {
 [Route("api/[controller]")]
 [Authorize]
 public class TicketController : ControllerBase {
-    private readonly ApplicationDbContext _db; public TicketController(ApplicationDbContext db) { _db = db; }
+    private readonly ApplicationDbContext _db; 
+    private readonly IFileService _fileService;
+    public TicketController(ApplicationDbContext db, IFileService fileService) { _db = db; _fileService = fileService; }
+    
     [HttpGet] public async Task<IActionResult> GetMyTickets() {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(userIdStr == null) return Unauthorized();
@@ -199,7 +237,7 @@ public class TicketController : ControllerBase {
         return Ok(new {
             ticket.Id, ticket.Subject, ticket.Status,
             Messages = ticket.Messages.OrderBy(m => m.SentAt).Select(m => new {
-                m.Id, m.Content, m.SentAt, m.SenderId, SenderName = m.Sender.FullName
+                m.Id, m.Content, m.SentAt, m.SenderId, SenderName = m.Sender.FullName, m.AttachmentUrl, m.AttachmentType
             })
         });
     }
@@ -210,6 +248,24 @@ public class TicketController : ControllerBase {
         var ticket = new Ticket { UserId = Guid.Parse(userIdStr), Subject = subject };
         _db.Tickets.Add(ticket); await _db.SaveChangesAsync();
         return Ok(ticket);
+    }
+
+    [HttpPost("{id}/Reply")] public async Task<IActionResult> Reply(Guid id, [FromForm] string? content, IFormFile? attachment, [FromForm] string? attachmentType) {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if(userIdStr == null) return Unauthorized();
+
+        var msg = new TicketMessage { TicketId = id, SenderId = Guid.Parse(userIdStr), Content = content ?? "", SentAt = DateTime.UtcNow };
+
+        if (attachment != null && attachment.Length > 0)
+        {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(attachment.FileName);
+            msg.AttachmentUrl = await _fileService.UploadFileAsync(attachment.OpenReadStream(), fileName);
+            msg.AttachmentType = attachmentType ?? "file";
+        }
+
+        _db.TicketMessages.Add(msg);
+        await _db.SaveChangesAsync();
+        return Ok(msg);
     }
 }
 

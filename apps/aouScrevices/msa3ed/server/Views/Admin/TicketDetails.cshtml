@@ -47,6 +47,20 @@
                             <span class="text-[10px] opacity-60">@msg.SentAt.ToLocalTime().ToString("HH:mm")</span>
                         </div>
                         <p class="text-sm leading-relaxed font-medium">@msg.Content</p>
+                        @if (!string.IsNullOrEmpty(msg.AttachmentUrl))
+                        {
+                            <div class="mt-3">
+                                @if(msg.AttachmentType == "image") {
+                                    <a href="@msg.AttachmentUrl" target="_blank"><img src="@msg.AttachmentUrl" class="max-w-full rounded-lg max-h-40" /></a>
+                                } else if(msg.AttachmentType == "voice") {
+                                    <audio controls src="@msg.AttachmentUrl" class="w-full max-w-[200px] mt-2"></audio>
+                                } else {
+                                    <a href="@msg.AttachmentUrl" target="_blank" class="flex items-center p-2 bg-black/10 rounded-lg text-xs font-bold hover:bg-black/20 w-fit">
+                                        <i class="fas fa-file-download ml-2"></i> تحميل المرفق
+                                    </a>
+                                }
+                            </div>
+                        }
                     </div>
                 </div>
             }
@@ -57,7 +71,11 @@
         {
             <div class="p-6 border-t border-gray-100 bg-white">
                 <div class="flex space-x-4 rtl:space-x-reverse items-end">
-                    <textarea id="replyContent" required 
+                    <label class="cursor-pointer text-gray-500 hover:text-indigo-600 transition-colors p-4 bg-gray-50 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-paperclip text-xl"></i>
+                        <input type="file" id="replyFile" class="hidden" accept="image/*,audio/*,.pdf,.doc,.docx" />
+                    </label>
+                    <textarea id="replyContent" 
                               class="flex-1 bg-gray-50 border border-gray-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all resize-none" 
                               rows="2" placeholder="اكتب ردك المهني هنا..."></textarea>
                     <button type="button" onclick="sendReply()" id="sendBtn"
@@ -147,7 +165,10 @@
 
         async function sendReply() {
             const content = document.getElementById('replyContent').value;
-            if (!content.trim()) return;
+            const fileInput = document.getElementById('replyFile');
+            const file = fileInput ? fileInput.files[0] : null;
+
+            if (!content.trim() && !file) return;
 
             const btn = document.getElementById('sendBtn');
             const originalHtml = btn.innerHTML;
@@ -157,13 +178,23 @@
             try {
                 const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                 
+                const formData = new FormData();
+                formData.append('TicketId', '@Model.Id');
+                if (content.trim()) formData.append('Content', content);
+                if (file) {
+                    formData.append('Attachment', file);
+                    let type = "file";
+                    if(file.type.startsWith("image/")) type = "image";
+                    else if(file.type.startsWith("audio/")) type = "voice";
+                    formData.append('AttachmentType', type);
+                }
+
                 const response = await fetch('/Admin/Tickets/ReplyApi', {
                     method: 'POST',
                     headers: { 
-                        'Content-Type': 'application/json',
                         'RequestVerificationToken': token 
                     },
-                    body: JSON.stringify({ ticketId: '@Model.Id', content: content })
+                    body: formData
                 });
 
                 if (!response.ok) {
@@ -186,6 +217,19 @@
         }
 
         function appendMessage(data) {
+            let attachmentHtml = '';
+            if (data.attachmentUrl) {
+                attachmentHtml = '<div class="mt-3">';
+                if(data.attachmentType === 'image') {
+                    attachmentHtml += `<a href="${data.attachmentUrl}" target="_blank"><img src="${data.attachmentUrl}" class="max-w-full rounded-lg max-h-40" /></a>`;
+                } else if(data.attachmentType === 'voice') {
+                    attachmentHtml += `<audio controls src="${data.attachmentUrl}" class="w-full max-w-[200px] mt-2"></audio>`;
+                } else {
+                    attachmentHtml += `<a href="${data.attachmentUrl}" target="_blank" class="flex items-center p-2 bg-black/10 rounded-lg text-xs font-bold hover:bg-black/20 w-fit"><i class="fas fa-file-download ml-2"></i> تحميل المرفق</a>`;
+                }
+                attachmentHtml += '</div>';
+            }
+
             const html = `
                 <div class="flex justify-start animate-fade-in">
                     <div class="max-w-[75%] bg-indigo-600 text-white rounded-2xl rounded-tr-none p-4 shadow-md shadow-indigo-200">
@@ -195,6 +239,7 @@
                             <span class="text-[10px] opacity-60">${data.time}</span>
                         </div>
                         <p class="text-sm leading-relaxed font-medium">${data.content}</p>
+                        ${attachmentHtml}
                     </div>
                 </div>
             `;

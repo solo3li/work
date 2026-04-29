@@ -514,7 +514,7 @@ public class AdminController : Controller
     }
 
     [HttpPost("Tickets/ReplyApi")]
-    public async Task<IActionResult> ReplyToTicketApi([FromBody] ReplyRequest request)
+    public async Task<IActionResult> ReplyToTicketApi([FromForm] ReplyRequest request)
     {
         var admin = await _db.Users.FirstOrDefaultAsync(u => u.Email == "admin@uis.com");
         if (admin == null) return Unauthorized();
@@ -523,9 +523,16 @@ public class AdminController : Controller
         {
             TicketId = request.TicketId,
             SenderId = admin.Id,
-            Content = request.Content,
+            Content = request.Content ?? "",
             SentAt = DateTime.UtcNow
         };
+
+        if (request.Attachment != null && request.Attachment.Length > 0)
+        {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(request.Attachment.FileName);
+            message.AttachmentUrl = await _fileService.UploadFileAsync(request.Attachment.OpenReadStream(), fileName);
+            message.AttachmentType = request.AttachmentType ?? "file";
+        }
 
         _db.TicketMessages.Add(message);
         await _db.SaveChangesAsync();
@@ -534,6 +541,8 @@ public class AdminController : Controller
             success = true, 
             senderName = "مدير النظام", 
             content = message.Content, 
+            attachmentUrl = message.AttachmentUrl,
+            attachmentType = message.AttachmentType,
             time = message.SentAt.ToLocalTime().ToString("HH:mm") 
         });
     }
@@ -541,11 +550,13 @@ public class AdminController : Controller
     public class ReplyRequest
     {
         public Guid TicketId { get; set; }
-        public string Content { get; set; } = string.Empty;
+        public string? Content { get; set; }
+        public IFormFile? Attachment { get; set; }
+        public string? AttachmentType { get; set; }
     }
 
     [HttpPost("Tickets/Reply")]
-    public async Task<IActionResult> ReplyToTicket(Guid ticketId, string content)
+    public async Task<IActionResult> ReplyToTicket(Guid ticketId, string? content, IFormFile? attachment, string? attachmentType)
     {
         var admin = await _db.Users.FirstOrDefaultAsync(u => u.Email == "admin@uis.com");
         if (admin == null) return Unauthorized();
@@ -554,9 +565,16 @@ public class AdminController : Controller
         {
             TicketId = ticketId,
             SenderId = admin.Id,
-            Content = content,
+            Content = content ?? "",
             SentAt = DateTime.UtcNow
         };
+
+        if (attachment != null && attachment.Length > 0)
+        {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(attachment.FileName);
+            message.AttachmentUrl = await _fileService.UploadFileAsync(attachment.OpenReadStream(), fileName);
+            message.AttachmentType = attachmentType ?? "file";
+        }
 
         _db.TicketMessages.Add(message);
         await _db.SaveChangesAsync();
