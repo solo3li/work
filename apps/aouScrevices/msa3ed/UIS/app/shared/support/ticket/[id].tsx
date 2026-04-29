@@ -1,24 +1,27 @@
 import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../store';
-import { fetchTicketById, replyToTicket } from '../../../../store/slices/ticketsSlice';
+import { fetchTicketById, replyToTicket, addLocalTicketMessage } from '../../../../store/slices/ticketsSlice';
+import * as signalR from '@microsoft/signalr';
+import { API_BASE_URL } from '../../../../services/api';
 
 export default function TicketDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { currentTicket: ticket, loading } = useSelector((state: RootState) => state.tickets);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, token } = useSelector((state: RootState) => state.auth);
 
   const [inputText, setInputText] = useState('');
   const [recording, setRecording] = useState<Audio.Recording | undefined>();
   const [isRecording, setIsRecording] = useState(false);
   const [sending, setSending] = useState(false);
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -26,14 +29,43 @@ export default function TicketDetailsScreen() {
     }
   }, [id, dispatch]);
 
+  // SignalR integration
+  useEffect(() => {
+    if (!id || !token) return;
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${API_BASE_URL}/hubs/chat`, {
+        accessTokenFactory: () => token
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    connection.start()
+      .then(() => {
+        console.log('Connected to Ticket Hub');
+        connection.invoke('JoinChat', "ticket-" + id);
+      })
+      .catch(err => console.error('Ticket Hub Error: ', err));
+
+    connection.on('ReceiveTicketMessage', (message) => {
+      dispatch(addLocalTicketMessage(message));
+    });
+
+    connectionRef.current = connection;
+
+    return () => {
+      if (connectionRef.current) {
+        connectionRef.current.stop();
+      }
+    };
+  }, [id, token, dispatch]);
+
   const handleSend = async () => {
     if (!inputText.trim()) return;
     setSending(true);
     try {
       await dispatch(replyToTicket({ id: id as string, content: inputText })).unwrap();
       setInputText('');
-      // Optionally re-fetch ticket to get messages
-      dispatch(fetchTicketById(id as string));
     } catch (err: any) {
       alert('فشل في إرسال الرد: ' + err.message);
     } finally {
@@ -42,11 +74,13 @@ export default function TicketDetailsScreen() {
   };
 
   const renderMessage = ({ item }: any) => {
-    const isSender = item.senderId === user?.id || item.isSender;
+    const isSender = item.senderId === user?.id;
     return (
       <View style={[styles.messageBubble, isSender ? styles.userBubble : styles.supportBubble]}>
-        <Text style={[styles.messageText, isSender ? styles.userText : styles.supportText]}>{item.content || item.text}</Text>
-        <Text style={[styles.timeText, isSender ? styles.userTime : styles.supportTime]}>{item.createdAt || item.time}</Text>
+        <Text style={[styles.messageText, isSender ? styles.userText : styles.supportText]}>{item.content}</Text>
+        <Text style={[styles.timeText, isSender ? styles.userTime : styles.supportTime]}>
+            {new Date(item.sentAt || item.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+        </Text>
       </View>
     );
   };

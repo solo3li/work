@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using Uis.Server.Data;
 using Uis.Server.Models;
 using Uis.Server.Services;
@@ -12,12 +13,14 @@ public class AdminController : Controller
     private readonly ApplicationDbContext _db;
     private readonly INotificationService _notificationService;
     private readonly IFileService _fileService;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<Uis.Server.Hubs.ChatHub> _hub;
 
-    public AdminController(ApplicationDbContext db, INotificationService notificationService, IFileService fileService)
+    public AdminController(ApplicationDbContext db, INotificationService notificationService, IFileService fileService, Microsoft.AspNetCore.SignalR.IHubContext<Uis.Server.Hubs.ChatHub> hub)
     {
         _db = db;
         _notificationService = notificationService;
         _fileService = fileService;
+        _hub = hub;
     }
 
     [HttpGet("")]
@@ -510,6 +513,9 @@ public class AdminController : Controller
 
         if (ticket == null) return NotFound();
 
+        var admin = await _db.Users.FirstOrDefaultAsync(u => u.Email == "admin@uis.com");
+        ViewBag.AdminId = admin?.Id;
+
         return View(ticket);
     }
 
@@ -536,6 +542,17 @@ public class AdminController : Controller
 
         _db.TicketMessages.Add(message);
         await _db.SaveChangesAsync();
+
+        // Real-time broadcast
+        await _hub.Clients.Group("ticket-" + request.TicketId.ToString()).SendAsync("ReceiveTicketMessage", new {
+            Id = message.Id,
+            Content = message.Content,
+            SentAt = message.SentAt,
+            SenderId = message.SenderId,
+            SenderName = "مدير النظام",
+            AttachmentUrl = message.AttachmentUrl,
+            AttachmentType = message.AttachmentType
+        });
 
         return Json(new { 
             success = true, 
@@ -578,6 +595,17 @@ public class AdminController : Controller
 
         _db.TicketMessages.Add(message);
         await _db.SaveChangesAsync();
+
+        // Real-time broadcast
+        await _hub.Clients.Group("ticket-" + ticketId.ToString()).SendAsync("ReceiveTicketMessage", new {
+            Id = message.Id,
+            Content = message.Content,
+            SentAt = message.SentAt,
+            SenderId = message.SenderId,
+            SenderName = "مدير النظام",
+            AttachmentUrl = message.AttachmentUrl,
+            AttachmentType = message.AttachmentType
+        });
 
         return RedirectToAction(nameof(TicketDetails), new { id = ticketId });
     }

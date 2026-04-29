@@ -5,18 +5,21 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
-import { useEffect, useState } from 'react';
-import { fetchOrderChat, sendMessage } from '../../../store/slices/chatSlice';
+import { useEffect, useState, useRef } from 'react';
+import { fetchOrderChat, sendMessage, addLocalMessage } from '../../../store/slices/chatSlice';
+import * as signalR from '@microsoft/signalr';
+import { API_BASE_URL } from '../../../services/api';
 
 export default function ChatDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { currentChat, loading } = useSelector((state: RootState) => state.chat);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, token } = useSelector((state: RootState) => state.auth);
   
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -24,13 +27,45 @@ export default function ChatDetailsScreen() {
     }
   }, [id, dispatch]);
 
+  // SignalR setup
+  useEffect(() => {
+    if (!currentChat?.id || !token) return;
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${API_BASE_URL}/hubs/chat`, {
+        accessTokenFactory: () => token
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    connection.start()
+      .then(() => {
+        console.log('Connected to SignalR');
+        connection.invoke('JoinChat', currentChat.id);
+      })
+      .catch(err => console.error('SignalR Connection Error: ', err));
+
+    connection.on('ReceiveMessage', (message) => {
+      // Avoid duplicating our own sent messages if the server broadcasts to sender too
+      dispatch(addLocalMessage(message));
+    });
+
+    connectionRef.current = connection;
+
+    return () => {
+      if (connectionRef.current) {
+        connectionRef.current.stop();
+      }
+    };
+  }, [currentChat?.id, token, dispatch]);
+
   const handleSend = async () => {
     if (!inputText.trim()) return;
     setSending(true);
     try {
       await dispatch(sendMessage({ chatId: currentChat.id, content: inputText })).unwrap();
       setInputText('');
-      dispatch(fetchOrderChat(id as string));
+      // No need to fetch, SignalR will deliver the message back or we can add it locally
     } catch (err: any) {
       alert('فشل في إرسال الرسالة: ' + err.message);
     } finally {
@@ -39,11 +74,13 @@ export default function ChatDetailsScreen() {
   };
 
   const renderMessage = ({ item, index }: any) => {
-    const isSender = item.senderId === user?.id || item.isSender;
+    const isSender = item.senderId === user?.id;
     return (
-      <Animated.View entering={FadeInUp.delay(index * 50)} style={[styles.messageBubble, isSender ? styles.senderBubble : styles.receiverBubble]}>
-        <Text style={[styles.messageText, isSender ? styles.senderText : styles.receiverText]}>{item.content || item.text}</Text>
-        <Text style={[styles.timeText, isSender ? styles.senderTime : styles.receiverTime]}>{item.createdAt || item.time}</Text>
+      <Animated.View entering={FadeInUp.delay(index * 10)} style={[styles.messageBubble, isSender ? styles.senderBubble : styles.receiverBubble]}>
+        <Text style={[styles.messageText, isSender ? styles.senderText : styles.receiverText]}>{item.content}</Text>
+        <Text style={[styles.timeText, isSender ? styles.senderTime : styles.receiverTime]}>
+            {new Date(item.sentAt || item.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+        </Text>
       </Animated.View>
     );
   };

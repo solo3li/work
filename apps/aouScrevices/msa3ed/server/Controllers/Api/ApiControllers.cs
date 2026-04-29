@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using Uis.Server.DTOs;
 using Uis.Server.Models;
 using Uis.Server.Services;
@@ -243,14 +244,18 @@ public class PaymentsController : ControllerBase {
 public class ChatController : ControllerBase {
     private readonly ApplicationDbContext _db; 
     private readonly IFileService _fileService;
-    public ChatController(ApplicationDbContext db, IFileService fileService) { _db = db; _fileService = fileService; }
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<Uis.Server.Hubs.ChatHub> _hub;
+    public ChatController(ApplicationDbContext db, IFileService fileService, Microsoft.AspNetCore.SignalR.IHubContext<Uis.Server.Hubs.ChatHub> hub) { 
+        _db = db; 
+        _fileService = fileService;
+        _hub = hub;
+    }
     
     [HttpGet("Order/{orderId}")] public async Task<IActionResult> GetOrderChat(Guid orderId) {
         var myIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(myIdStr == null) return Unauthorized();
         var myId = Guid.Parse(myIdStr);
 
-        // Verify order exists and user is part of it
         var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == orderId && (o.StudentId == myId || o.ExecutorId == myId));
         if (order == null) return NotFound("Order not found or access denied.");
 
@@ -296,8 +301,10 @@ public class ChatController : ControllerBase {
     [HttpPost("{chatId}/Message")] public async Task<IActionResult> SendMessage(Guid chatId, [FromForm] string? content, IFormFile? attachment, [FromForm] string? attachmentType) {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(userIdStr == null) return Unauthorized();
+        var uid = Guid.Parse(userIdStr);
+        var sender = await _db.Users.FindAsync(uid);
         
-        var msg = new Message { ChatId = chatId, SenderId = Guid.Parse(userIdStr), Content = content ?? "", SentAt = DateTime.UtcNow };
+        var msg = new Message { ChatId = chatId, SenderId = uid, Content = content ?? "", SentAt = DateTime.UtcNow };
 
         if (attachment != null && attachment.Length > 0)
         {
@@ -308,6 +315,17 @@ public class ChatController : ControllerBase {
 
         _db.Messages.Add(msg);
         await _db.SaveChangesAsync();
+
+        await _hub.Clients.Group(chatId.ToString()).SendAsync("ReceiveMessage", new {
+            Id = msg.Id,
+            Content = msg.Content,
+            SentAt = msg.SentAt,
+            SenderId = msg.SenderId,
+            SenderName = sender?.FullName,
+            AttachmentUrl = msg.AttachmentUrl,
+            AttachmentType = msg.AttachmentType
+        });
+
         return Ok(msg);
     }
 }
@@ -318,7 +336,12 @@ public class ChatController : ControllerBase {
 public class TicketController : ControllerBase {
     private readonly ApplicationDbContext _db; 
     private readonly IFileService _fileService;
-    public TicketController(ApplicationDbContext db, IFileService fileService) { _db = db; _fileService = fileService; }
+    private readonly IHubContext<Uis.Server.Hubs.ChatHub> _hub;
+    public TicketController(ApplicationDbContext db, IFileService fileService, IHubContext<Uis.Server.Hubs.ChatHub> hub) { 
+        _db = db; 
+        _fileService = fileService;
+        _hub = hub;
+    }
     
     [HttpGet] public async Task<IActionResult> GetMyTickets() {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -350,8 +373,10 @@ public class TicketController : ControllerBase {
     [HttpPost("{id}/Reply")] public async Task<IActionResult> Reply(Guid id, [FromForm] string? content, IFormFile? attachment, [FromForm] string? attachmentType) {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(userIdStr == null) return Unauthorized();
+        var uid = Guid.Parse(userIdStr);
+        var sender = await _db.Users.FindAsync(uid);
 
-        var msg = new TicketMessage { TicketId = id, SenderId = Guid.Parse(userIdStr), Content = content ?? "", SentAt = DateTime.UtcNow };
+        var msg = new TicketMessage { TicketId = id, SenderId = uid, Content = content ?? "", SentAt = DateTime.UtcNow };
 
         if (attachment != null && attachment.Length > 0)
         {
@@ -362,6 +387,17 @@ public class TicketController : ControllerBase {
 
         _db.TicketMessages.Add(msg);
         await _db.SaveChangesAsync();
+
+        await _hub.Clients.Group("ticket-" + id.ToString()).SendAsync("ReceiveTicketMessage", new {
+            Id = msg.Id,
+            Content = msg.Content,
+            SentAt = msg.SentAt,
+            SenderId = msg.SenderId,
+            SenderName = sender?.FullName,
+            AttachmentUrl = msg.AttachmentUrl,
+            AttachmentType = msg.AttachmentType
+        });
+
         return Ok(msg);
     }
 }
