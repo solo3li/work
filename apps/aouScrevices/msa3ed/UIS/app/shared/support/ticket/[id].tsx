@@ -1,12 +1,17 @@
 import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { DUMMY_TICKETS, DUMMY_MESSAGES } from '../../../../constants/dummyData';
+import { Audio } from 'expo-av';
 
 export default function TicketDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const [inputText, setInputText] = useState('');
+  const [recording, setRecording] = useState<Audio.Recording | undefined>();
+  const [isRecording, setIsRecording] = useState(false);
   
   const ticket = DUMMY_TICKETS.find(t => t.id === id) || DUMMY_TICKETS[0];
 
@@ -18,6 +23,41 @@ export default function TicketDetailsScreen() {
       </View>
     );
   };
+
+  async function startRecording() {
+    try {
+      console.log('Requesting permissions..');
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      console.log('Starting recording..');
+      const { recording } = await Audio.Recording.createAsync( Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      setRecording(recording);
+      setIsRecording(true);
+      console.log('Recording started');
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  }
+
+  async function stopRecording() {
+    console.log('Stopping recording..');
+    setRecording(undefined);
+    setIsRecording(false);
+    if (!recording) return;
+    await recording.stopAndUnloadAsync();
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+    });
+    const uri = recording.getURI();
+    console.log('Recording stopped and stored at', uri);
+    // Here you would upload the file to your API
+    alert('تم تسجيل المقطع الصوتي وسيتم إرساله: ' + uri);
+  }
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
@@ -48,15 +88,29 @@ export default function TicketDetailsScreen() {
         <Pressable style={styles.attachBtn}>
           <Ionicons name="attach" size={24} color={Colors.textSecondary} />
         </Pressable>
+
         <TextInput 
           style={styles.input} 
-          placeholder="اكتب ردك هنا..." 
-          placeholderTextColor={Colors.textSecondary}
+          placeholder={isRecording ? "جاري التسجيل..." : "اكتب ردك هنا..."}
+          placeholderTextColor={isRecording ? Colors.error : Colors.textSecondary}
           multiline
+          value={inputText}
+          onChangeText={setInputText}
+          editable={!isRecording}
         />
-        <Pressable style={styles.sendBtn}>
-          <Ionicons name="send" size={20} color={Colors.white} style={{ marginLeft: 4 }} />
-        </Pressable>
+
+        {inputText.length > 0 ? (
+          <Pressable style={styles.sendBtn}>
+            <Ionicons name="send" size={20} color={Colors.white} style={{ marginLeft: 4 }} />
+          </Pressable>
+        ) : (
+          <Pressable 
+            style={[styles.sendBtn, isRecording && { backgroundColor: Colors.error }]} 
+            onPress={isRecording ? stopRecording : startRecording}
+          >
+            <Ionicons name={isRecording ? "stop" : "mic"} size={20} color={Colors.white} />
+          </Pressable>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
