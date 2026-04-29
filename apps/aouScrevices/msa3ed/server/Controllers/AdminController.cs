@@ -449,7 +449,7 @@ public class AdminController : Controller
         return View(orders);
     }
 
-    [HttpPost("Orders/UpdateStatus/{id}")]
+    [HttpPost("UpdateOrderStatus")]
     public async Task<IActionResult> UpdateOrderStatus(Guid id, string status)
     {
         var order = await _db.Orders.FindAsync(id);
