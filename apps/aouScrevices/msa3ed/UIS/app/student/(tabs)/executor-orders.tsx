@@ -1,12 +1,21 @@
-import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { DUMMY_EXECUTOR_ORDERS } from '../../../constants/dummyData';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { useEffect } from 'react';
+import { fetchAvailableOrders } from '../../../store/slices/ordersSlice';
 
 export default function AvailableOrdersScreen() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { availableOrders, loading } = useSelector((state: RootState) => state.orders);
+
+  useEffect(() => {
+    dispatch(fetchAvailableOrders());
+  }, [dispatch]);
 
   const renderItem = ({ item, index }: any) => {
     return (
@@ -19,7 +28,7 @@ export default function AvailableOrdersScreen() {
             </View>
           </View>
           
-          <Text style={styles.serviceTitle}>{item.serviceTitle}</Text>
+          <Text style={styles.serviceTitle}>{item.serviceName || item.serviceTitle}</Text>
           
           <View style={styles.detailsRow}>
             <View style={styles.detail}>
@@ -28,14 +37,14 @@ export default function AvailableOrdersScreen() {
             </View>
             <View style={styles.detail}>
               <Ionicons name="time-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.detailText}>{item.deadline}</Text>
+              <Text style={styles.detailText}>{item.deadline || item.createdAt}</Text>
             </View>
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.price}>{item.price} ج.م</Text>
+            <Text style={styles.price}>{item.totalPrice || item.price} ج.م</Text>
             <Pressable style={styles.acceptBtn} onPress={() => router.push(`/shared/order/${item.id}`)}>
-              <Text style={styles.acceptBtnText}>{item.status === 'متاح' ? 'قبول الطلب' : 'متابعة'}</Text>
+              <Text style={styles.acceptBtnText}>{item.status === 'متاح' || item.status === 'Available' ? 'قبول الطلب' : 'متابعة'}</Text>
             </Pressable>
           </View>
         </View>
@@ -53,12 +62,23 @@ export default function AvailableOrdersScreen() {
         <View style={styles.backBtn} />
       </View>
 
-      <FlatList
-        data={DUMMY_EXECUTOR_ORDERS}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-      />
+      {loading && availableOrders.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={availableOrders}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <View style={{ alignItems: 'center', marginTop: 50 }}>
+              <Text style={{ color: Colors.textSecondary }}>لا توجد طلبات متاحة حالياً</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }

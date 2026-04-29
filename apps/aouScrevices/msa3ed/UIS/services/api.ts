@@ -10,9 +10,12 @@ export const setAuthToken = (token: string | null) => {
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (authToken) {
     headers['Authorization'] = `Bearer ${authToken}`;

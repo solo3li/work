@@ -1,24 +1,35 @@
-import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { Colors } from '../../../constants/Colors';
-import { DUMMY_ORDERS } from '../../../constants/dummyData';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { BlurView } from 'expo-blur';
-
 import { useRouter } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { useEffect } from 'react';
+import { fetchMyOrders } from '../../../store/slices/ordersSlice';
 
 export default function OrdersScreen() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { myOrders, loading } = useSelector((state: RootState) => state.orders);
+
+  useEffect(() => {
+    dispatch(fetchMyOrders());
+  }, [dispatch]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'قيد التنفيذ':
+      case 'In Progress':
         return Colors.warning;
       case 'مكتمل':
+      case 'Completed':
         return Colors.success;
       case 'ملغي':
+      case 'Cancelled':
         return Colors.error;
       case 'بانتظار الرد':
+      case 'Pending':
         return Colors.primary;
       default:
         return Colors.textSecondary;
@@ -27,10 +38,14 @@ export default function OrdersScreen() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'قيد التنفيذ': return 'time';
-      case 'مكتمل': return 'checkmark-circle';
-      case 'ملغي': return 'close-circle';
-      case 'بانتظار الرد': return 'hourglass';
+      case 'قيد التنفيذ':
+      case 'In Progress': return 'time';
+      case 'مكتمل':
+      case 'Completed': return 'checkmark-circle';
+      case 'ملغي':
+      case 'Cancelled': return 'close-circle';
+      case 'بانتظار الرد':
+      case 'Pending': return 'hourglass';
       default: return 'help-circle';
     }
   };
@@ -51,14 +66,14 @@ export default function OrdersScreen() {
             </View>
           </View>
           
-          <Text style={styles.serviceTitle}>{item.serviceTitle}</Text>
+          <Text style={styles.serviceTitle}>{item.serviceName || item.serviceTitle}</Text>
           
           <View style={styles.orderFooter}>
             <View style={styles.dateContainer}>
               <Ionicons name="calendar-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.dateText}>{item.date}</Text>
+              <Text style={styles.dateText}>{item.createdAt || item.date}</Text>
             </View>
-            <Text style={styles.price}>{item.price} ج.م</Text>
+            <Text style={styles.price}>{item.totalPrice || item.price} ج.م</Text>
           </View>
         </Pressable>
       </Animated.View>
@@ -70,13 +85,24 @@ export default function OrdersScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>طلباتي</Text>
       </View>
-      <FlatList
-        data={DUMMY_ORDERS}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading && myOrders.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={myOrders}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={{ alignItems: 'center', marginTop: 50 }}>
+              <Text style={{ color: Colors.textSecondary }}>لا توجد طلبات حالياً</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }

@@ -1,20 +1,31 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../context/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { verifyOtp } from '../../store/slices/authSlice';
 
 const { width } = Dimensions.get('window');
 
 export default function OtpVerifyScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading } = useSelector((state: RootState) => state.auth);
+  
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
 
-  const handleVerify = () => {
-    login({ id: '2', name: 'مستخدم جديد', email: 'new@uis.com', isExecutor: false });
-    router.replace('/student/(tabs)');
+  const handleVerify = async () => {
+    const result = await dispatch(verifyOtp({ email, code }));
+    if (verifyOtp.fulfilled.match(result)) {
+      router.replace('/student/(tabs)');
+    } else {
+      alert('رمز التحقق غير صحيح');
+    }
   };
 
   return (
@@ -41,26 +52,38 @@ export default function OtpVerifyScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(800).delay(200)} style={styles.form}>
-          <View style={styles.otpContainer}>
-            {[1, 2, 3, 4].map((_, index) => (
-              <TextInput
-                key={index}
-                style={styles.otpInput}
-                keyboardType="numeric"
-                maxLength={1}
-                textAlign="center"
-              />
-            ))}
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail-outline" size={22} color={Colors.textSecondary} style={styles.icon} />
+            <TextInput 
+              style={styles.input} 
+              placeholder="البريد الإلكتروني للتأكيد" 
+              placeholderTextColor={Colors.textSecondary}
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
+          
+          <View style={styles.inputContainer}>
+             <Ionicons name="keypad-outline" size={22} color={Colors.textSecondary} style={styles.icon} />
+             <TextInput 
+              style={styles.input} 
+              placeholder="رمز التحقق (1234)" 
+              placeholderTextColor={Colors.textSecondary}
+              keyboardType="number-pad"
+              value={code}
+              onChangeText={setCode}
+            />
           </View>
 
-          <Pressable onPress={handleVerify}>
+          <Pressable onPress={handleVerify} disabled={loading}>
             <LinearGradient
               colors={[Colors.primary, Colors.secondary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.button}
             >
-              <Text style={styles.buttonText}>تأكيد</Text>
+              {loading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.buttonText}>تأكيد</Text>}
             </LinearGradient>
           </Pressable>
 
@@ -88,11 +111,9 @@ const styles = StyleSheet.create({
   title: { fontSize: 36, fontWeight: '900', color: Colors.text, marginBottom: 8 },
   subtitle: { fontSize: 16, color: Colors.textSecondary, fontWeight: '500' },
   form: { gap: 32 },
-  otpContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20 },
-  otpInput: {
-    width: 60, height: 60, backgroundColor: Colors.white, borderRadius: 16, fontSize: 24, fontWeight: 'bold', color: Colors.text,
-    borderWidth: 1, borderColor: Colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2,
-  },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, borderRadius: 16, paddingHorizontal: 20, height: 64, borderWidth: 1, borderColor: Colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  icon: { marginRight: 16 },
+  input: { flex: 1, fontSize: 16, color: Colors.text, textAlign: 'right' },
   button: {
     height: 64, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
     shadowColor: Colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8,

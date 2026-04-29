@@ -8,7 +8,7 @@ The UIS Backend is a hybrid application providing a **RESTful Web API** for the 
 - **Framework:** ASP.NET Core 10.0
 - **Database:** PostgreSQL (via Entity Framework Core 10)
 - **Real-time:** SignalR (for Chat and Notifications)
-- **Auth:** JWT with Email-based OTP verification
+- **Auth:** JWT with Email-based OTP verification (Real email sending via MailKit using fps60y@gmail.com)
 - **Infrastructure:** Docker & Docker Compose
 
 ## 📂 Architecture & Directory Structure

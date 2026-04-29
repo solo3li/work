@@ -7,6 +7,8 @@ import { useAuth } from '../../../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
+const getApiUrl = (path: string) => path ? (path.startsWith('http') ? path : 'http://localhost:5035' + path) : 'https://placehold.co/150';
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -17,7 +19,7 @@ export default function ProfileScreen() {
   };
 
   const menuItems = [
-    { icon: 'wallet', title: 'المحفظة', value: '450 ج.م', route: '' },
+    { icon: 'wallet', title: 'المحفظة', value: '0 ج.م', route: '' },
     { icon: 'heart', title: 'المفضلة', route: '' },
     { icon: 'settings', title: 'الإعدادات', route: '/shared/settings' },
     { icon: 'help-buoy', title: 'الدعم والنزاعات', route: '/shared/support/tickets' },
@@ -42,27 +44,27 @@ export default function ProfileScreen() {
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image 
-              source={{ uri: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' }} 
+              source={{ uri: getApiUrl(user?.avatar || 'https://i.pravatar.cc/150?u=' + (user?.id || '123')) }} 
               style={styles.avatar} 
             />
             <Pressable style={styles.editAvatarBtn}>
               <Ionicons name="camera" size={16} color={Colors.white} />
             </Pressable>
           </View>
-          <Text style={styles.name}>{user?.name || 'أحمد محمد'}</Text>
-          <Text style={styles.university}>جامعة القاهرة - كلية الهندسة</Text>
+          <Text style={styles.name}>{user?.name || user?.email?.split('@')[0] || 'مستخدم'}</Text>
+          <Text style={styles.university}>{user?.university || 'جامعة غير محددة'}</Text>
         </View>
       </LinearGradient>
 
       <View style={styles.content}>
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>12</Text>
+            <Text style={styles.statValue}>{user?.completedOrders || 0}</Text>
             <Text style={styles.statLabel}>طلب مكتمل</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>4.8</Text>
+            <Text style={styles.statValue}>{user?.rating || '0.0'}</Text>
             <Text style={styles.statLabel}>التقييم العام</Text>
           </View>
         </View>

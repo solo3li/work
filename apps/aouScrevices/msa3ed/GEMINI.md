@@ -39,7 +39,7 @@ UIS is a multi-role platform (Student and Executor) designed for university serv
 - **Framework:** ASP.NET Core 10.0 (Web API + MVC)
 - **Database:** PostgreSQL with Entity Framework Core 10
 - **Real-time:** SignalR (for Chat)
-- **Auth:** JWT with Email-based OTP logic
+- **Auth:** JWT with Email-based OTP logic (Real email sending via MailKit using fps60y@gmail.com)
 - **Containerization:** Docker & Docker Compose
 
 ## 🏃 Getting Started
@@ -62,7 +62,7 @@ UIS is a multi-role platform (Student and Executor) designed for university serv
 All screens for both Student and Executor roles have been implemented according to the PRD. The unified frontend uses `isExecutor` state for Role-Based conditional rendering.
 The ASP.NET Core backend has been updated to include all necessary REST API endpoints mapping directly to the frontend screens (Auth, Users/Me, Services, Orders, Payments, Chat, Tickets, KYC).
 The system now fully supports `multipart/form-data` uploads for `Services` (images) and `Chat`/`Tickets` (images, files, voice notes).
-The frontend includes an `apiFetch` client in `UIS/services/api.ts` ready to replace the static dummy data.
+The frontend has been completely integrated with the backend using Redux Toolkit. All static dummy data (`dummyData.ts`) has been removed and replaced with dynamic data fetched via `apiFetch` within Redux slices (`authSlice`, `catalogSlice`, `ordersSlice`, `chatSlice`, `ticketsSlice`, `kycSlice`).
 
 ### Backend (server)
 1. Navigate to the `server` directory:

@@ -1,11 +1,41 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../../store';
+import { createTicket } from '../../../store/slices/ticketsSlice';
 
 export default function NewTicketScreen() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const [subject, setSubject] = useState('');
+  const [details, setDetails] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!subject.trim()) {
+      alert('يرجى إدخال عنوان التذكرة');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // API expects subject only or more? We just pass subject for now as per ticketSlice.ts
+      // But we can append details to subject if needed, or update API later.
+      const fullSubject = details ? `${subject} - ${details}` : subject;
+      await dispatch(createTicket(fullSubject)).unwrap();
+      alert('تم فتح التذكرة بنجاح');
+      router.back();
+    } catch (error: any) {
+      alert('حدث خطأ أثناء فتح التذكرة: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
@@ -20,7 +50,12 @@ export default function NewTicketScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
           <Text style={styles.label}>عنوان التذكرة</Text>
-          <TextInput style={styles.input} placeholder="مثال: مشكلة في الدفع، تأخير طلب..." />
+          <TextInput 
+            style={styles.input} 
+            placeholder="مثال: مشكلة في الدفع، تأخير طلب..." 
+            value={subject}
+            onChangeText={setSubject}
+          />
         </View>
 
         <View style={styles.section}>
@@ -36,6 +71,8 @@ export default function NewTicketScreen() {
             multiline 
             numberOfLines={6}
             textAlignVertical="top"
+            value={details}
+            onChangeText={setDetails}
           />
         </View>
 
@@ -50,9 +87,9 @@ export default function NewTicketScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={handleSubmit} disabled={loading}>
           <LinearGradient colors={[Colors.primary, Colors.secondary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.submitBtn}>
-            <Text style={styles.submitBtnText}>فتح التذكرة</Text>
+            {loading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.submitBtnText}>فتح التذكرة</Text>}
           </LinearGradient>
         </Pressable>
       </View>

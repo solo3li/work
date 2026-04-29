@@ -1,22 +1,60 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { DUMMY_MESSAGES } from '../../../constants/dummyData';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { useEffect, useState } from 'react';
+import { fetchOrderChat, sendMessage } from '../../../store/slices/chatSlice';
 
 export default function ChatDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { currentChat, loading } = useSelector((state: RootState) => state.chat);
+  const { user } = useSelector((state: RootState) => state.auth);
+  
+  const [inputText, setInputText] = useState('');
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchOrderChat(id as string));
+    }
+  }, [id, dispatch]);
+
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
+    setSending(true);
+    try {
+      await dispatch(sendMessage({ chatId: currentChat.id, content: inputText })).unwrap();
+      setInputText('');
+      dispatch(fetchOrderChat(id as string));
+    } catch (err: any) {
+      alert('فشل في إرسال الرسالة: ' + err.message);
+    } finally {
+      setSending(false);
+    }
+  };
 
   const renderMessage = ({ item, index }: any) => {
+    const isSender = item.senderId === user?.id || item.isSender;
     return (
-      <Animated.View entering={FadeInUp.delay(index * 50)} style={[styles.messageBubble, item.isSender ? styles.senderBubble : styles.receiverBubble]}>
-        <Text style={[styles.messageText, item.isSender ? styles.senderText : styles.receiverText]}>{item.text}</Text>
-        <Text style={[styles.timeText, item.isSender ? styles.senderTime : styles.receiverTime]}>{item.time}</Text>
+      <Animated.View entering={FadeInUp.delay(index * 50)} style={[styles.messageBubble, isSender ? styles.senderBubble : styles.receiverBubble]}>
+        <Text style={[styles.messageText, isSender ? styles.senderText : styles.receiverText]}>{item.content || item.text}</Text>
+        <Text style={[styles.timeText, isSender ? styles.senderTime : styles.receiverTime]}>{item.createdAt || item.time}</Text>
       </Animated.View>
     );
   };
+
+  if (loading && !currentChat) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
@@ -25,7 +63,7 @@ export default function ChatDetailsScreen() {
           <Ionicons name="arrow-forward" size={24} color={Colors.text} />
         </Pressable>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>أحمد محمود</Text>
+          <Text style={styles.headerTitle}>المحادثة #{id}</Text>
           <Text style={styles.headerStatus}>متصل الآن</Text>
         </View>
         <Pressable style={styles.backBtn}>
@@ -34,12 +72,17 @@ export default function ChatDetailsScreen() {
       </View>
 
       <FlatList
-        data={DUMMY_MESSAGES}
-        keyExtractor={item => item.id}
+        data={currentChat?.messages || []}
+        keyExtractor={item => item.id?.toString() || Math.random().toString()}
         renderItem={renderMessage}
         contentContainerStyle={styles.chatList}
         showsVerticalScrollIndicator={false}
         inverted={false}
+        ListEmptyComponent={
+          <View style={{ alignItems: 'center', marginTop: 50 }}>
+            <Text style={{ color: Colors.textSecondary }}>لا توجد رسائل</Text>
+          </View>
+        }
       />
 
       <View style={styles.inputContainer}>
@@ -51,9 +94,12 @@ export default function ChatDetailsScreen() {
           placeholder="اكتب رسالتك هنا..." 
           placeholderTextColor={Colors.textSecondary}
           multiline
+          value={inputText}
+          onChangeText={setInputText}
+          editable={!sending}
         />
-        <Pressable style={styles.sendBtn}>
-          <Ionicons name="send" size={20} color={Colors.white} style={{ marginLeft: 4 }} />
+        <Pressable style={styles.sendBtn} onPress={handleSend} disabled={sending}>
+          {sending ? <ActivityIndicator size="small" color={Colors.white} /> : <Ionicons name="send" size={20} color={Colors.white} style={{ marginLeft: 4 }} />}
         </Pressable>
       </View>
     </KeyboardAvoidingView>

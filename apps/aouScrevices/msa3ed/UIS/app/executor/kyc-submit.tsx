@@ -1,14 +1,33 @@
-import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { submitKyc } from '../../store/slices/kycSlice';
 
 export default function KycSubmitScreen() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading } = useSelector((state: RootState) => state.kyc);
 
-  const handleSubmit = () => {
-    router.replace('/executor/kyc-status');
+  const [nationalId, setNationalId] = useState('');
+  const [phone, setPhone] = useState('');
+
+  const handleSubmit = async () => {
+    if (!nationalId.trim() || !phone.trim()) {
+      alert('يرجى إدخال جميع البيانات المطلوبة');
+      return;
+    }
+    
+    try {
+      await dispatch(submitKyc({ nationalId, phone })).unwrap();
+      router.replace('/executor/kyc-status');
+    } catch (err: any) {
+      alert('حدث خطأ أثناء التقديم: ' + err.message);
+    }
   };
 
   return (
@@ -29,7 +48,13 @@ export default function KycSubmitScreen() {
 
         <View style={styles.section}>
           <Text style={styles.label}>الرقم القومي</Text>
-          <TextInput style={styles.input} placeholder="أدخل الرقم القومي المكون من 14 رقم" keyboardType="numeric" />
+          <TextInput 
+            style={styles.input} 
+            placeholder="أدخل الرقم القومي المكون من 14 رقم" 
+            keyboardType="numeric"
+            value={nationalId}
+            onChangeText={setNationalId}
+          />
         </View>
 
         <View style={styles.section}>
@@ -50,15 +75,21 @@ export default function KycSubmitScreen() {
 
         <View style={styles.section}>
           <Text style={styles.label}>رقم الهاتف المسجل باسمك</Text>
-          <TextInput style={styles.input} placeholder="01X XXX XXXX" keyboardType="phone-pad" />
+          <TextInput 
+            style={styles.input} 
+            placeholder="01X XXX XXXX" 
+            keyboardType="phone-pad"
+            value={phone}
+            onChangeText={setPhone}
+          />
         </View>
 
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable onPress={handleSubmit}>
+        <Pressable onPress={handleSubmit} disabled={loading}>
           <LinearGradient colors={[Colors.primary, Colors.secondary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.submitBtn}>
-            <Text style={styles.submitBtnText}>إرسال للتقييم</Text>
+            {loading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.submitBtnText}>إرسال للتقييم</Text>}
           </LinearGradient>
         </Pressable>
       </View>

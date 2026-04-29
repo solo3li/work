@@ -1,25 +1,44 @@
-import { View, Text, StyleSheet, ScrollView, Image, Pressable, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, Pressable, Dimensions, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../constants/Colors';
-import { DUMMY_SERVICES } from '../../../constants/dummyData';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { useEffect } from 'react';
+import { fetchServiceById } from '../../../store/slices/catalogSlice';
 
 const { width } = Dimensions.get('window');
+
+const getApiUrl = (path: string) => path ? (path.startsWith('http') ? path : 'http://localhost:5035' + path) : 'https://placehold.co/150';
 
 export default function ServiceDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  
-  const service = DUMMY_SERVICES.find(s => s.id === id) || DUMMY_SERVICES[0];
+  const dispatch = useDispatch<AppDispatch>();
+  const { currentService: service, loading } = useSelector((state: RootState) => state.catalog);
+
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchServiceById(id as string));
+    }
+  }, [id, dispatch]);
+
+  if (loading || !service) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.imageContainer}>
           <Image 
-            source={{ uri: service.image }} 
+            source={{ uri: getApiUrl(service.imageUrl || service.image) }} 
             style={styles.image} 
           />
           <LinearGradient
@@ -30,27 +49,27 @@ export default function ServiceDetailsScreen() {
             <Ionicons name="arrow-forward-outline" size={24} color={Colors.text} />
           </Pressable>
           <View style={styles.imageContent}>
-            <Text style={styles.categoryBadge}>{service.category}</Text>
+            <Text style={styles.categoryBadge}>{service.categoryName || service.category}</Text>
           </View>
         </View>
 
         <View style={styles.content}>
           <Animated.View entering={FadeInDown.delay(200)}>
             <View style={styles.header}>
-              <Text style={styles.title}>{service.title}</Text>
+              <Text style={styles.title}>{service.name || service.title}</Text>
               <View style={styles.rating}>
                 <Ionicons name="star" size={18} color={Colors.warning} />
-                <Text style={styles.ratingText}>{service.rating}</Text>
-                <Text style={styles.reviewsText}>({service.reviews} تقييم)</Text>
+                <Text style={styles.ratingText}>{service.rating || '4.5'}</Text>
+                <Text style={styles.reviewsText}>({service.reviews || 0} تقييم)</Text>
               </View>
             </View>
 
-            <Text style={styles.price}>{service.price} ج.م</Text>
+            <Text style={styles.price}>{service.basePrice || service.price} ج.م</Text>
 
             <View style={styles.providerCard}>
-              <Image source={{ uri: service.providerAvatar }} style={styles.providerAvatar} />
+              <Image source={{ uri: getApiUrl(service.providerAvatar) }} style={styles.providerAvatar} />
               <View style={styles.providerInfo}>
-                <Text style={styles.providerName}>{service.provider}</Text>
+                <Text style={styles.providerName}>{service.providerName || service.provider}</Text>
                 <Text style={styles.providerLevel}>بائع مميز موثوق</Text>
               </View>
               <Pressable style={styles.chatBtn}>
@@ -61,7 +80,7 @@ export default function ServiceDetailsScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>نظرة عامة على الخدمة</Text>
               <Text style={styles.description}>
-                هذا النص هو مثال لنص يمكن أن يستبدل في نفس المساحة، لقد تم توليد هذا النص من مولد النص العربى. يمكنك الاعتماد على هذه الخدمة لإنجاز مهامك الجامعية بأعلى جودة واحترافية وبدون تأخير عن موعد التسليم المحدد.
+                {service.description}
               </Text>
             </View>
 
@@ -71,7 +90,7 @@ export default function ServiceDetailsScreen() {
                   <Ionicons name="time" size={24} color={Colors.primary} />
                 </View>
                 <Text style={styles.detailTitle}>مدة التسليم</Text>
-                <Text style={styles.detailValue}>{service.deliveryTime}</Text>
+                <Text style={styles.detailValue}>{service.deliveryTime || 'يومان'}</Text>
               </View>
               <View style={styles.detailItem}>
                 <View style={[styles.detailIconContainer, { backgroundColor: Colors.accent + '15' }]}>
@@ -86,7 +105,7 @@ export default function ServiceDetailsScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable onPress={() => router.push('/student/checkout')} style={{ flex: 1 }}>
+        <Pressable onPress={() => router.push(`/student/checkout?serviceId=${service.id}`)} style={{ flex: 1 }}>
           <LinearGradient
             colors={[Colors.primary, Colors.secondary]}
             start={{ x: 0, y: 0 }}

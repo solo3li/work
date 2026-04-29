@@ -1,25 +1,52 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
-import { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator } from 'react-native';
+import { useState, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { DUMMY_TICKETS, DUMMY_MESSAGES } from '../../../../constants/dummyData';
 import { Audio } from 'expo-av';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../../store';
+import { fetchTicketById, replyToTicket } from '../../../../store/slices/ticketsSlice';
 
 export default function TicketDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { currentTicket: ticket, loading } = useSelector((state: RootState) => state.tickets);
+  const { user } = useSelector((state: RootState) => state.auth);
+
   const [inputText, setInputText] = useState('');
   const [recording, setRecording] = useState<Audio.Recording | undefined>();
   const [isRecording, setIsRecording] = useState(false);
-  
-  const ticket = DUMMY_TICKETS.find(t => t.id === id) || DUMMY_TICKETS[0];
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchTicketById(id as string));
+    }
+  }, [id, dispatch]);
+
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
+    setSending(true);
+    try {
+      await dispatch(replyToTicket({ id: id as string, content: inputText })).unwrap();
+      setInputText('');
+      // Optionally re-fetch ticket to get messages
+      dispatch(fetchTicketById(id as string));
+    } catch (err: any) {
+      alert('فشل في إرسال الرد: ' + err.message);
+    } finally {
+      setSending(false);
+    }
+  };
 
   const renderMessage = ({ item }: any) => {
+    const isSender = item.senderId === user?.id || item.isSender;
     return (
-      <View style={[styles.messageBubble, item.isSender ? styles.userBubble : styles.supportBubble]}>
-        <Text style={[styles.messageText, item.isSender ? styles.userText : styles.supportText]}>{item.text}</Text>
-        <Text style={[styles.timeText, item.isSender ? styles.userTime : styles.supportTime]}>{item.time}</Text>
+      <View style={[styles.messageBubble, isSender ? styles.userBubble : styles.supportBubble]}>
+        <Text style={[styles.messageText, isSender ? styles.userText : styles.supportText]}>{item.content || item.text}</Text>
+        <Text style={[styles.timeText, isSender ? styles.userTime : styles.supportTime]}>{item.createdAt || item.time}</Text>
       </View>
     );
   };
@@ -55,8 +82,15 @@ export default function TicketDetailsScreen() {
     });
     const uri = recording.getURI();
     console.log('Recording stopped and stored at', uri);
-    // Here you would upload the file to your API
     alert('تم تسجيل المقطع الصوتي وسيتم إرساله: ' + uri);
+  }
+
+  if (loading || !ticket) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
   }
 
   return (
@@ -77,11 +111,16 @@ export default function TicketDetailsScreen() {
       </View>
 
       <FlatList
-        data={DUMMY_MESSAGES.slice(0,2)}
-        keyExtractor={item => item.id}
+        data={ticket.messages || []}
+        keyExtractor={item => item.id?.toString() || Math.random().toString()}
         renderItem={renderMessage}
         contentContainerStyle={styles.chatList}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={{ alignItems: 'center', marginTop: 20 }}>
+            <Text style={{ color: Colors.textSecondary }}>لا توجد رسائل</Text>
+          </View>
+        }
       />
 
       <View style={styles.inputContainer}>
@@ -96,17 +135,18 @@ export default function TicketDetailsScreen() {
           multiline
           value={inputText}
           onChangeText={setInputText}
-          editable={!isRecording}
+          editable={!isRecording && !sending}
         />
 
         {inputText.length > 0 ? (
-          <Pressable style={styles.sendBtn}>
-            <Ionicons name="send" size={20} color={Colors.white} style={{ marginLeft: 4 }} />
+          <Pressable style={styles.sendBtn} onPress={handleSend} disabled={sending}>
+            {sending ? <ActivityIndicator size="small" color={Colors.white} /> : <Ionicons name="send" size={20} color={Colors.white} style={{ marginLeft: 4 }} />}
           </Pressable>
         ) : (
           <Pressable 
             style={[styles.sendBtn, isRecording && { backgroundColor: Colors.error }]} 
             onPress={isRecording ? stopRecording : startRecording}
+            disabled={sending}
           >
             <Ionicons name={isRecording ? "stop" : "mic"} size={20} color={Colors.white} />
           </Pressable>

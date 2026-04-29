@@ -1,34 +1,39 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  isExecutor: boolean;
-}
+import React, { createContext, useContext, ReactNode, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '../store';
+import { login as reduxLogin, logout as reduxLogout, updateUserSync, setToken, fetchMe } from '../store/slices/authSlice';
 
 interface AuthContextType {
-  user: User | null;
-  login: (user: User) => void;
+  user: any | null;
+  login: (credentials: any) => Promise<boolean>;
   logout: () => void;
-  updateUser: (data: Partial<User>) => void;
+  updateUser: (data: any) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const token = useSelector((state: RootState) => state.auth.token);
 
-  const login = (newUser: User) => {
-    setUser(newUser);
+  useEffect(() => {
+    if (token && !user) {
+      dispatch(fetchMe());
+    }
+  }, [token, user]);
+
+  const login = async (credentials: any) => {
+    const result = await dispatch(reduxLogin(credentials));
+    return reduxLogin.fulfilled.match(result);
   };
 
   const logout = () => {
-    setUser(null);
+    dispatch(reduxLogout());
   };
 
-  const updateUser = (data: Partial<User>) => {
-    setUser(prev => (prev ? { ...prev, ...data } : null));
+  const updateUser = (data: any) => {
+    dispatch(updateUserSync(data));
   };
 
   return (

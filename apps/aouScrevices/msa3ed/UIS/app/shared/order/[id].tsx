@@ -1,23 +1,40 @@
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { DUMMY_ORDERS } from '../../../constants/dummyData';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { useEffect } from 'react';
+import { fetchOrderById } from '../../../store/slices/ordersSlice';
 
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  
-  const order = DUMMY_ORDERS.find(o => o.id === id) || DUMMY_ORDERS[0];
+  const dispatch = useDispatch<AppDispatch>();
+  const { currentOrder: order, loading } = useSelector((state: RootState) => state.orders);
+
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchOrderById(id as string));
+    }
+  }, [id, dispatch]);
 
   const getStatusColor = (status: string) => {
-    if (status === 'قيد التنفيذ') return Colors.warning;
-    if (status === 'مكتمل') return Colors.success;
-    if (status === 'ملغي') return Colors.error;
+    if (status === 'قيد التنفيذ' || status === 'In Progress') return Colors.warning;
+    if (status === 'مكتمل' || status === 'Completed') return Colors.success;
+    if (status === 'ملغي' || status === 'Cancelled') return Colors.error;
     return Colors.primary;
   };
+
+  if (loading || !order) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -37,15 +54,15 @@ export default function OrderDetailsScreen() {
               <Text style={[styles.badgeText, { color: getStatusColor(order.status) }]}>{order.status}</Text>
             </View>
           </View>
-          <Text style={styles.serviceTitle}>{order.serviceTitle}</Text>
-          <Text style={styles.date}>{order.date}</Text>
+          <Text style={styles.serviceTitle}>{order.serviceName || order.serviceTitle}</Text>
+          <Text style={styles.date}>{order.createdAt || order.date}</Text>
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(200)} style={styles.card}>
           <Text style={styles.sectionTitle}>تفاصيل الدفع</Text>
           <View style={styles.row}>
             <Text style={styles.label}>المبلغ المدفوع</Text>
-            <Text style={styles.value}>{order.price} ج.م</Text>
+            <Text style={styles.value}>{order.totalPrice || order.price} ج.م</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>طريقة الدفع</Text>
@@ -60,22 +77,21 @@ export default function OrderDetailsScreen() {
               <View style={[styles.timelineDot, styles.timelineDotActive]} />
               <View style={styles.timelineContent}>
                 <Text style={styles.timelineTitle}>تم استلام الطلب</Text>
-                <Text style={styles.timelineDate}>2023-10-25 10:00 ص</Text>
+                <Text style={styles.timelineDate}>{order.createdAt || '2023-10-25 10:00 ص'}</Text>
               </View>
             </View>
             <View style={styles.timelineLine} />
             <View style={styles.timelineItem}>
-              <View style={[styles.timelineDot, styles.timelineDotActive]} />
+              <View style={[styles.timelineDot, (order.status === 'قيد التنفيذ' || order.status === 'In Progress' || order.status === 'مكتمل' || order.status === 'Completed') ? styles.timelineDotActive : undefined]} />
               <View style={styles.timelineContent}>
                 <Text style={styles.timelineTitle}>قيد التنفيذ</Text>
-                <Text style={styles.timelineDate}>2023-10-25 12:00 م</Text>
               </View>
             </View>
             <View style={styles.timelineLine} />
             <View style={styles.timelineItem}>
-              <View style={styles.timelineDot} />
+              <View style={[styles.timelineDot, (order.status === 'مكتمل' || order.status === 'Completed') ? styles.timelineDotActive : undefined]} />
               <View style={styles.timelineContent}>
-                <Text style={[styles.timelineTitle, { color: Colors.textSecondary }]}>بانتظار التسليم</Text>
+                <Text style={[styles.timelineTitle, (order.status !== 'مكتمل' && order.status !== 'Completed') && { color: Colors.textSecondary }]}>مكتمل</Text>
               </View>
             </View>
           </View>
@@ -83,9 +99,9 @@ export default function OrderDetailsScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable style={styles.chatBtn} onPress={() => router.push(`/shared/chat/new?orderId=${order.id}`)}>
+        <Pressable style={styles.chatBtn} onPress={() => router.push(`/shared/chat/${order.id}`)}>
           <Ionicons name="chatbubbles-outline" size={24} color={Colors.primary} />
-          <Text style={styles.chatBtnText}>تواصل مع المنفذ</Text>
+          <Text style={styles.chatBtnText}>تواصل حول الطلب</Text>
         </Pressable>
       </View>
     </View>

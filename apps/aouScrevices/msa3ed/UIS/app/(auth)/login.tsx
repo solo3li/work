@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,10 +12,20 @@ const { width } = Dimensions.get('window');
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    login({ id: '1', name: 'أحمد محمد', email: 'student@uis.com', isExecutor: false });
-    router.replace('/student/(tabs)');
+  const handleLogin = async () => {
+    setLoading(true);
+    const success = await login({ email, password });
+    setLoading(false);
+    if (success) {
+      router.replace('/(auth)/otp-verify');
+    } else {
+      alert('فشل تسجيل الدخول. يرجى التأكد من البيانات.');
+    }
   };
 
   return (
@@ -45,6 +56,8 @@ export default function LoginScreen() {
               placeholder="البريد الإلكتروني" 
               placeholderTextColor={Colors.textSecondary}
               keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
 
@@ -55,6 +68,8 @@ export default function LoginScreen() {
               placeholder="كلمة المرور" 
               placeholderTextColor={Colors.textSecondary}
               secureTextEntry
+              value={password}
+              onChangeText={setPassword}
             />
             <Ionicons name="eye-off-outline" size={22} color={Colors.textSecondary} style={styles.eyeIcon} />
           </View>
@@ -63,14 +78,18 @@ export default function LoginScreen() {
             <Text style={styles.forgotPassword}>نسيت كلمة المرور؟</Text>
           </Pressable>
 
-          <Pressable onPress={handleLogin} style={{ marginTop: 8 }}>
+          <Pressable onPress={handleLogin} style={{ marginTop: 8 }} disabled={loading}>
             <LinearGradient
               colors={[Colors.primary, Colors.secondary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.button}
             >
-              <Text style={styles.buttonText}>تسجيل الدخول</Text>
+              {loading ? (
+                <ActivityIndicator color={Colors.white} />
+              ) : (
+                <Text style={styles.buttonText}>تسجيل الدخول</Text>
+              )}
             </LinearGradient>
           </Pressable>
 

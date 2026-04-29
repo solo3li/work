@@ -1,42 +1,34 @@
-import { View, Text, StyleSheet, FlatList, Image, Pressable, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, Pressable, Dimensions, ActivityIndicator } from 'react-native';
 import { Colors } from '../../../constants/Colors';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-
 import { useRouter } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { useEffect } from 'react';
+import { fetchMyOrders } from '../../../store/slices/ordersSlice';
 
-const DUMMY_CHATS = [
-  {
-    id: '1',
-    name: 'أحمد محمود',
-    avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
-    lastMessage: 'ممتاز، سأبدأ في العمل على الملف الآن.',
-    time: '10:30 ص',
-    unread: 2,
-    online: true,
-  },
-  {
-    id: '2',
-    name: 'د. سارة',
-    avatar: 'https://i.pravatar.cc/150?u=a04258a2462d826712d',
-    lastMessage: 'هل يمكنك تأكيد الموعد غداً؟',
-    time: 'أمس',
-    unread: 0,
-    online: false,
-  },
-  {
-    id: '3',
-    name: 'منى عبدالله',
-    avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026707d',
-    lastMessage: 'تم تسليم المشروع بنجاح.',
-    time: 'منذ يومين',
-    unread: 0,
-    online: true,
-  }
-];
+const getApiUrl = (path: string) => path ? (path.startsWith('http') ? path : 'http://localhost:5035' + path) : 'https://placehold.co/150';
 
 export default function ChatScreen() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { myOrders, loading } = useSelector((state: RootState) => state.orders);
+
+  useEffect(() => {
+    dispatch(fetchMyOrders());
+  }, [dispatch]);
+
+  // Derive chats from orders for now
+  const chats = myOrders.map((order: any) => ({
+    id: order.id,
+    name: order.executorName || order.customerName || `طلب #${order.id}`,
+    avatar: 'https://i.pravatar.cc/150?u=' + order.id,
+    lastMessage: 'تواصل بخصوص الطلب ' + (order.serviceName || ''),
+    time: order.createdAt || 'الآن',
+    unread: 0,
+    online: false,
+  }));
 
   const renderItem = ({ item, index }: any) => (
     <Animated.View entering={FadeInLeft.delay(index * 100)}>
@@ -73,13 +65,24 @@ export default function ChatScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>الرسائل</Text>
       </View>
-      <FlatList
-        data={DUMMY_CHATS}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading && chats.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={chats}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={{ alignItems: 'center', marginTop: 50 }}>
+              <Text style={{ color: Colors.textSecondary }}>لا توجد محادثات حالياً</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }

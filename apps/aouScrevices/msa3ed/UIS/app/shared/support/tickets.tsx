@@ -1,15 +1,24 @@
-import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { DUMMY_TICKETS } from '../../../constants/dummyData';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { useEffect } from 'react';
+import { fetchMyTickets } from '../../../store/slices/ticketsSlice';
 
 export default function TicketsScreen() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { myTickets, loading } = useSelector((state: RootState) => state.tickets);
+
+  useEffect(() => {
+    dispatch(fetchMyTickets());
+  }, [dispatch]);
 
   const getStatusColor = (status: string) => {
-    return status === 'مفتوحة' ? Colors.success : Colors.textSecondary;
+    return status === 'مفتوحة' || status === 'Open' ? Colors.success : Colors.textSecondary;
   };
 
   const renderItem = ({ item, index }: any) => (
@@ -27,9 +36,9 @@ export default function TicketsScreen() {
         <View style={styles.footer}>
           <View style={styles.dateInfo}>
             <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
-            <Text style={styles.dateText}>{item.date}</Text>
+            <Text style={styles.dateText}>{item.createdAt || item.date}</Text>
           </View>
-          <Text style={styles.lastUpdate}>آخر تحديث: {item.lastUpdate}</Text>
+          <Text style={styles.lastUpdate}>آخر تحديث: {item.updatedAt || item.lastUpdate || item.createdAt || item.date}</Text>
         </View>
       </Pressable>
     </Animated.View>
@@ -42,18 +51,29 @@ export default function TicketsScreen() {
           <Ionicons name="arrow-forward" size={24} color={Colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>الدعم الفني والنزاعات</Text>
-        <Pressable style={styles.addBtn} onPress={() => router.push('/support/new-ticket')}>
+        <Pressable style={styles.addBtn} onPress={() => router.push('/shared/support/new-ticket')}>
           <Ionicons name="add" size={24} color={Colors.primary} />
         </Pressable>
       </View>
 
-      <FlatList
-        data={DUMMY_TICKETS}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading && myTickets.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={myTickets}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={{ alignItems: 'center', marginTop: 50 }}>
+              <Text style={{ color: Colors.textSecondary }}>لا توجد تذاكر حالياً</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }

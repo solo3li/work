@@ -4,11 +4,33 @@ using System.Security.Cryptography;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 using Uis.Server.Data;
 using Uis.Server.Models;
 using Uis.Server.DTOs;
 
 namespace Uis.Server.Services;
+
+public interface IEmailService { Task SendEmailAsync(string to, string subject, string body); }
+public class EmailService : IEmailService {
+    private readonly IConfiguration _config;
+    public EmailService(IConfiguration config) { _config = config; }
+    public async Task SendEmailAsync(string to, string subject, string body) {
+        var email = new MimeMessage();
+        email.From.Add(new MailboxAddress(_config["EmailSettings:SenderName"], _config["EmailSettings:SenderEmail"]));
+        email.To.Add(MailboxAddress.Parse(to));
+        email.Subject = subject;
+        email.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = body };
+
+        using var smtp = new SmtpClient();
+        await smtp.ConnectAsync(_config["EmailSettings:SmtpServer"], int.Parse(_config["EmailSettings:SmtpPort"]), SecureSocketOptions.StartTls);
+        await smtp.AuthenticateAsync(_config["EmailSettings:SenderEmail"], _config["EmailSettings:Password"]);
+        await smtp.SendAsync(email);
+        await smtp.DisconnectAsync(true);
+    }
+}
 
 public interface IAuthService { Task<string?> LoginAsync(LoginDto dto); Task<bool> RegisterAsync(RegisterDto dto); }
 public class AuthService : IAuthService {
@@ -46,10 +68,18 @@ public class AuthService : IAuthService {
 
 public interface IOtpService { Task<string> GenerateOtpAsync(string email); Task<bool> VerifyOtpAsync(string email, string code); }
 public class OtpService : IOtpService {
-    private readonly ApplicationDbContext _db; public OtpService(ApplicationDbContext db) { _db = db; }
+    private readonly ApplicationDbContext _db; 
+    private readonly IEmailService _emailService;
+    public OtpService(ApplicationDbContext db, IEmailService emailService) { _db = db; _emailService = emailService; }
     public async Task<string> GenerateOtpAsync(string email) {
-        var otp = new EmailOtp { Email = email, Code = "1234", ExpiryDate = DateTime.UtcNow.AddMinutes(10) };
-        _db.EmailOtps.Add(otp); await _db.SaveChangesAsync(); return otp.Code;
+        var code = new Random().Next(1000, 9999).ToString();
+        var otp = new EmailOtp { Email = email, Code = code, ExpiryDate = DateTime.UtcNow.AddMinutes(10) };
+        _db.EmailOtps.Add(otp); 
+        await _db.SaveChangesAsync(); 
+        
+        await _emailService.SendEmailAsync(email, "رمز التحقق الخاص بك - UIS", $"<h1>مرحباً</h1><p>رمز التحقق الخاص بك لإتمام تسجيل الدخول هو: <strong>{code}</strong></p><p>هذا الرمز صالح لمدة 10 دقائق.</p>");
+        
+        return otp.Code;
     }
     public async Task<bool> VerifyOtpAsync(string email, string code) {
         var otp = await _db.EmailOtps.FirstOrDefaultAsync(o => o.Email == email && o.Code == code && !o.IsUsed && o.ExpiryDate > DateTime.UtcNow);

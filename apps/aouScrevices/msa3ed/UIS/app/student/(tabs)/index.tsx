@@ -1,15 +1,37 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, Image, Dimensions, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { DUMMY_CATEGORIES, DUMMY_SERVICES } from '../../../constants/dummyData';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { fetchCategories, fetchServices } from '../../../store/slices/catalogSlice';
+import { useAuth } from '../../../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
+// Default icons/colors if backend doesn't provide them
+const defaultIcons = ['school-outline', 'book-outline', 'color-palette-outline', 'language-outline', 'code-slash-outline'];
+const defaultColors = ['#EFF6FF', '#FEF2F2', '#F0FDF4', '#FFFBEB', '#EEF2FF'];
+
 export default function HomeScreen() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { categories, services, loading } = useSelector((state: RootState) => state.catalog);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    dispatch(fetchCategories());
+    dispatch(fetchServices());
+  }, [dispatch]);
+
+  const getApiUrl = (path: string) => {
+    if (!path) return 'https://images.unsplash.com/photo-1542744094-3a31f272c490?q=80&w=600&auto=format&fit=crop';
+    const baseUrl = 'http://localhost:5035'; // Use 10.0.2.2 for android emulator
+    return baseUrl + path;
+  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -23,7 +45,7 @@ export default function HomeScreen() {
         >
           <View style={styles.headerTop}>
             <View>
-              <Text style={styles.greeting}>مرحباً، أحمد 👋</Text>
+              <Text style={styles.greeting}>مرحباً، {user?.name?.split(' ')[0] || 'أحمد'} 👋</Text>
               <Text style={styles.subtitle}>ماذا تحتاج اليوم؟</Text>
             </View>
             <Pressable style={styles.notificationBtn}>
@@ -56,18 +78,22 @@ export default function HomeScreen() {
               <Text style={styles.seeAll}>الكل</Text>
             </Pressable>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesList}>
-            {DUMMY_CATEGORIES.slice(0, 6).map((cat, index) => (
-              <Animated.View key={cat.id} entering={FadeInDown.delay(index * 50).springify()}>
-                <Pressable style={styles.categoryCard}>
-                  <View style={[styles.iconContainer, { backgroundColor: cat.color }]}>
-                    <Ionicons name={cat.icon as any} size={28} color={Colors.primary} />
-                  </View>
-                  <Text style={styles.categoryTitle}>{cat.title}</Text>
-                </Pressable>
-              </Animated.View>
-            ))}
-          </ScrollView>
+          {loading && categories.length === 0 ? (
+            <ActivityIndicator color={Colors.primary} />
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesList}>
+              {categories.slice(0, 6).map((cat: any, index: number) => (
+                <Animated.View key={cat.id} entering={FadeInDown.delay(index * 50).springify()}>
+                  <Pressable style={styles.categoryCard}>
+                    <View style={[styles.iconContainer, { backgroundColor: defaultColors[index % defaultColors.length] }]}>
+                      <Ionicons name={defaultIcons[index % defaultIcons.length] as any} size={28} color={Colors.primary} />
+                    </View>
+                    <Text style={styles.categoryTitle}>{cat.name}</Text>
+                  </Pressable>
+                </Animated.View>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Special Offer */}
@@ -92,37 +118,41 @@ export default function HomeScreen() {
         {/* Popular Services */}
         <View style={[styles.section, { paddingBottom: 100 }]}>
           <Text style={styles.sectionTitle}>خدمات شائعة</Text>
-          <View style={styles.servicesGrid}>
-            {DUMMY_SERVICES.map((service, index) => (
-              <Animated.View key={service.id} entering={FadeInDown.delay(index * 50).springify()} style={styles.serviceCardWrapper}>
-                <Pressable style={styles.serviceCard} onPress={() => router.push(`/service/${service.id}`)}>
-                  <Image source={{ uri: service.image }} style={styles.serviceImage} />
-                  <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.6)']}
-                    style={styles.imageOverlay}
-                  >
-                    <Text style={styles.categoryTag}>{service.category}</Text>
-                  </LinearGradient>
-                  <View style={styles.serviceContent}>
-                    <Text style={styles.serviceTitle} numberOfLines={2}>{service.title}</Text>
-                    
-                    <View style={styles.providerInfo}>
-                      <Image source={{ uri: service.providerAvatar }} style={styles.providerAvatar} />
-                      <Text style={styles.providerName}>{service.provider}</Text>
-                    </View>
-
-                    <View style={styles.serviceFooter}>
-                      <View style={styles.rating}>
-                        <Ionicons name="star" size={16} color={Colors.warning} />
-                        <Text style={styles.ratingText}>{service.rating}</Text>
+          {loading && services.length === 0 ? (
+            <ActivityIndicator color={Colors.primary} />
+          ) : (
+            <View style={styles.servicesGrid}>
+              {services.map((service: any, index: number) => (
+                <Animated.View key={service.id} entering={FadeInDown.delay(index * 50).springify()} style={styles.serviceCardWrapper}>
+                  <Pressable style={styles.serviceCard} onPress={() => router.push(`/student/service/${service.id}`)}>
+                    <Image source={{ uri: getApiUrl(service.imageUrl) }} style={styles.serviceImage} />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.6)']}
+                      style={styles.imageOverlay}
+                    >
+                      <Text style={styles.categoryTag}>{service.categoryName}</Text>
+                    </LinearGradient>
+                    <View style={styles.serviceContent}>
+                      <Text style={styles.serviceTitle} numberOfLines={2}>{service.title}</Text>
+                      
+                      <View style={styles.providerInfo}>
+                        <Image source={{ uri: 'https://i.pravatar.cc/150?u=' + service.id }} style={styles.providerAvatar} />
+                        <Text style={styles.providerName}>موثوق UIS</Text>
                       </View>
-                      <Text style={styles.price}>{service.price} ج.م</Text>
+
+                      <View style={styles.serviceFooter}>
+                        <View style={styles.rating}>
+                          <Ionicons name="star" size={16} color={Colors.warning} />
+                          <Text style={styles.ratingText}>5.0</Text>
+                        </View>
+                        <Text style={styles.price}>{service.basePrice} ج.م</Text>
+                      </View>
                     </View>
-                  </View>
-                </Pressable>
-              </Animated.View>
-            ))}
-          </View>
+                  </Pressable>
+                </Animated.View>
+              ))}
+            </View>
+          )}
         </View>
       </View>
     </ScrollView>

@@ -78,6 +78,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Configure Services
+builder.Services.AddScoped<Uis.Server.Services.IEmailService, Uis.Server.Services.EmailService>();
 builder.Services.AddScoped<Uis.Server.Services.IAuthService, Uis.Server.Services.AuthService>();
 builder.Services.AddScoped<Uis.Server.Services.IOtpService, Uis.Server.Services.OtpService>();
 builder.Services.AddScoped<Uis.Server.Services.IJwtService, Uis.Server.Services.JwtService>();
@@ -94,6 +95,18 @@ builder.Services.AddScoped<Uis.Server.Services.INotificationService, Uis.Server.
 
 // Configure SignalR
 builder.Services.AddSignalR();
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.SetIsOriginAllowed(_ => true)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
 var app = builder.Build();
 
@@ -120,6 +133,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles(); // For local file storage and static assets
 
 app.UseRouting();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

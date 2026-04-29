@@ -1,12 +1,52 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { createOrder } from '../../store/slices/ordersSlice';
+import { apiFetch } from '../../services/api';
 
 export default function CheckoutScreen() {
   const router = useRouter();
+  const { serviceId } = useLocalSearchParams();
+  const dispatch = useDispatch<AppDispatch>();
+  const { currentService } = useSelector((state: RootState) => state.catalog);
+  
+  const [loading, setLoading] = useState(false);
+
+  const basePrice = currentService ? (currentService.basePrice || currentService.price || 150) : 150;
+  const platformFee = Math.round(basePrice * 0.1); // 10% fee
+  const totalAmount = basePrice + platformFee;
+
+  const handleCheckout = async () => {
+    if (!currentService && !serviceId) {
+      alert('لم يتم العثور على الخدمة');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const sId = serviceId || currentService?.id;
+      // 1. Create Order
+      const order = await dispatch(createOrder({ serviceId: sId as string, price: totalAmount })).unwrap();
+      
+      // 2. Mock payment API call
+      await apiFetch('/Payments/Process', {
+        method: 'POST',
+        body: JSON.stringify({ orderId: order.id, amount: totalAmount })
+      });
+      
+      router.replace('/student/payment-result');
+    } catch (err: any) {
+      alert('فشل في إتمام الطلب: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -24,15 +64,15 @@ export default function CheckoutScreen() {
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryText}>اسم الخدمة</Text>
-              <Text style={styles.summaryValue}>تصميم عرض تقديمي</Text>
+              <Text style={styles.summaryValue}>{currentService?.name || currentService?.title || 'خدمة غير معروفة'}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryText}>السعر الأساسي</Text>
-              <Text style={styles.summaryValue}>150 ج.م</Text>
+              <Text style={styles.summaryValue}>{basePrice} ج.م</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryText}>رسوم المنصة</Text>
-              <Text style={styles.summaryValue}>15 ج.م</Text>
+              <Text style={styles.summaryValue}>{platformFee} ج.م</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryText}>الخصم</Text>
@@ -40,7 +80,7 @@ export default function CheckoutScreen() {
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Text style={styles.totalText}>الإجمالي المطلوب</Text>
-              <Text style={styles.totalValue}>165 ج.م</Text>
+              <Text style={styles.totalValue}>{totalAmount} ج.م</Text>
             </View>
           </View>
         </Animated.View>
@@ -91,17 +131,21 @@ export default function CheckoutScreen() {
       <View style={styles.footer}>
         <View style={styles.footerTotal}>
           <Text style={styles.footerTotalText}>المبلغ النهائي</Text>
-          <Text style={styles.footerTotalValue}>165 ج.م</Text>
+          <Text style={styles.footerTotalValue}>{totalAmount} ج.م</Text>
         </View>
-        <Pressable onPress={() => router.replace('/student/payment-result')}>
+        <Pressable onPress={handleCheckout} disabled={loading}>
           <LinearGradient
             colors={[Colors.primary, Colors.secondary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.payBtn}
           >
-            <Text style={styles.payBtnText}>تأكيد ودفع</Text>
-            <Ionicons name="shield-checkmark" size={20} color={Colors.white} />
+            {loading ? <ActivityIndicator color={Colors.white} /> : (
+              <>
+                <Text style={styles.payBtnText}>تأكيد ودفع</Text>
+                <Ionicons name="shield-checkmark" size={20} color={Colors.white} />
+              </>
+            )}
           </LinearGradient>
         </Pressable>
       </View>
