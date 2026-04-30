@@ -471,3 +471,30 @@ public class KycController : ControllerBase {
         return Ok(new { success = true });
     }
 }
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class NotificationsController : ControllerBase {
+    private readonly INotificationService _notificationService;
+    public NotificationsController(INotificationService notificationService) { 
+        _notificationService = notificationService;
+    }
+
+    [HttpGet] public async Task<IActionResult> GetMyNotifications() {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if(userIdStr == null) return Unauthorized();
+        var uid = Guid.Parse(userIdStr);
+        return Ok(await _notificationService.GetUserNotificationsAsync(uid));
+    }
+
+    [HttpPost("MarkRead/{id}")] public async Task<IActionResult> MarkRead(Guid id) {
+        await _notificationService.MarkAsReadAsync(id);
+        return Ok(new { success = true });
+    }
+
+    [HttpDelete("{id}")] public async Task<IActionResult> Delete(Guid id) {
+        await _notificationService.DeleteNotificationAsync(id);
+        return Ok(new { success = true });
+    }
+}

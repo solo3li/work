@@ -16,6 +16,7 @@ export default function RootLayout() {
           <Stack.Screen name="student" />
           <Stack.Screen name="executor" />
           <Stack.Screen name="shared" />
+          <Stack.Screen name="Admin" />
         </Stack>
       </AuthProvider>
     </Provider>
