@@ -159,8 +159,7 @@ The ASP.NET Core backend exposes the following REST API endpoints for the mobile
 
 ### 🌐 Network & Access
 - **Backend Port:** 5035
-- **Public URL (Cloudflare):** `https://specifics-protection-suddenly-beliefs.trycloudflare.com`
-- **Tunnel Process PID:** 7284
+- **Local URL:** `http://localhost:5035` (or `http://10.0.2.2:5035` for Android Emulator)
 
 ### 📧 SMTP Configuration
 - **Server:** `smtp.gmail.com:587`
@@ -175,5 +174,6 @@ The ASP.NET Core backend exposes the following REST API endpoints for the mobile
 5. [DONE] Synchronize Service model (Rating, Delivery Time, Reviews).
 6. [DONE] Implement dynamic Email/SMTP settings in Admin Panel.
 7. [DONE] Integrate SignalR for real-time chat and support tickets.
-8. [TODO] Implement Paymob integration for student payments.
+8. [DONE] Adapt frontend features and map fields perfectly to the backend API (Reset password, Profile data, Orders, Earnings).
+9. [SKIPPED] Implement Paymob integration for student payments (Payment bypass logic implemented for now).
 

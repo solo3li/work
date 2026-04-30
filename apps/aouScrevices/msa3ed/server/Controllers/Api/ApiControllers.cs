@@ -111,19 +111,23 @@ public class UsersController : ControllerBase {
 public class ServicesController : ControllerBase {
     private readonly ApplicationDbContext _db; public ServicesController(ApplicationDbContext db) { _db = db; }
     [HttpGet] public async Task<IActionResult> GetAll() {
-        var services = await _db.Services.Include(s => s.Category).Where(s => s.IsActive).ToListAsync();
+        var services = await _db.Services.Include(s => s.Category).Include(s => s.Executor).Where(s => s.IsActive).ToListAsync();
         return Ok(services.Select(s => new {
             s.Id, s.Title, s.Description, s.BasePrice, CategoryName = s.Category.Name, s.CategoryId, s.ImageUrl,
-            s.Rating, s.ReviewsCount, s.DeliveryTime
+            s.Rating, s.ReviewsCount, s.DeliveryTime,
+            ProviderName = s.Executor?.FullName ?? "منصة UIS",
+            ProviderAvatarUrl = s.Executor?.ProfilePicture
         }));
     }
     
     [HttpGet("{id}")] public async Task<IActionResult> GetById(Guid id) {
-        var s = await _db.Services.Include(s => s.Category).FirstOrDefaultAsync(x => x.Id == id);
+        var s = await _db.Services.Include(s => s.Category).Include(s => s.Executor).FirstOrDefaultAsync(x => x.Id == id);
         if (s == null) return NotFound();
         return Ok(new {
             s.Id, s.Title, s.Description, s.BasePrice, CategoryName = s.Category.Name, s.CategoryId, s.ImageUrl,
-            s.Rating, s.ReviewsCount, s.DeliveryTime
+            s.Rating, s.ReviewsCount, s.DeliveryTime,
+            ProviderName = s.Executor?.FullName ?? "منصة UIS",
+            ProviderAvatarUrl = s.Executor?.ProfilePicture
         });
     }
 }
@@ -146,10 +150,17 @@ public class OrdersController : ControllerBase {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(userIdStr == null) return Unauthorized();
         var uid = Guid.Parse(userIdStr);
-        var orders = await _db.Orders.Include(o => o.Service).Where(o => o.StudentId == uid || o.ExecutorId == uid)
+        var orders = await _db.Orders.Include(o => o.Service).Include(o => o.Student).Include(o => o.Executor)
+            .Where(o => o.StudentId == uid || o.ExecutorId == uid)
             .OrderByDescending(o => o.CreatedAt).ToListAsync();
         return Ok(orders.Select(o => new {
-            o.Id, o.Status, o.Price, o.CreatedAt, ServiceTitle = o.Service.Title, o.ServiceId, o.StudentId, o.ExecutorId
+            o.Id, o.Status, o.Price, o.CreatedAt, 
+            ServiceTitle = o.Service.Title, o.ServiceId, 
+            ServiceImageUrl = o.Service.ImageUrl,
+            o.StudentId, o.ExecutorId,
+            StudentName = o.Student.FullName,
+            ExecutorName = o.Executor?.FullName,
+            ServiceCategory = o.Service.Category?.Name
         }));
     }
 
@@ -157,7 +168,8 @@ public class OrdersController : ControllerBase {
         var orders = await _db.Orders.Include(o => o.Service).Include(o => o.Student)
             .Where(o => o.Status == "Pending").OrderByDescending(o => o.CreatedAt).ToListAsync();
         return Ok(orders.Select(o => new {
-            o.Id, o.Status, o.Price, o.CreatedAt, ServiceTitle = o.Service.Title, StudentName = o.Student.FullName
+            o.Id, o.Status, o.Price, o.CreatedAt, ServiceTitle = o.Service.Title, StudentName = o.Student.FullName,
+            ServiceImageUrl = o.Service.ImageUrl
         }));
     }
 
@@ -165,10 +177,16 @@ public class OrdersController : ControllerBase {
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(userIdStr == null) return Unauthorized();
         var uid = Guid.Parse(userIdStr);
-        var o = await _db.Orders.Include(x => x.Service).FirstOrDefaultAsync(x => x.Id == id && (x.StudentId == uid || x.ExecutorId == uid));
+        var o = await _db.Orders.Include(x => x.Service).Include(x => x.Student).Include(x => x.Executor)
+            .FirstOrDefaultAsync(x => x.Id == id && (x.StudentId == uid || x.ExecutorId == uid));
         if (o == null) return NotFound();
         return Ok(new {
-            o.Id, o.Status, o.Price, o.CreatedAt, ServiceTitle = o.Service.Title, o.ServiceId, o.StudentId, o.ExecutorId
+            o.Id, o.Status, o.Price, o.CreatedAt, 
+            ServiceTitle = o.Service.Title, o.ServiceId, 
+            ServiceImageUrl = o.Service.ImageUrl,
+            o.StudentId, o.ExecutorId,
+            StudentName = o.Student.FullName,
+            ExecutorName = o.Executor?.FullName
         });
     }
 
@@ -199,12 +217,17 @@ public class OrdersController : ControllerBase {
 [Route("api/[controller]")]
 [Authorize]
 public class PaymentsController : ControllerBase {
-    private readonly ApplicationDbContext _db; public PaymentsController(ApplicationDbContext db) { _db = db; }
+    private readonly ApplicationDbContext _db;
+    private readonly IEscrowService _escrow;
+    public PaymentsController(ApplicationDbContext db, IEscrowService escrow) { _db = db; _escrow = escrow; }
     
     [HttpPost("{orderId}")] public async Task<IActionResult> Process(Guid orderId, [FromBody] decimal amount) {
         _db.Payments.Add(new Payment { OrderId = orderId, Amount = amount, Status = "Completed", TransactionId = Guid.NewGuid().ToString() });
         var order = await _db.Orders.FindAsync(orderId);
-        if(order != null) { order.Status = "Pending"; } // paid
+        if(order != null) { 
+            order.Status = "Pending"; 
+            await _escrow.HoldFundsAsync(orderId, amount);
+        }
         await _db.SaveChangesAsync();
         return Ok(new { success = true });
     }

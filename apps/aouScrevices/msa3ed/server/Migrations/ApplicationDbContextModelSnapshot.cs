@@ -408,6 +408,9 @@ namespace Uis.Server.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("ExecutorId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
@@ -427,6 +430,8 @@ namespace Uis.Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ExecutorId");
 
                     b.ToTable("Services");
                 });
@@ -719,7 +724,13 @@ namespace Uis.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Uis.Server.Models.User", "Executor")
+                        .WithMany()
+                        .HasForeignKey("ExecutorId");
+
                     b.Navigation("Category");
+
+                    b.Navigation("Executor");
                 });
 
             modelBuilder.Entity("Uis.Server.Models.Ticket", b =>

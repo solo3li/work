@@ -135,7 +135,7 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Disabled to prevent redirecting Cloudflare Tunnel HTTP traffic which breaks CORS preflight
 app.UseStaticFiles(); // For local file storage and static assets
 
 app.UseRouting();

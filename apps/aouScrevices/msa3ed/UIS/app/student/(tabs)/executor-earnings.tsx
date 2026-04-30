@@ -90,10 +90,10 @@ export default function EarningsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: { padding: 24, paddingTop: 60, backgroundColor: Colors.white, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, zIndex: 10 },
+  header: { padding: 24, paddingTop: 60, backgroundColor: Colors.white, alignItems: 'center', boxShadow: [{ color: 'rgba(0,0,0,0.05)', offsetX: 0, offsetY: 2, blurRadius: 10, spreadDistance: 0 }], elevation: 2, zIndex: 10 },
   headerTitle: { fontSize: 20, fontWeight: '900', color: Colors.text },
   content: { padding: 24, paddingBottom: 120 },
-  balanceCard: { borderRadius: 24, padding: 24, marginBottom: 32, shadowColor: Colors.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 10 },
+  balanceCard: { borderRadius: 24, padding: 24, marginBottom: 32, boxShadow: [{ color: 'rgba(99, 102, 241, 0.3)', offsetX: 0, offsetY: 10, blurRadius: 20, spreadDistance: 0 }], elevation: 10 },
   balanceLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 16, marginBottom: 8 },
   balanceValue: { color: Colors.white, fontSize: 36, fontWeight: '900', marginBottom: 24 },
   balanceFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 16 },
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   withdrawBtn: { backgroundColor: Colors.white, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
   withdrawBtnText: { color: Colors.primary, fontWeight: 'bold' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text, marginBottom: 16 },
-  transactionList: { backgroundColor: Colors.white, borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 10, elevation: 2 },
+  transactionList: { backgroundColor: Colors.white, borderRadius: 20, padding: 16, boxShadow: [{ color: 'rgba(0,0,0,0.03)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }], elevation: 2 },
   transactionItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: Colors.border },
   transactionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   transactionInfo: { flex: 1, marginRight: 12 },

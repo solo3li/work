@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -8,6 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { forgotPassword } from '../../store/slices/authSlice';
+import Button from '../../components/Button';
+import Input from '../../components/Input';
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +29,7 @@ export default function ForgotPasswordScreen() {
     const result = await dispatch(forgotPassword(email));
     if (forgotPassword.fulfilled.match(result)) {
       alert('تم إرسال رمز التحقق إلى بريدك الإلكتروني');
-      router.replace({ pathname: '/(auth)/otp-verify', params: { email } });
+      router.replace({ pathname: '/(auth)/reset-password', params: { email } });
     } else {
       alert('فشل إرسال الرمز: ' + (result.payload || 'خطأ غير معروف'));
     }
@@ -57,28 +59,21 @@ export default function ForgotPasswordScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(800).delay(200)} style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={22} color={Colors.textSecondary} style={styles.icon} />
-            <TextInput 
-              style={styles.input} 
-              placeholder="البريد الإلكتروني" 
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
+          <Input 
+            icon="mail-outline"
+            placeholder="البريد الإلكتروني"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
 
-          <Pressable onPress={handleReset} disabled={loading}>
-            <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.button, loading && { opacity: 0.7 }]}
-            >
-              {loading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.buttonText}>إرسال الرمز</Text>}
-            </LinearGradient>
-          </Pressable>
+          <Button 
+            title="إرسال الرمز"
+            onPress={handleReset}
+            loading={loading}
+            disabled={!email}
+            style={{ marginTop: 12 }}
+          />
         </Animated.View>
       </View>
     </KeyboardAvoidingView>
@@ -96,16 +91,5 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, justifyContent: 'center', marginBottom: 16 },
   title: { fontSize: 32, fontWeight: '900', color: Colors.text, marginBottom: 12 },
   subtitle: { fontSize: 16, color: Colors.textSecondary, fontWeight: '500', lineHeight: 24 },
-  form: { gap: 24 },
-  inputContainer: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, borderRadius: 16, paddingHorizontal: 20, height: 64,
-    borderWidth: 1, borderColor: Colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2,
-  },
-  icon: { marginRight: 16 },
-  input: { flex: 1, fontSize: 16, color: Colors.text, textAlign: 'right' },
-  button: {
-    height: 64, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
-    shadowColor: Colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8,
-  },
-  buttonText: { color: Colors.white, fontSize: 20, fontWeight: 'bold' },
+  form: { gap: 0 },
 });

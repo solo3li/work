@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -6,6 +6,8 @@ import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
+import Button from '../../components/Button';
+import Input from '../../components/Input';
 
 const { width } = Dimensions.get('window');
 
@@ -16,8 +18,10 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
+    if (!email || !password) return;
     setLoading(true);
     const success = await login({ email, password });
     setLoading(false);
@@ -49,49 +53,34 @@ export default function LoginScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(800).delay(200)} style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={22} color={Colors.textSecondary} style={styles.icon} />
-            <TextInput 
-              style={styles.input} 
-              placeholder="البريد الإلكتروني" 
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
+          <Input 
+            icon="mail-outline"
+            placeholder="البريد الإلكتروني"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={22} color={Colors.textSecondary} style={styles.icon} />
-            <TextInput 
-              style={styles.input} 
-              placeholder="كلمة المرور" 
-              placeholderTextColor={Colors.textSecondary}
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-            <Ionicons name="eye-off-outline" size={22} color={Colors.textSecondary} style={styles.eyeIcon} />
-          </View>
+          <Input 
+            icon="lock-closed-outline"
+            placeholder="كلمة المرور"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+            rightIcon={showPassword ? "eye-off-outline" : "eye-outline"}
+            onRightIconPress={() => setShowPassword(!showPassword)}
+          />
 
-          <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
+          <Pressable onPress={() => router.push('/(auth)/forgot-password')} style={styles.forgotPasswordContainer}>
             <Text style={styles.forgotPassword}>نسيت كلمة المرور؟</Text>
           </Pressable>
 
-          <Pressable onPress={handleLogin} style={{ marginTop: 8 }} disabled={loading}>
-            <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.button}
-            >
-              {loading ? (
-                <ActivityIndicator color={Colors.white} />
-              ) : (
-                <Text style={styles.buttonText}>تسجيل الدخول</Text>
-              )}
-            </LinearGradient>
-          </Pressable>
+          <Button 
+            title="تسجيل الدخول"
+            onPress={handleLogin}
+            loading={loading}
+            disabled={!email || !password}
+          />
 
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
@@ -121,24 +110,18 @@ const styles = StyleSheet.create({
   topDecoration: { position: 'absolute', top: -width * 0.4, left: -width * 0.2, width: width * 1.4, height: width * 1.4, opacity: 0.1 },
   gradientCircle: { flex: 1, borderRadius: width * 0.7 },
   content: { flex: 1, padding: 24, justifyContent: 'center' },
-  header: { marginBottom: 48 },
+  header: { marginBottom: 40 },
   title: { fontSize: 40, fontWeight: '900', color: Colors.text, marginBottom: 8 },
   subtitle: { fontSize: 18, color: Colors.textSecondary, fontWeight: '500' },
-  form: { gap: 20 },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, borderRadius: 16, paddingHorizontal: 20, height: 64, borderWidth: 1, borderColor: Colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-  icon: { marginRight: 16 },
-  eyeIcon: { marginLeft: 16 },
-  input: { flex: 1, fontSize: 16, color: Colors.text, textAlign: 'right' },
-  forgotPassword: { color: Colors.primary, fontSize: 15, fontWeight: '700', textAlign: 'left' },
-  rowButtons: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  button: { height: 64, borderRadius: 16, justifyContent: 'center', alignItems: 'center', shadowColor: Colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 },
-  buttonText: { color: Colors.white, fontSize: 16, fontWeight: 'bold' },
-  dividerContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 12 },
+  form: { gap: 0 },
+  forgotPasswordContainer: { alignSelf: 'flex-start', marginBottom: 24, marginTop: -8 },
+  forgotPassword: { color: Colors.primary, fontSize: 15, fontWeight: '700' },
+  dividerContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
   divider: { flex: 1, height: 1, backgroundColor: Colors.border },
   dividerText: { marginHorizontal: 16, color: Colors.textSecondary, fontWeight: '500' },
-  googleButton: { flexDirection: 'row', backgroundColor: Colors.white, height: 64, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  googleButton: { flexDirection: 'row', backgroundColor: Colors.white, height: 60, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: Colors.border, elevation: 1 },
   googleButtonText: { color: Colors.text, fontSize: 18, fontWeight: '700' },
-  registerContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
+  registerContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
   registerText: { color: Colors.textSecondary, fontSize: 16 },
   registerLink: { color: Colors.primary, fontSize: 16, fontWeight: 'bold' },
 });

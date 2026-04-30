@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -8,6 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { verifyOtp, login } from '../../store/slices/authSlice';
+import Button from '../../components/Button';
+import Input from '../../components/Input';
 
 const { width } = Dimensions.get('window');
 
@@ -22,7 +24,7 @@ export default function OtpVerifyScreen() {
   const [timer, setTimer] = useState(60);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (timer > 0) {
       interval = setInterval(() => setTimer(t => t - 1), 1000);
     }
@@ -45,10 +47,7 @@ export default function OtpVerifyScreen() {
   const handleResend = async () => {
     if (timer > 0) return;
     setTimer(60);
-    // Login triggers OTP generation
-    await dispatch(login({ email, password: '' })); // Backend needs a way to resend or just call login again with a flag? 
-    // Actually our login triggers OTP. But we don't have the password here if we replaced the screen.
-    // Ideally the backend has a /resend-otp endpoint.
+    await dispatch(login({ email, password: '' }));
     alert('تم إعادة إرسال الرمز إلى بريدك الإلكتروني');
   };
 
@@ -77,28 +76,24 @@ export default function OtpVerifyScreen() {
 
         <Animated.View entering={FadeInDown.duration(800).delay(200)} style={styles.form}>
           <View style={styles.otpContainer}>
-             <TextInput 
-              style={styles.otpInput} 
+             <Input 
               placeholder="0 0 0 0" 
-              placeholderTextColor={Colors.border}
               keyboardType="number-pad"
               maxLength={4}
               value={code}
               onChangeText={setCode}
               autoFocus
+              style={styles.otpInput}
             />
           </View>
 
-          <Pressable onPress={handleVerify} disabled={loading}>
-            <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.button, loading && { opacity: 0.7 }]}
-            >
-              {loading ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.buttonText}>تحقق الآن</Text>}
-            </LinearGradient>
-          </Pressable>
+          <Button 
+            title="تحقق الآن"
+            onPress={handleVerify}
+            loading={loading}
+            disabled={code.length < 4}
+            style={{ marginTop: 12 }}
+          />
 
           <View style={styles.resendContainer}>
             <Text style={styles.resendText}>لم تستلم الرمز؟ </Text>
@@ -125,18 +120,9 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, justifyContent: 'center', marginBottom: 16 },
   title: { fontSize: 36, fontWeight: '900', color: Colors.text, marginBottom: 8 },
   subtitle: { fontSize: 16, color: Colors.textSecondary, fontWeight: '500', lineHeight: 24 },
-  form: { gap: 32 },
+  form: { gap: 0 },
   otpContainer: {
-    backgroundColor: Colors.white,
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 5,
+    marginBottom: 24,
   },
   otpInput: {
     fontSize: 48,
@@ -146,12 +132,7 @@ const styles = StyleSheet.create({
     letterSpacing: 20,
     height: 80,
   },
-  button: {
-    height: 64, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
-    shadowColor: Colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8,
-  },
-  buttonText: { color: Colors.white, fontSize: 20, fontWeight: 'bold' },
-  resendContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
+  resendContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
   resendText: { color: Colors.textSecondary, fontSize: 16 },
   resendLink: { color: Colors.primary, fontSize: 16, fontWeight: 'bold' },
 });

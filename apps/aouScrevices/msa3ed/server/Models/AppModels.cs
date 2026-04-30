@@ -100,6 +100,8 @@ public class Service
     public string? ImageUrl { get; set; }
     
     // New fields
+    public Guid? ExecutorId { get; set; }
+    public User? Executor { get; set; }
     public decimal Rating { get; set; } = 5.0m;
     public int ReviewsCount { get; set; } = 0;
     public string DeliveryTime { get; set; } = "يومان";

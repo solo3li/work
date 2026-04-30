@@ -36,7 +36,7 @@ export default function PaymentResultScreen() {
             <Text style={styles.btnText}>متابعة الطلب</Text>
           </LinearGradient>
         </Pressable>
-        <Pressable onPress={() => router.replace('/student/')} style={styles.btnOutline}>
+        <Pressable onPress={() => router.replace('/student')} style={styles.btnOutline}>
           <Text style={styles.btnOutlineText}>العودة للرئيسية</Text>
         </Pressable>
       </View>

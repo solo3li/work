@@ -63,10 +63,7 @@ const styles = StyleSheet.create({
     borderRadius: 55,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
+    boxShadow: [{ color: 'rgba(0, 0, 0, 0.15)', offsetX: 0, offsetY: 10, blurRadius: 20, spreadDistance: 0 }],
     elevation: 10,
   },
   logoText: {

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
 import { useEffect } from 'react';
 import { fetchAvailableOrders } from '../../../store/slices/ordersSlice';
+import LoadingState from '../../../components/LoadingState';
+import EmptyState from '../../../components/EmptyState';
 
 export default function AvailableOrdersScreen() {
   const router = useRouter();
@@ -33,7 +35,7 @@ export default function AvailableOrdersScreen() {
           <View style={styles.detailsRow}>
             <View style={styles.detail}>
               <Ionicons name="person-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.detailText}>{item.customerName}</Text>
+              <Text style={styles.detailText}>{item.studentName || item.customerName}</Text>
             </View>
             <View style={styles.detail}>
               <Ionicons name="time-outline" size={16} color={Colors.textSecondary} />
@@ -63,19 +65,19 @@ export default function AvailableOrdersScreen() {
       </View>
 
       {loading && availableOrders.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <LoadingState message="جاري البحث عن طلبات متاحة..." />
       ) : (
         <FlatList
           data={availableOrders}
           renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item: any) => item.id.toString()}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <View style={{ alignItems: 'center', marginTop: 50 }}>
-              <Text style={{ color: Colors.textSecondary }}>لا توجد طلبات متاحة حالياً</Text>
-            </View>
+            <EmptyState 
+              icon="briefcase-outline" 
+              title="لا توجد طلبات متاحة حالياً" 
+              description="يرجى العودة لاحقاً، سنقوم بإشعارك عند توفر طلبات جديدة تناسب تخصصك." 
+            />
           }
         />
       )}
@@ -85,11 +87,11 @@ export default function AvailableOrdersScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: Colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, zIndex: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: Colors.white, boxShadow: [{ color: 'rgba(0,0,0,0.05)', offsetX: 0, offsetY: 2, blurRadius: 10, spreadDistance: 0 }], elevation: 2, zIndex: 10 },
   backBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'flex-end' },
   headerTitle: { fontSize: 18, fontWeight: '900', color: Colors.text },
   list: { padding: 24 },
-  card: { backgroundColor: Colors.white, borderRadius: 20, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: Colors.border },
+  card: { backgroundColor: Colors.white, borderRadius: 20, padding: 20, marginBottom: 16, boxShadow: [{ color: 'rgba(0,0,0,0.03)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }], elevation: 2, borderWidth: 1, borderColor: Colors.border },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   orderId: { fontSize: 14, fontWeight: 'bold', color: Colors.textSecondary },
   badge: { backgroundColor: Colors.success + '15', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
 import { useEffect } from 'react';
 import { fetchMyTickets } from '../../../store/slices/ticketsSlice';
+import LoadingState from '../../../components/LoadingState';
+import EmptyState from '../../../components/EmptyState';
 
 export default function TicketsScreen() {
   const router = useRouter();
@@ -57,20 +59,20 @@ export default function TicketsScreen() {
       </View>
 
       {loading && myTickets.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <LoadingState message="جاري تحميل التذاكر..." />
       ) : (
         <FlatList
           data={myTickets}
           renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item: any) => item.id.toString()}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={{ alignItems: 'center', marginTop: 50 }}>
-              <Text style={{ color: Colors.textSecondary }}>لا توجد تذاكر حالياً</Text>
-            </View>
+            <EmptyState 
+              icon="help-buoy-outline" 
+              title="لا توجد تذاكر دعم" 
+              description="لم تقم بفتح أي تذاكر للدعم الفني. إذا واجهتك أي مشكلة يمكنك فتح تذكرة جديدة وسنساعدك فوراً." 
+            />
           }
         />
       )}
@@ -80,12 +82,12 @@ export default function TicketsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: Colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, zIndex: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: Colors.white, boxShadow: [{ color: 'rgba(0, 0, 0, 0.05)', offsetX: 0, offsetY: 2, blurRadius: 10, spreadDistance: 0 }], elevation: 2, zIndex: 10 },
   backBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'flex-end' },
   headerTitle: { fontSize: 18, fontWeight: '900', color: Colors.text },
   addBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'flex-start' },
   list: { padding: 24 },
-  card: { backgroundColor: Colors.white, borderRadius: 20, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: Colors.border },
+  card: { backgroundColor: Colors.white, borderRadius: 20, padding: 20, marginBottom: 16, boxShadow: [{ color: 'rgba(0, 0, 0, 0.03)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }], elevation: 2, borderWidth: 1, borderColor: Colors.border },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   ticketId: { fontSize: 14, fontWeight: 'bold', color: Colors.textSecondary },
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },

@@ -19,12 +19,6 @@ export default function KycStatusScreen() {
     dispatch(fetchKycStatus());
   }, [dispatch]);
 
-  const handleSimulateApproval = () => {
-    updateUser({ isExecutor: true });
-    alert('تم قبول طلبك بنجاح في هذه النسخة التجريبية!');
-    router.replace('/student/executor-orders');
-  };
-
   const getStatusDisplay = () => {
     if (status === 'Approved') {
       return { icon: 'checkmark-circle', color: Colors.success, title: 'تم قبول طلبك', desc: 'تهانينا! يمكنك الآن العمل كمنفذ وتصفح الطلبات المتاحة.' };
@@ -61,17 +55,10 @@ export default function KycStatusScreen() {
         </View>
         <Text style={styles.title}>{display.title}</Text>
         <Text style={styles.description}>{display.desc}</Text>
-
-        {/* Dummy button to simulate approval only if pending */}
-        {(!status || status === 'Pending') && (
-          <Pressable onPress={handleSimulateApproval} style={{ marginTop: 24, padding: 12, backgroundColor: Colors.success + '20', borderRadius: 12 }}>
-            <Text style={{ color: Colors.success, fontWeight: 'bold' }}>[اختبار] محاكاة قبول الطلب</Text>
-          </Pressable>
-        )}
       </View>
 
       <View style={styles.footer}>
-        <Pressable onPress={() => router.replace('/student/')}>
+        <Pressable onPress={() => router.replace('/student')}>
           <LinearGradient colors={[Colors.primary, Colors.secondary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btn}>
             <Text style={styles.btnText}>العودة للرئيسية</Text>
           </LinearGradient>

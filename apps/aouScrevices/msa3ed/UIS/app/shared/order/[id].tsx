@@ -8,12 +8,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
 import { useEffect } from 'react';
 import { fetchOrderById } from '../../../store/slices/ordersSlice';
+import { API_BASE_URL } from '../../../services/api';
 
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const { currentOrder: order, loading } = useSelector((state: RootState) => state.orders);
+  const { currentOrder, loading } = useSelector((state: RootState) => state.orders);
+  const order = currentOrder as any;
 
   useEffect(() => {
     if (id) {
@@ -26,6 +28,16 @@ export default function OrderDetailsScreen() {
     if (status === 'مكتمل' || status === 'Completed') return Colors.success;
     if (status === 'ملغي' || status === 'Cancelled') return Colors.error;
     return Colors.primary;
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return dateString;
+    }
   };
 
   if (loading || !order) {
@@ -49,13 +61,13 @@ export default function OrderDetailsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Animated.View entering={FadeInUp.delay(100)} style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.orderId}>#{order.id}</Text>
+            <Text style={styles.orderId}>#{order.id.substring(0, 8)}</Text>
             <View style={[styles.badge, { backgroundColor: getStatusColor(order.status) + '15' }]}>
               <Text style={[styles.badgeText, { color: getStatusColor(order.status) }]}>{order.status}</Text>
             </View>
           </View>
           <Text style={styles.serviceTitle}>{order.serviceName || order.serviceTitle}</Text>
-          <Text style={styles.date}>{order.createdAt || order.date}</Text>
+          <Text style={styles.date}>{formatDate(order.createdAt || order.date)}</Text>
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(200)} style={styles.card}>
@@ -112,14 +124,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60,
-    backgroundColor: Colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, zIndex: 10,
+    backgroundColor: Colors.white, boxShadow: [{ color: 'rgba(0, 0, 0, 0.05)', offsetX: 0, offsetY: 2, blurRadius: 10, spreadDistance: 0 }], elevation: 2, zIndex: 10,
   },
   backBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'flex-end' },
   headerTitle: { fontSize: 20, fontWeight: '900', color: Colors.text },
   content: { padding: 24, paddingBottom: 100 },
   card: {
     backgroundColor: Colors.white, borderRadius: 20, padding: 20, marginBottom: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: Colors.border,
+    boxShadow: [{ color: 'rgba(0, 0, 0, 0.03)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }], elevation: 2, borderWidth: 1, borderColor: Colors.border,
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   orderId: { fontSize: 16, fontWeight: 'bold', color: Colors.textSecondary },

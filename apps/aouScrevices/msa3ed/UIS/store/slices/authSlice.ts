@@ -8,6 +8,12 @@ export interface User {
   isExecutor: boolean;
   isAdmin: boolean;
   roles: string[];
+  rating?: number;
+  completedOrdersCount?: number;
+  profilePicture?: string;
+  university?: string;
+  major?: string;
+  bio?: string;
 }
 
 interface AuthState {
@@ -67,6 +73,18 @@ export const forgotPassword = createAsyncThunk('auth/forgotPassword', async (ema
       body: JSON.stringify(email),
     });
     return data;
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
+
+export const resetPassword = createAsyncThunk('auth/resetPassword', async (data: any, { rejectWithValue }) => {
+  try {
+    const res = await apiFetch('/Auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return res;
   } catch (error: any) {
     return rejectWithValue(error.message);
   }

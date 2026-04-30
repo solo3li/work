@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, Image, Pressable, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, Pressable } from 'react-native';
 import { Colors } from '../../../constants/Colors';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,6 +8,8 @@ import { AppDispatch, RootState } from '../../../store';
 import { useEffect } from 'react';
 import { fetchMyOrders } from '../../../store/slices/ordersSlice';
 import { API_BASE_URL } from '../../../services/api';
+import LoadingState from '../../../components/LoadingState';
+import EmptyState from '../../../components/EmptyState';
 
 const getApiUrl = (path: string) => path ? (path.startsWith('http') ? path : API_BASE_URL + path) : 'https://placehold.co/150';
 
@@ -15,21 +17,27 @@ export default function ChatScreen() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { myOrders, loading } = useSelector((state: RootState) => state.orders);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     dispatch(fetchMyOrders());
   }, [dispatch]);
 
-  // Derive chats from orders for now
-  const chats = myOrders.map((order: any) => ({
-    id: order.id,
-    name: order.executorName || order.customerName || `طلب #${order.id}`,
-    avatar: 'https://i.pravatar.cc/150?u=' + order.id,
-    lastMessage: 'تواصل بخصوص الطلب ' + (order.serviceName || ''),
-    time: order.createdAt || 'الآن',
-    unread: 0,
-    online: false,
-  }));
+  // Derive chats from orders
+  const chats = myOrders.map((order: any) => {
+    const isStudent = user?.id === order.studentId;
+    const otherName = isStudent ? (order.executorName || 'منصة UIS') : (order.studentName || 'طالب');
+    
+    return {
+      id: order.id,
+      name: otherName,
+      avatar: 'https://i.pravatar.cc/150?u=' + (isStudent ? order.executorId : order.studentId),
+      lastMessage: 'تواصل بخصوص ' + (order.serviceTitle || ''),
+      time: order.createdAt ? new Date(order.createdAt).toLocaleDateString('ar-EG') : 'الآن',
+      unread: 0,
+      online: false,
+    };
+  });
 
   const renderItem = ({ item, index }: any) => (
     <Animated.View entering={FadeInLeft.delay(index * 100)}>
@@ -67,20 +75,20 @@ export default function ChatScreen() {
         <Text style={styles.headerTitle}>الرسائل</Text>
       </View>
       {loading && chats.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <LoadingState message="جاري تحميل الرسائل..." />
       ) : (
         <FlatList
           data={chats}
           renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item: any) => item.id.toString()}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={{ alignItems: 'center', marginTop: 50 }}>
-              <Text style={{ color: Colors.textSecondary }}>لا توجد محادثات حالياً</Text>
-            </View>
+            <EmptyState 
+              icon="chatbubbles-outline" 
+              title="لا توجد محادثات" 
+              description="ستظهر هنا محادثاتك مع المنفذين بخصوص الطلبات الخاصة بك." 
+            />
           }
         />
       )}
@@ -98,10 +106,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     backgroundColor: Colors.white,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0,0,0,0.05)', offsetX: 0, offsetY: 2, blurRadius: 10, spreadDistance: 0 }],
     elevation: 2,
     zIndex: 10,
   },
@@ -121,10 +126,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 16,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0,0,0,0.03)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }],
     elevation: 2,
     borderWidth: 1,
     borderColor: Colors.border,

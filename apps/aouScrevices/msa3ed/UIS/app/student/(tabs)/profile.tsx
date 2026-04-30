@@ -45,7 +45,7 @@ export default function ProfileScreen() {
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image 
-              source={{ uri: getApiUrl(user?.avatar || 'https://i.pravatar.cc/150?u=' + (user?.id || '123')) }} 
+              source={{ uri: getApiUrl(user?.profilePicture || 'https://i.pravatar.cc/150?u=' + (user?.id || '123')) }} 
               style={styles.avatar} 
             />
             <Pressable style={styles.editAvatarBtn}>
@@ -60,7 +60,7 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{user?.completedOrders || 0}</Text>
+            <Text style={styles.statValue}>{user?.completedOrdersCount || 0}</Text>
             <Text style={styles.statLabel}>طلب مكتمل</Text>
           </View>
           <View style={styles.statDivider} />
@@ -175,10 +175,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0,0,0,0.05)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }],
     elevation: 3,
   },
   statItem: {
@@ -204,10 +201,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: 24,
     padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0,0,0,0.05)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }],
     elevation: 3,
     marginBottom: 100,
   },

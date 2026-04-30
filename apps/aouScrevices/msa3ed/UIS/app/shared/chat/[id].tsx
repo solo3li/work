@@ -10,6 +10,9 @@ import { fetchOrderChat, sendMessage, addLocalMessage } from '../../../store/sli
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL } from '../../../services/api';
 
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'react-native';
+
 export default function ChatDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -69,12 +72,17 @@ export default function ChatDetailsScreen() {
     };
   }, [currentChat?.id, token, dispatch]);
 
-  const handleSend = async () => {
-    if (!inputText.trim()) return;
+  const handleSend = async (content?: string, attachment?: any, type: string = 'file') => {
+    if (!content?.trim() && !attachment) return;
     setSending(true);
     try {
-      await dispatch(sendMessage({ chatId: currentChat.id, content: inputText })).unwrap();
-      setInputText('');
+      await dispatch(sendMessage({ 
+        chatId: currentChat.id, 
+        content: content || '', 
+        attachment, 
+        attachmentType: type 
+      })).unwrap();
+      if (!attachment) setInputText('');
     } catch (err: any) {
       alert('فشل في إرسال الرسالة: ' + err.message);
     } finally {
@@ -82,11 +90,41 @@ export default function ChatDetailsScreen() {
     }
   };
 
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      const file = {
+        uri: asset.uri,
+        name: asset.fileName || 'chat_upload.jpg',
+        type: asset.mimeType || 'image/jpeg',
+      };
+      await handleSend('', file, 'image');
+    }
+  };
+
   const renderMessage = ({ item, index }: any) => {
     const isSender = item.senderId === user?.id;
     return (
       <View style={[styles.messageBubble, isSender ? styles.senderBubble : styles.receiverBubble]}>
-        <Text style={[styles.messageText, isSender ? styles.senderText : styles.receiverText]}>{item.content}</Text>
+        {!isSender && <Text style={styles.senderName}>{item.senderName || 'الطرف الآخر'}</Text>}
+        {item.content ? <Text style={[styles.messageText, isSender ? styles.senderText : styles.receiverText]}>{item.content}</Text> : null}
+        
+        {item.attachmentUrl && item.attachmentType === 'image' && (
+            <Image source={{ uri: item.attachmentUrl.startsWith('http') ? item.attachmentUrl : API_BASE_URL + item.attachmentUrl }} style={styles.messageImage} resizeMode="cover" />
+        )}
+
+        {item.attachmentUrl && item.attachmentType !== 'image' && (
+            <View style={styles.fileContainer}>
+                <Ionicons name="document-attach" size={24} color={isSender ? Colors.white : Colors.primary} />
+                <Text style={[styles.fileText, { color: isSender ? Colors.white : Colors.text }]} numberOfLines={1}>ملف مرفق</Text>
+            </View>
+        )}
+
         <Text style={[styles.timeText, isSender ? styles.senderTime : styles.receiverTime]}>
             {new Date(item.sentAt || item.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
         </Text>
@@ -108,10 +146,10 @@ export default function ChatDetailsScreen() {
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-forward" size={24} color={Colors.text} />
         </Pressable>
-        <div className="flex flex-col items-center">
+        <View style={{ alignItems: 'center' }}>
           <Text style={styles.headerTitle}>المحادثة #{id?.toString().substring(0,8)}</Text>
           <Text style={styles.headerStatus}>متصل الآن</Text>
-        </div>
+        </View>
         <View style={styles.backBtn} />
       </View>
 
@@ -131,7 +169,7 @@ export default function ChatDetailsScreen() {
       />
 
       <View style={styles.inputContainer}>
-        <Pressable style={styles.attachBtn}>
+        <Pressable style={styles.attachBtn} onPress={pickImage} disabled={sending}>
           <Ionicons name="attach" size={24} color={Colors.textSecondary} />
         </Pressable>
         <TextInput 
@@ -143,7 +181,7 @@ export default function ChatDetailsScreen() {
           onChangeText={setInputText}
           editable={!sending}
         />
-        <Pressable style={styles.sendBtn} onPress={handleSend} disabled={sending}>
+        <Pressable style={styles.sendBtn} onPress={() => handleSend(inputText)} disabled={sending}>
           {sending ? <ActivityIndicator size="small" color={Colors.white} /> : <Ionicons name="send" size={20} color={Colors.white} style={{ marginLeft: 4 }} />}
         </Pressable>
       </View>
@@ -153,18 +191,22 @@ export default function ChatDetailsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: Colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, zIndex: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: Colors.white, boxShadow: [{ color: 'rgba(0, 0, 0, 0.05)', offsetX: 0, offsetY: 2, blurRadius: 10, spreadDistance: 0 }], elevation: 2, zIndex: 10 },
   backBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text },
   headerStatus: { fontSize: 12, color: Colors.success, fontWeight: '500' },
   chatList: { padding: 24, paddingBottom: 16 },
-  messageBubble: { maxWidth: '80%', padding: 16, borderRadius: 20, marginBottom: 12 },
+  messageBubble: { maxWidth: '85%', padding: 16, borderRadius: 20, marginBottom: 12, boxShadow: [{ color: 'rgba(0, 0, 0, 0.03)', offsetX: 0, offsetY: 2, blurRadius: 5, spreadDistance: 0 }], elevation: 1 },
   senderBubble: { alignSelf: 'flex-start', backgroundColor: Colors.primary, borderBottomLeftRadius: 4 },
   receiverBubble: { alignSelf: 'flex-end', backgroundColor: Colors.white, borderBottomRightRadius: 4, borderWidth: 1, borderColor: Colors.border },
+  senderName: { fontSize: 12, fontWeight: 'bold', color: Colors.primary, marginBottom: 4 },
   messageText: { fontSize: 16, lineHeight: 24 },
   senderText: { color: Colors.white },
   receiverText: { color: Colors.text },
-  timeText: { fontSize: 11, marginTop: 8, alignSelf: 'flex-end' },
+  messageImage: { width: 220, height: 220, borderRadius: 12, marginTop: 8 },
+  fileContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 8, padding: 10, backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 10 },
+  fileText: { fontSize: 13, fontWeight: '600' },
+  timeText: { fontSize: 10, marginTop: 8, alignSelf: 'flex-end', fontWeight: '600' },
   senderTime: { color: 'rgba(255,255,255,0.7)' },
   receiverTime: { color: Colors.textSecondary },
   inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16, backgroundColor: Colors.white, borderTopWidth: 1, borderTopColor: Colors.border },

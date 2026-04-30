@@ -89,3 +89,16 @@ The project follows a standard ASP.NET Core MVC/Web API pattern:
 - The **RESTful Web API** provides endpoints for Authentication, OTP verification, Orders, Services, Chats, and KYC submission.
 - Real-time chatting and notifications are functional via SignalR (`ChatHub`).
 - The database is successfully seeded with test entities, sample orders, payments, and KYC records via `DbSeeder`.
+
+## 📊 System State Snapshot
+
+### 🌐 Network & Access
+- **Backend Port:** 5035
+- **Public URL (Cloudflare):** `https://transmit-cambridge-plus-colon.trycloudflare.com`
+- **Tunnel Process PID:** 22480
+
+### 📧 SMTP Configuration
+- **Server:** `smtp.gmail.com:587`
+- **User:** `fps60y@gmail.com`
+- **Status:** Dynamic management enabled via Admin Panel.
+

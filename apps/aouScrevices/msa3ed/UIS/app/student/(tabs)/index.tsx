@@ -58,7 +58,7 @@ export default function HomeScreen() {
           <View style={styles.searchContainer}>
             <Ionicons name="search-outline" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
             <TextInput 
-              style={styles.searchInput} 
+              style={styles.searchInput as any} 
               placeholder="ابحث عن خدمات..."
               placeholderTextColor={Colors.textSecondary}
             />
@@ -136,8 +136,13 @@ export default function HomeScreen() {
                       <Text style={styles.serviceTitle} numberOfLines={2}>{service.title}</Text>
                       
                       <View style={styles.providerInfo}>
-                        <Image source={{ uri: 'https://ui-avatars.com/api/?name=Executor&background=6366F1&color=fff' }} style={styles.providerAvatar} />
-                        <Text style={styles.providerName}>منفذ موثوق</Text>
+                        <Image source={{ uri: getApiUrl(service.providerAvatarUrl) }} style={styles.providerAvatar} />
+                        <Text style={styles.providerName}>{service.providerName || 'منصة UIS'}</Text>
+                      </View>
+
+                      <View style={styles.serviceMeta}>
+                        <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
+                        <Text style={styles.metaText}>{service.deliveryTime || 'يومان'}</Text>
                       </View>
 
                       <View style={styles.serviceFooter}>
@@ -168,10 +173,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
     overflow: 'hidden',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
+    boxShadow: [{ color: 'rgba(28, 55, 120, 0.15)', offsetX: 0, offsetY: 10, blurRadius: 20, spreadDistance: 0 }],
     elevation: 10,
   },
   header: {
@@ -228,10 +230,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
     textAlign: 'right',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0, 0, 0, 0.05)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }],
     elevation: 2,
   },
   searchIcon: {
@@ -347,10 +346,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0, 0, 0, 0.05)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }],
     elevation: 3,
   },
   serviceImage: {
@@ -399,6 +395,17 @@ const styles = StyleSheet.create({
   },
   providerName: {
     fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  serviceMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 12,
     color: Colors.textSecondary,
     fontWeight: '500',
   },

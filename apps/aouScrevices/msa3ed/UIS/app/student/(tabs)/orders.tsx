@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, Image } from 'react-native';
 import { Colors } from '../../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -7,6 +7,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store';
 import { useEffect } from 'react';
 import { fetchMyOrders } from '../../../store/slices/ordersSlice';
+import LoadingState from '../../../components/LoadingState';
+import EmptyState from '../../../components/EmptyState';
+import { API_BASE_URL } from '../../../services/api';
 
 export default function OrdersScreen() {
   const router = useRouter();
@@ -50,6 +53,21 @@ export default function OrdersScreen() {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (e) {
+      return dateString;
+    }
+  };
+
+  const getApiUrl = (path: string) => {
+    if (!path) return 'https://images.unsplash.com/photo-1542744094-3a31f272c490?q=80&w=600';
+    return path.startsWith('http') ? path : API_BASE_URL + path;
+  };
+
   const renderItem = ({ item, index }: any) => {
     const statusColor = getStatusColor(item.status);
     return (
@@ -58,7 +76,7 @@ export default function OrdersScreen() {
           <View style={styles.orderHeader}>
             <View style={styles.orderIdContainer}>
               <Ionicons name="receipt-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.orderId}>#{item.id}</Text>
+              <Text style={styles.orderId}>#{item.id.substring(0, 8)}</Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
               <Ionicons name={getStatusIcon(item.status) as any} size={14} color={statusColor} style={{ marginLeft: 4 }} />
@@ -66,12 +84,15 @@ export default function OrdersScreen() {
             </View>
           </View>
           
-          <Text style={styles.serviceTitle}>{item.serviceName || item.serviceTitle}</Text>
+          <View style={styles.serviceInfoRow}>
+            <Image source={{ uri: getApiUrl(item.serviceImageUrl) }} style={styles.serviceThumb} />
+            <Text style={styles.serviceTitle} numberOfLines={2}>{item.serviceName || item.serviceTitle}</Text>
+          </View>
           
           <View style={styles.orderFooter}>
             <View style={styles.dateContainer}>
               <Ionicons name="calendar-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.dateText}>{item.createdAt || item.date}</Text>
+              <Text style={styles.dateText}>{formatDate(item.createdAt || item.date)}</Text>
             </View>
             <Text style={styles.price}>{item.totalPrice || item.price} ج.م</Text>
           </View>
@@ -86,20 +107,20 @@ export default function OrdersScreen() {
         <Text style={styles.headerTitle}>طلباتي</Text>
       </View>
       {loading && myOrders.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <LoadingState message="جاري تحميل الطلبات..." />
       ) : (
         <FlatList
           data={myOrders}
           renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item: any) => item.id.toString()}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={{ alignItems: 'center', marginTop: 50 }}>
-              <Text style={{ color: Colors.textSecondary }}>لا توجد طلبات حالياً</Text>
-            </View>
+            <EmptyState 
+              icon="document-text-outline" 
+              title="لا توجد طلبات حالياً" 
+              description="لم تقم بطلب أي خدمة بعد. تصفح الخدمات المتاحة واطلب ما تحتاجه." 
+            />
           }
         />
       )}
@@ -117,10 +138,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     backgroundColor: Colors.white,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0,0,0,0.05)', offsetX: 0, offsetY: 2, blurRadius: 10, spreadDistance: 0 }],
     elevation: 2,
     zIndex: 10,
   },
@@ -138,10 +156,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0,0,0,0.04)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }],
     elevation: 2,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -178,11 +193,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   serviceTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: Colors.text,
+    flex: 1,
+    lineHeight: 22,
+  },
+  serviceInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
-    lineHeight: 24,
+    gap: 12,
+  },
+  serviceThumb: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    backgroundColor: Colors.background,
   },
   orderFooter: {
     flexDirection: 'row',

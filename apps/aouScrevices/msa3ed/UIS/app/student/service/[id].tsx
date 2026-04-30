@@ -18,7 +18,8 @@ export default function ServiceDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const { currentService: service, loading } = useSelector((state: RootState) => state.catalog);
+  const { currentService, loading } = useSelector((state: RootState) => state.catalog);
+  const service = currentService as any;
 
   useEffect(() => {
     if (id) {
@@ -68,9 +69,9 @@ export default function ServiceDetailsScreen() {
             <Text style={styles.price}>{service.basePrice || service.price} ج.م</Text>
 
             <View style={styles.providerCard}>
-              <Image source={{ uri: getApiUrl(service.providerAvatar) }} style={styles.providerAvatar} />
+              <Image source={{ uri: getApiUrl(service.providerAvatarUrl) }} style={styles.providerAvatar} />
               <View style={styles.providerInfo}>
-                <Text style={styles.providerName}>{service.providerName || service.provider}</Text>
+                <Text style={styles.providerName}>{service.providerName || 'منصة UIS'}</Text>
                 <Text style={styles.providerLevel}>بائع مميز موثوق</Text>
               </View>
               <Pressable style={styles.chatBtn}>
@@ -211,10 +212,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 20,
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0,0,0,0.05)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }],
     elevation: 2,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -273,10 +271,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     marginHorizontal: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
+    boxShadow: [{ color: 'rgba(0,0,0,0.03)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }],
     elevation: 2,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -317,10 +312,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
+    boxShadow: [{ color: 'rgba(99, 102, 241, 0.3)', offsetX: 0, offsetY: 8, blurRadius: 15, spreadDistance: 0 }],
     elevation: 8,
   },
   orderBtnText: {

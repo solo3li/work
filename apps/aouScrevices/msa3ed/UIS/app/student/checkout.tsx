@@ -14,7 +14,7 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const { serviceId } = useLocalSearchParams();
   const dispatch = useDispatch<AppDispatch>();
-  const { currentService } = useSelector((state: RootState) => state.catalog);
+  const currentService = useSelector((state: RootState) => state.catalog.currentService) as any;
   
   const [loading, setLoading] = useState(false);
 
@@ -154,13 +154,13 @@ export default function CheckoutScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: Colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, zIndex: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: Colors.white, boxShadow: [{ color: 'rgba(0,0,0,0.05)', offsetX: 0, offsetY: 2, blurRadius: 10, spreadDistance: 0 }], elevation: 2, zIndex: 10 },
   backBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'flex-end' },
   headerTitle: { fontSize: 20, fontWeight: '900', color: Colors.text },
   content: { padding: 24, paddingBottom: 120 },
   section: { marginBottom: 32 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text, marginBottom: 16 },
-  summaryCard: { backgroundColor: Colors.white, borderRadius: 20, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: Colors.border },
+  summaryCard: { backgroundColor: Colors.white, borderRadius: 20, padding: 20, boxShadow: [{ color: 'rgba(0,0,0,0.03)', offsetX: 0, offsetY: 4, blurRadius: 10, spreadDistance: 0 }], elevation: 2, borderWidth: 1, borderColor: Colors.border },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
   summaryText: { fontSize: 16, color: Colors.textSecondary, fontWeight: '500' },
   summaryValue: { fontSize: 16, color: Colors.text, fontWeight: 'bold' },
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   couponInput: { flex: 1, height: '100%', paddingHorizontal: 12, fontSize: 16, color: Colors.text, textAlign: 'right' },
   applyBtn: { backgroundColor: Colors.text, height: 48, paddingHorizontal: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   applyBtnText: { color: Colors.white, fontSize: 16, fontWeight: 'bold' },
-  paymentMethod: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.white, padding: 16, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: Colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.02, shadowRadius: 5, elevation: 1 },
+  paymentMethod: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.white, padding: 16, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: Colors.border, boxShadow: [{ color: 'rgba(0,0,0,0.02)', offsetX: 0, offsetY: 2, blurRadius: 5, spreadDistance: 0 }], elevation: 1 },
   activePayment: { borderColor: Colors.primary, backgroundColor: Colors.primary + '05', borderWidth: 2 },
   paymentMethodLeft: { flexDirection: 'row', alignItems: 'center' },
   paymentIconContainer: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
@@ -182,6 +182,6 @@ const styles = StyleSheet.create({
   footerTotal: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   footerTotalText: { fontSize: 16, color: Colors.textSecondary, fontWeight: '600' },
   footerTotalValue: { fontSize: 28, fontWeight: '900', color: Colors.primary },
-  payBtn: { flexDirection: 'row', height: 64, borderRadius: 20, justifyContent: 'center', alignItems: 'center', shadowColor: Colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 },
+  payBtn: { flexDirection: 'row', height: 64, borderRadius: 20, justifyContent: 'center', alignItems: 'center', boxShadow: [{ color: 'rgba(99, 102, 241, 0.3)', offsetX: 0, offsetY: 8, blurRadius: 15, spreadDistance: 0 }], elevation: 8 },
   payBtnText: { color: Colors.white, fontSize: 18, fontWeight: 'bold', marginRight: 12 },
 });

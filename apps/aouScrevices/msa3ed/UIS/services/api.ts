@@ -1,11 +1,18 @@
 import { Platform } from 'react-native';
 
-// Centralized configuration for API access
-// This URL is generated via Cloudflare Tunnel
-export const API_BASE_URL = 'https://specifics-protection-suddenly-beliefs.trycloudflare.com'; 
+// Dynamically determine the local API URL based on the platform and environment.
+let LOCAL_URL = 'http://localhost:5035';
 
-// For local development fallback if needed
-const DEV_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5035' : 'http://localhost:5035';
+if (Platform.OS === 'android') {
+  // Android emulators need 10.0.2.2 to reach the host machine's localhost
+  LOCAL_URL = 'http://10.0.2.2:5035';
+} else if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  // If running in a web browser, use the actual hostname the browser is accessing
+  // to avoid CORS mismatch when accessing via a local network IP (e.g., 192.168.x.x)
+  LOCAL_URL = `http://${window.location.hostname}:5035`;
+}
+
+export const API_BASE_URL = LOCAL_URL; 
 
 export const API_URL = `${API_BASE_URL}/api`;
 
@@ -16,8 +23,8 @@ export const setAuthToken = (token: string | null) => {
 };
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  const headers: HeadersInit = {
-    ...options.headers,
+  const headers: Record<string, string> = {
+    ...options.headers as Record<string, string>,
   };
 
   if (!(options.body instanceof FormData)) {
@@ -27,7 +34,7 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   } else {
     // CRITICAL: When sending FormData, the browser/fetch must set the Content-Type 
     // including the boundary. If we set it manually, it will fail.
-    delete (headers as any)['Content-Type'];
+    delete headers['Content-Type'];
   }
 
   if (authToken) {
