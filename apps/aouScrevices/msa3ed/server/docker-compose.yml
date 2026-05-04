@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+  app:
+    build: .
+    container_name: uis_app
+    restart: always
+    ports:
+      - "5035:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=uis_db;Username=postgres;Password=password123
+    depends_on:
+      - db
+      - redis
+
   db:
     image: postgres:15-alpine
     container_name: uis_postgres

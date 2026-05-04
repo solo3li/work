@@ -1,0 +1,56 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 bg-primary text-white h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="card-title fw-bold">Products</h5>
+                        <p class="card-text opacity-75">Manage your product catalog</p>
+                    </div>
+                    <a asp-action="Products" class="btn btn-light btn-sm mt-3 w-100 fw-bold text-primary">View Products</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 bg-success text-white h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="card-title fw-bold">Categories</h5>
+                        <p class="card-text opacity-75">Organize product structure</p>
+                    </div>
+                    <a asp-action="Categories" class="btn btn-light btn-sm mt-3 w-100 fw-bold text-success">View Categories</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 bg-warning text-dark h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="card-title fw-bold">Orders</h5>
+                        <p class="card-text opacity-75">Track customer purchases</p>
+                    </div>
+                    <a asp-action="Orders" class="btn btn-light btn-sm mt-3 w-100 fw-bold text-warning">View Orders</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 bg-info text-white h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="card-title fw-bold">Users</h5>
+                        <p class="card-text opacity-75">Manage system access</p>
+                    </div>
+                    <a asp-action="Users" class="btn btn-light btn-sm mt-3 w-100 fw-bold text-info">View Users</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

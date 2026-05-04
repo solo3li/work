@@ -1,0 +1,45 @@
+@model IEnumerable<EcomServer.Models.User>
+@{
+    ViewData["Title"] = "Users";
+}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Users</h1>
+        <button class="btn btn-primary btn-sm">Add New User</button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Id</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model) {
+                            <tr>
+                                <td class="ps-4">@item.Id</td>
+                                <td class="fw-semibold">@item.Username</td>
+                                <td>
+                                    @if(item.Role == "Admin") {
+                                        <span class="badge bg-danger rounded-pill">@item.Role</span>
+                                    } else {
+                                        <span class="badge bg-secondary rounded-pill">@item.Role</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-secondary">Edit</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
